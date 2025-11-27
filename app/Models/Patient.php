@@ -31,4 +31,25 @@ class Patient extends Model
     {
         return "{$this->first_name} {$this->middle_name} {$this->last_name}";
     }
+
+    public function cardPayments()
+{
+    return $this->hasMany(CardPayment::class)->orderBy('payment_date', 'desc');
+}
+
+ public function servicePayments(){
+    
+        return $this->hasMany(ServicePayment::class)->orderBy('payment_date', 'desc');
+ 
+ }
+
+public function latestUnpaidCardPayment()
+{
+    return $this->hasMany(CardPayment::class)
+                ->where('is_paid', false)
+                ->orderBy('payment_date', 'desc')
+                ->first(); // returns a single CardPayment model or null
+}
+
+
 }

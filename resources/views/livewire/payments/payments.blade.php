@@ -135,17 +135,18 @@
                             <td class="px-6 py-4 text-sm">
                                 <div class="flex justify-center items-center gap-3">
                                     {{-- View Detail Button --}}
-                                    <flux:button size="sm" variant="ghost" wire:click="viewDetails({{ $patient->id }})"
-                                       class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
-                                        <flux:icon.eye class="text-yellow-500" />
-                                    </flux:button>
+                                    <flux:button size="sm" variant="ghost"
+    onclick="window.location='{{ route('payments-detail', ['patient' => $patient->id]) }}'"
+    class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
+    <flux:icon.identification class="text-green-500" />
+</flux:button>
 
                                     {{-- Edit Button --}}
                                     <flux:button size="sm" variant="ghost" wire:click="edit({{ $patient->id }})"
                                         class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
                                         <flux:icon.pencil-square class="text-sky-500" />
 
-                                    </flux:button >
+                                    </flux:button>
                                     {{-- Delete Button --}}
                                     <flux:button size="sm" variant="ghost"
                                         class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">

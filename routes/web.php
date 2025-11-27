@@ -6,6 +6,8 @@ use App\Livewire\ServiceCategory;
 use App\Livewire\Services\Service;
 use App\Livewire\Patients\Patients;
 use App\Livewire\CardFee\CardFee;
+use App\Livewire\Payments\Payments;
+use App\Livewire\Payments\PaymentDetail;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,4 +30,8 @@ Route::get('service-category', ServiceCategory::class)->name('service-category')
 Route::get('services', Service::class)->name('services'); 
 Route::get('patients', Patients::class)->name('patients'); 
 Route::get('card-fee', CardFee::class)->name('card-fee'); 
+Route::get('payments', Payments::class)->name('payments'); 
+// Route::get('payments-detail', PaymentDetail::class)->name('payments-detail'); 
+Route::get('patients/{patient}/payments', PaymentDetail::class)
+     ->name('payments-detail');
 require __DIR__.'/auth.php';

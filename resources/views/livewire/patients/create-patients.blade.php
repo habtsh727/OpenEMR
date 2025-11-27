@@ -25,9 +25,10 @@
                 <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Personal Information</h3>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pl-3">
-                <flux:input label="First Name" placeholder="First name" wire:model="first_name" badge="Required"/>
-                <flux:input label="Father Name" placeholder="Father name" wire:model="middle_name" badge="Required"/>
-                <flux:input label="Grandfather Name" placeholder="Grandfather name" wire:model="last_name" badge="Required" />
+                <flux:input label="First Name" placeholder="First name" wire:model="first_name" badge="Required" />
+                <flux:input label="Father Name" placeholder="Father name" wire:model="middle_name" badge="Required" />
+                <flux:input label="Grandfather Name" placeholder="Grandfather name" wire:model="last_name"
+                    badge="Required" />
                 <flux:input label="Mother Name" placeholder="Mother name" wire:model="mother_name" />
             </div>
         </div>
@@ -39,14 +40,15 @@
                 <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Identity & Contact</h3>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pl-3">
-                <flux:input label="Date of Birth" placeholder="YYYY-MM-DD" wire:model="date_of_birth" type="date" badge="Required"/>
+                <flux:input label="Date of Birth" placeholder="YYYY-MM-DD" wire:model="date_of_birth" type="date"
+                    badge="Required" />
                 <flux:select label="Gender" wire:model="gender" badge="Required">
                     <flux:select.option value="">--Select--</flux:select.option>
                     <flux:select.option value="Male">Male</flux:select.option>
                     <flux:select.option value="Female">Female</flux:select.option>
                 </flux:select>
                 <flux:input label="Phone Number 1" placeholder="+251 (911) 111-457" wire:model="phone_number1"
-                    type="tel" badge="Required"/>
+                    type="tel" badge="Required" />
                 <flux:input label="Phone Number 2" placeholder="+251 (911) 111-457" wire:model="phone_number2"
                     type="tel" />
             </div>
@@ -90,7 +92,9 @@
         <!-- Action Buttons with improved layout -->
         <div class="flex gap-3 justify-end pt-6 border-t border-slate-200">
             <flux:button wire:click="$dispatch('closeModal')" variant="ghost">Cancel</flux:button>
-            <flux:button type="submit" variant="primary" wire:click="save">Create Patient</flux:button>
+            <flux:button wire:click="save" variant="primary">
+                Create
+            </flux:button>
         </div>
     </div>
 </flux:modal>

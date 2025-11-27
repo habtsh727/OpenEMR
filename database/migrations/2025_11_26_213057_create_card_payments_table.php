@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('payment_date');
             $table->foreignId('processed_by')->constrained('users');
             $table->boolean('is_paid')->default(false);
+            $table->enum('payment_type', ['cash', 'bank', 'telebirr', 'insurance'])->default('cash');
             $table->timestamps();
         });
     }

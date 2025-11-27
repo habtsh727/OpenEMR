@@ -90,7 +90,9 @@
         <!-- Action Buttons with improved layout -->
         <div class="flex gap-3 justify-end pt-6 border-t border-slate-200">
             <flux:button wire:click="$dispatch('closeModal')" variant="ghost">Cancel</flux:button>
-            <flux:button type="submit" variant="primary" wire:click="update">Update</flux:button>
+            <flux:button wire:click="update" variant="primary">
+                Update
+            </flux:button>
         </div>
     </div>
 </flux:modal>

@@ -32,7 +32,6 @@ class CreatePatients extends Component
     public $price;
 
     public function save(){
-
      $cardFee = \App\Models\CardFee::where('is_active', true)->first();
      $amount = $cardFee->amount;
      $validatedData = $this->validate([
@@ -65,9 +64,11 @@ class CreatePatients extends Component
       }
       $this->card_number = 'FCHC-' . date('Y') . '-' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
 
+      
        DB::beginTransaction();
 
     try {
+      
         // Create patient
         $patient = \App\Models\Patient::create([
             'first_name' => $this->first_name,
@@ -96,6 +97,7 @@ class CreatePatients extends Component
             'payment_date' => now(),
             'processed_by' => auth()->id(),
         ]);
+        
 
         DB::commit();
 

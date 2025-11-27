@@ -22,7 +22,7 @@
 
         <flux:sidebar.nav>
             <flux:sidebar.item icon="users" :href="route('patients')">Patients</flux:sidebar.item>
-            <flux:sidebar.item icon="currency-dollar" badge="12" href="#">Payments</flux:sidebar.item>
+            <flux:sidebar.item icon="currency-dollar" badge="12" :href="route('payments')">Payments</flux:sidebar.item>
 
             <flux:sidebar.group expandable heading="Settings" class="grid">
                 <flux:sidebar.item icon="document-text" :href="route('service-category')">Services Categories
