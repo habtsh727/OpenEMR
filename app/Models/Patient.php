@@ -51,5 +51,9 @@ public function latestUnpaidCardPayment()
                 ->first(); // returns a single CardPayment model or null
 }
 
+    public function vital(){
+        return $this->hasMany(NurseTriage::class);
+    }
+
 
 }

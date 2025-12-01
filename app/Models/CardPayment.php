@@ -14,11 +14,18 @@ class CardPayment extends Model
         'payment_date',
         'processed_by',
         'is_paid',
+        'payment_type',
     ];
 
 
         public function getDueDateAttribute($value)
     {
         return $value ? \Carbon\Carbon::parse($value) : $this->created_at->copy()->addDays(10);
+    }
+    // app/Models/Patient.php
+
+    public function cardPayments()
+    {
+        return $this->hasMany(\App\Models\CardPayment::class);
     }
 }

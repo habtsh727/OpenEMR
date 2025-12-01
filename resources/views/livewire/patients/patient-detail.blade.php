@@ -11,6 +11,7 @@
                 </div>
                 <div class="text-white">
                     <h1 class="text-2xl font-bold">{{ $first_name }} {{ $middle_name }}</h1>
+                    <p class="text-sky-100">Mother.N: {{ $mother_name }}</p>
                     <p class="text-sky-100">{{ $card_number }}</p>
                 </div>
             </div>
@@ -49,20 +50,7 @@
 
     <!-- Content Sections -->
     <div class="space-y-6 px-6 pb-6">
-        <!-- Personal Information -->
-        <div>
-            <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <div class="w-1 h-5 bg-sky-500 rounded"></div>
-                Personal Information
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-1 gap-3">
-                <div class="bg-slate-50 rounded-lg p-4">
-                    <div class="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-2">Mother Name</div>
-                    <div class="text-slate-900 font-medium">{{ $mother_name }}</div>
-                </div>
-            </div>
-        </div>
-
+        
         <!-- Identity & Contact -->
         <div>
             <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">

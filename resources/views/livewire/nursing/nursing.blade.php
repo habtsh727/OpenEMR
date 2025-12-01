@@ -2,8 +2,8 @@
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Patients Payments</h1>
-            <p class="text-gray-600 dark:text-gray-400">Manage and  all patient payments </p>
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Triage Station </h1>
+            <p class="text-gray-600 dark:text-gray-400">Manage and all patients </p>
         </div>
     </div>
 
@@ -21,9 +21,9 @@
     @endsession
 
     {{-- Modals --}}
-    <livewire:patients.create-patients />
+    {{-- <livewire:patients.create-patients />
     <livewire:patients.edit-patients />
-    <livewire:patients.patient-detail />
+    <livewire:patients.patient-detail /> --}}
 
     {{-- Search Bar --}}
     <div class="mb-6">
@@ -127,11 +127,17 @@
                                 <div class="flex justify-center items-center gap-3">
                                     {{-- View Detail Button --}}
                                     <flux:button size="sm" variant="ghost"
-    onclick="window.location='{{ route('payments-detail', ['patient' => $patient->id]) }}'"
-    class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
-    <flux:icon.identification class="text-green-500" />
-</flux:button>
+                                        onclick="window.location='{{ route('view-detail', ['patient' => $patient->id]) }}'"
+                                        class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
+                                        <flux:icon.eye class="text-green-500" />
+                                    </flux:button>
+                                    <flux:button size="sm" variant="ghost"
+                                        onclick="window.location='{{ route('create-triage', ['patient' => $patient->id]) }}'"
+                                        class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
+                                        <flux:icon.arrow-top-right-on-square class="text-green-500" />
+                                    </flux:button>
 
+                                    
                                 </div>
                             </td>
                         </tr>
