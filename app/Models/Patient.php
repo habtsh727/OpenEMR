@@ -32,28 +32,36 @@ class Patient extends Model
         return "{$this->first_name} {$this->middle_name} {$this->last_name}";
     }
 
-    public function cardPayments()
-{
-    return $this->hasMany(CardPayment::class)->orderBy('payment_date', 'desc');
-}
+        public function cardPayments()
+    {
+        return $this->hasMany(CardPayment::class)->orderBy('payment_date', 'desc');
+    }
 
- public function servicePayments(){
+    public function servicePayments(){
+        
+            return $this->hasMany(ServicePayment::class)->orderBy('payment_date', 'desc');
     
-        return $this->hasMany(ServicePayment::class)->orderBy('payment_date', 'desc');
- 
- }
+    }
 
-public function latestUnpaidCardPayment()
-{
-    return $this->hasMany(CardPayment::class)
-                ->where('is_paid', false)
-                ->orderBy('payment_date', 'desc')
-                ->first(); // returns a single CardPayment model or null
-}
+    public function latestUnpaidCardPayment()
+    {
+        return $this->hasMany(CardPayment::class)
+                    ->where('is_paid', false)
+                    ->orderBy('payment_date', 'desc')
+                    ->first(); // returns a single CardPayment model or null
+    }
 
     public function vital(){
         return $this->hasMany(NurseTriage::class);
     }
 
 
+    public function doctorQueues() { return $this->hasMany(DoctorQueue::class); }
+    public function consultations() { return $this->hasMany(DoctorConsultation::class); }
+
+// Latest vital record
+    public function latestVital()
+    {
+        return $this->hasOne(NurseTriage::class)->latestOfMany();
+    }
 }

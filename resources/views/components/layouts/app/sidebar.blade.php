@@ -29,23 +29,28 @@
             <flux:sidebar.group expandable heading="Clinical" class="grid">
                 <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')">Triage
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('services')">Doctor</flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')">Doctor</flux:sidebar.item>
 
             </flux:sidebar.group>
 
 
-           
+
 
 
             <flux:sidebar.group expandable heading="Results" class="grid">
-                <flux:sidebar.item icon="tag" >Lab</flux:sidebar.item>
-                <flux:sidebar.item icon="tag" >Imaging</flux:sidebar.item>
-                <flux:sidebar.item icon="tag" >Radiology</flux:sidebar.item>
+                <flux:sidebar.item icon="tag">Lab</flux:sidebar.item>
+                <flux:sidebar.item icon="tag">Imaging</flux:sidebar.item>
+                <flux:sidebar.item icon="tag">Radiology</flux:sidebar.item>
             </flux:sidebar.group>
 
-            <flux:sidebar.item icon="arrow-top-right-on-square" href="#">Pharmacy</flux:sidebar.item>
+            <flux:sidebar.group expandable heading="Pharmacy" class="grid">
+                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')">
+                    Pharmacy
+                </flux:sidebar.item>
+               <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')">Batches / Stock</flux:sidebar.item>
+            </flux:sidebar.group>
 
-             <flux:sidebar.group expandable heading="Settings" class="grid">
+            <flux:sidebar.group expandable heading="Settings" class="grid">
                 <flux:sidebar.item icon="document-text" :href="route('service-category')">Services Categories
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="server-stack" :href="route('services')">Services</flux:sidebar.item>
