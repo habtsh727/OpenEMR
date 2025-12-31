@@ -13,7 +13,7 @@ use App\Livewire\NurseTriage\NurseTriage;
 use App\Livewire\PatientHistory\PatientHistory;
 use App\Livewire\DoctorQueue\DoctorQueue;
 use App\Livewire\DoctorConsultation\DoctorConsultation;
-
+use App\Livewire\Admin\Users;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -62,10 +62,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/batches', \App\Livewire\Pharmacy\Batch\Index::class)
     ->name('pharmacy.batches');
 
-
     });
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('users', Users::class)->name('users');
+        Route::get('roles', \App\Livewire\Admin\Roles::class)->name('roles');
+    });
+
+
+
+
+
 });
-
-
 
 require __DIR__.'/auth.php';

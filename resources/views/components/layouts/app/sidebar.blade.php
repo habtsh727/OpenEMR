@@ -19,44 +19,57 @@
                     wire:navigate>Dashboard</flux:navlist.item>
             </flux:navlist.group>
         </flux:navlist>
-
+        @hasanyrole('super-admin|admin')
+            <flux:sidebar.group expandable heading="Accounts" class="grid">
+                <flux:sidebar.item icon="user" :href="route('admin.users')">Users</flux:sidebar.item>
+                <flux:sidebar.item icon="key" :href="route('admin.roles')">Roles</flux:sidebar.item>
+            </flux:sidebar.group>
+        @endhasanyrole
         <flux:sidebar.nav>
-            <flux:sidebar.item icon="users" :href="route('patients')">Patients</flux:sidebar.item>
-            <flux:sidebar.item icon="currency-dollar" :href="route('payments')">Payments</flux:sidebar.item>
+            @role('registration')
+                <flux:sidebar.item icon="users" :href="route('patients')">Patients</flux:sidebar.item>
+            @endrole
 
+            @role('cashier')
+                <flux:sidebar.item icon="currency-dollar" :href="route('payments')">Payments</flux:sidebar.item>
+            @endrole
+            @hasanyrole('doctor|nurse')
+                <flux:sidebar.group expandable heading="Clinical" class="grid">
+                    @role('nurse')
+                        <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')">Triage
+                        </flux:sidebar.item>
+                    @endrole
+                    @role('doctor')
+                        <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')">Doctor</flux:sidebar.item>
+                    @endrole
+                </flux:sidebar.group>
+            @endhasanyrole
 
+            @hasanyrole('laboratory')
+                <flux:sidebar.group expandable heading="Results" class="grid">
+                    <flux:sidebar.item icon="tag">Lab</flux:sidebar.item>
+                    <flux:sidebar.item icon="tag">Imaging</flux:sidebar.item>
+                    <flux:sidebar.item icon="tag">Radiology</flux:sidebar.item>
+                </flux:sidebar.group>
+            @endhasanyrole
+            @hasanyrole('pharmacy')
+                <flux:sidebar.group expandable heading="Pharmacy" class="grid">
+                    <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')">
+                        Pharmacy
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')">Batches / Stock
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+            @endhasanyrole
+            @hasanyrole('super-admin|admin')
+                <flux:sidebar.group expandable heading="Settings" class="grid">
+                    <flux:sidebar.item icon="document-text" :href="route('service-category')">Services Categories
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="server-stack" :href="route('services')">Services</flux:sidebar.item>
+                    <flux:sidebar.item icon="cog" :href="route('card-fee')">Card Fee</flux:sidebar.item>
 
-            <flux:sidebar.group expandable heading="Clinical" class="grid">
-                <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')">Triage
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')">Doctor</flux:sidebar.item>
-
-            </flux:sidebar.group>
-
-
-
-
-
-            <flux:sidebar.group expandable heading="Results" class="grid">
-                <flux:sidebar.item icon="tag">Lab</flux:sidebar.item>
-                <flux:sidebar.item icon="tag">Imaging</flux:sidebar.item>
-                <flux:sidebar.item icon="tag">Radiology</flux:sidebar.item>
-            </flux:sidebar.group>
-
-            <flux:sidebar.group expandable heading="Pharmacy" class="grid">
-                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')">
-                    Pharmacy
-                </flux:sidebar.item>
-               <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')">Batches / Stock</flux:sidebar.item>
-            </flux:sidebar.group>
-
-            <flux:sidebar.group expandable heading="Settings" class="grid">
-                <flux:sidebar.item icon="document-text" :href="route('service-category')">Services Categories
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="server-stack" :href="route('services')">Services</flux:sidebar.item>
-                <flux:sidebar.item icon="cog" :href="route('card-fee')">Card Fee</flux:sidebar.item>
-
-            </flux:sidebar.group>
+                </flux:sidebar.group>
+            @endhasanyrole
         </flux:sidebar.nav>
 
 

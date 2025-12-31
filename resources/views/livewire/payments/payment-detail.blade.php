@@ -233,6 +233,7 @@
                 </div>
 
                 <flux:select wire:model="payment_type" placeholder="Choose Payment Method..." label="Amount">
+                    <flux:select.option>--Select--</flux:select.option>
                     <flux:select.option>Cash</flux:select.option>
                     <flux:select.option>Bank</flux:select.option>
                     <flux:select.option>Telebirr</flux:select.option>
