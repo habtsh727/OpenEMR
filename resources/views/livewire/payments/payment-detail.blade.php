@@ -95,6 +95,10 @@
                             </svg>
                             <p class="text-green-700 dark:text-green-300 font-semibold">Card Payments Completed</p>
                         </div>
+
+                        <flux:button icon="printer" variant="primary" size="sm" onclick="window.print()">
+                            Print Payment Receipt
+                        </flux:button>
                     @endif
                 </div>
             </div>
@@ -254,6 +258,126 @@
 
 
     </div>
+
+
+    <div id="printable-card" class="hidden print:block bg-white text-black">
+        <div class="receipt mx-auto">
+
+            <!-- Hospital Header -->
+            <div class="text-center mb-3">
+                <h1 class="text-lg font-extrabold tracking-wide uppercase">
+                    Firdows Medical Center
+                </h1>
+                <p class="text-xs">Sheger, Oromia, Ethiopia</p>
+                <p class="text-xs">Tel: +251 911 000 000</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Receipt Meta -->
+            <div class="text-xs space-y-1">
+                <div class="flex justify-between">
+                    <span>Date</span>
+                    <span>{{ now()->format('d/m/Y H:i') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Receipt No</span>
+                    <span>#RCP-{{ str_pad($patient->id, 5, '0', STR_PAD_LEFT) }}</span>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Patient Info -->
+            <div class="text-xs space-y-1">
+                <div class="flex justify-between">
+                    <span>Patient</span>
+                    <span class="font-semibold">{{ $patient->name }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Card ID</span>
+                    <span>{{ $patient->card_number }}</span>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Payment Table -->
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="font-semibold">
+                        <th class="text-left pb-1">Description</th>
+                        <th class="text-right pb-1">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-t border-dashed border-gray-400">
+                        <td class="py-1">Registration / Card Fee</td>
+                        <td class="text-right py-1">
+                            {{ number_format($patient->cardPayments?->where('is_paid', true)->first()?->amount ?? 0, 2) }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="divider"></div>
+
+            <!-- Total -->
+            <div class="flex justify-between text-sm font-bold">
+                <span>TOTAL</span>
+                <span>
+                    {{ number_format($patient->cardPayments?->where('is_paid', true)->sum('amount') ?? 0, 2) }} Birr
+                </span>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Footer -->
+            <div class="text-center text-[10px] mt-3 space-y-1">
+                <p class="italic">"Your health, our priority"</p>
+                <p>Thank you for visiting</p>
+            </div>
+
+            <div class="mt-6 text-center text-xs">
+                ------------------------------
+                <br>
+                Authorized Signature
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printable-card,
+            #printable-card * {
+                visibility: visible;
+            }
+
+            #printable-card {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+            }
+
+            .receipt {
+                width: 280px;
+                /* 58mm printer */
+                margin: auto;
+                padding: 10px;
+                font-family: 'Courier New', monospace;
+            }
+
+            .divider {
+                border-top: 1px dashed #000;
+                margin: 8px 0;
+            }
+        }
+    </style>
 
 
 
