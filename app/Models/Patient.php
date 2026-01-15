@@ -64,4 +64,5 @@ class Patient extends Model
     {
         return $this->hasOne(NurseTriage::class)->latestOfMany();
     }
+
 }

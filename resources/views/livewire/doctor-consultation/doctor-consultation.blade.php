@@ -278,9 +278,9 @@
                         Next →
                     </button>
                 @else
-                    <button wire:click="saveConsultation" class="px-8 py-2.5 bg-green-600 text-white rounded-lg font-medium text-sm hover:bg-green-700 transition-all shadow-md hover:shadow-lg">
+                    <flux:button wire:click="saveConsultation" variant="primary" class="px-8 py-2.5 font-medium text-sm shadow-md hover:shadow-lg">
                         ✓ Save & Submit
-                    </button>
+                    </flux:button>
                 @endif
             </div>
         </div>

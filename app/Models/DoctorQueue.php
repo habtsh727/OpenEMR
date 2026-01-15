@@ -11,4 +11,9 @@ class DoctorQueue extends Model
     public function patient() { return $this->belongsTo(Patient::class); }
     public function triage() { return $this->belongsTo(NurseTriage::class, 'nurse_triage_id'); }
     public function doctor() { return $this->belongsTo(User::class, 'doctor_id'); }
+
+    public function consultation()
+{
+    return $this->hasOne(DoctorConsultation::class, 'patient_id', 'patient_id');
+}
 }

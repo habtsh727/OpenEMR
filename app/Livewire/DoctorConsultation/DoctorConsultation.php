@@ -110,23 +110,27 @@ class DoctorConsultation extends Component
     }
 
     public function saveConsultation()
-    {
+{
+    $this->queue->consultation()->create([
+        'doctor_id' => auth()->id(),
+        'patient_id' => $this->queue->patient_id,
+        'history' => json_encode($this->history),
+        'current_complaints' => json_encode($this->current_complaints),
+        'physical_exam' => json_encode($this->physical_exam),
+        'assessment_options' => json_encode($this->assessment_options),
+        'assessment_notes' => $this->assessment_notes,
+        'lab_orders' => json_encode($this->lab_orders),
+        'imaging_orders' => json_encode($this->imaging_orders),
+        'medications' => json_encode($this->medications),
+        // Optional: If you want diagnosis, plan, disposition fields
+        'diagnosis' => json_encode($this->assessment_options), // Or compute from assessment
+        'plan' => null,
+        'disposition' => null,
+    ]);
 
-        dd($this->history, $this->current_complaints, $this->physical_exam, $this->assessment_options, $this->assessment_notes, $this->lab_orders, $this->imaging_orders, $this->medications);
-        $this->queue->consultation()->create([
-            'history' => json_encode($this->history),
-            'current_complaints' => json_encode($this->current_complaints),
-            'physical_exam' => json_encode($this->physical_exam),
-            'assessment_options' => json_encode($this->assessment_options),
-            'assessment_notes' => $this->assessment_notes,
-            'lab_orders' => json_encode($this->lab_orders),
-            'imaging_orders' => json_encode($this->imaging_orders),
-            'medications' => json_encode($this->medications),
-        ]);
-
-        session()->flash('message', 'Consultation saved successfully!');
-        $this->redirect(route('doctor.consult'));
-    }
+    session()->flash('message', 'Consultation saved successfully!');
+    $this->redirect(route('doctor.queue'));
+}
 
     public function render()
     {

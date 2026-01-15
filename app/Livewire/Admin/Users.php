@@ -84,7 +84,7 @@ class Users extends Component
             'is_active' => $this->is_active ?? false,
         ]);
 
-        if($this->password){
+        if($this->password !="" && $this->password != null){
             $user->update(['password' => Hash::make($this->password)]);
         }
 

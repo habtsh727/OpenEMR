@@ -12,14 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('doctor_consultations', function (Blueprint $table) {
-            $table->id();
+              $table->id();
             $table->foreignId('patient_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('doctor_id')->constrained('users');
-            $table->text('history')->nullable();
-            $table->text('physical_exam')->nullable();
+            $table->foreignId('doctor_id')->constrained('users')->cascadeOnDelete();
+            $table->longText('history')->nullable();
+            $table->longText('current_complaints')->nullable();
+            $table->longText('physical_exam')->nullable();
+            $table->longText('assessment_options')->nullable();
+            $table->text('assessment_notes')->nullable();
+            $table->longText('lab_orders')->nullable();
+            $table->longText('imaging_orders')->nullable();
+            $table->longText('medications')->nullable();
             $table->text('diagnosis')->nullable();
             $table->text('plan')->nullable();
-            $table->string('disposition')->nullable(); // lab, imaging, pharmacy, admit, discharge etc
+            $table->string('disposition')->nullable();
             $table->timestamps();
         });
     }
