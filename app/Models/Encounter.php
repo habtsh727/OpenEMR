@@ -21,4 +21,12 @@ class Encounter extends Model
     {
         return $this->belongsTo(Patient::class);
     }
+    public function triageBy()
+    {
+        return $this->belongsTo(User::class, 'triage_by');
+    }
+    public function doctor()
+    {
+        return $this->belongsTo(User::class, 'doctor_id');
+    }
 }

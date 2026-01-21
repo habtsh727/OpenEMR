@@ -37,7 +37,7 @@ class PatientProfile extends Component
         $lastEncounter = Encounter::where('patient_id', $this->patient->id)
             ->latest('created_at')
             ->first();
-        
+
         $this->lastVisit = $lastEncounter ? $lastEncounter->created_at : null;
     }
 
@@ -48,7 +48,7 @@ class PatientProfile extends Component
             ->whereIn('status', ['pending', 'triaged', 'doctor_assigned'])
             ->latest()
             ->first();
-        
+
         $this->currentPriority = $currentEncounter ? $currentEncounter->priority : null;
     }
 
@@ -57,6 +57,20 @@ class PatientProfile extends Component
         $this->activeTab = $tab;
     }
 
+    public function getVitalsHistoryProperty()
+    {
+        return Encounter::where('patient_id', $this->patient->id)
+            ->whereNotNull('triage_by') // Only include encounters where vitals were recorded
+            ->where(function ($query) {
+                $query->whereNotNull('bp_systolic')
+                    ->orWhereNotNull('temperature')
+                    ->orWhereNotNull('pulse')
+                    ->orWhereNotNull('spo2');
+            })
+            ->with(['triageBy', 'doctor']) // Load relationships
+            ->latest()
+            ->get();
+    }
     public function render()
     {
         return view('livewire.patient-profile');
