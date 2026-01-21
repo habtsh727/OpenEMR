@@ -15,78 +15,111 @@
 
     <!-- Table -->
     <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead>
-                <tr
-                    class="bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <th class="px-6 py-3 font-semibold">Encounter</th>
-                    <th class="px-6 py-3 font-semibold">Patient Details</th>
-                    <th class="px-6 py-3 font-semibold">Status</th>
-                    <th class="px-6 py-3 font-semibold">Arrival Time</th>
-                    <th class="px-6 py-3 font-semibold text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-                @foreach($encounters as $encounter)
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150">
-                    <td class="px-6 py-4">
-                        <div class="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
-                            ENC-{{ str_pad($encounter->id, 5, '0', STR_PAD_LEFT) }}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="font-medium text-gray-900 dark:text-gray-100">
-                            {{ $encounter->patient->name ?? 'N/A' }}
-                        </div>
-                        @if($encounter->patient)
-                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            Patient ID: {{ $encounter->patient->id }}
-                        </div>
+       <table class="w-full">
+    <thead>
+        <tr class="bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <th class="px-6 py-3 font-semibold">Encounter</th>
+            <th class="px-6 py-3 font-semibold">Patient Details</th>
+            <th class="px-6 py-3 font-semibold">Card No.</th>
+            <th class="px-6 py-3 font-semibold">Gender</th>
+            <th class="px-6 py-3 font-semibold">Status</th>
+            <th class="px-6 py-3 font-semibold">Arrival Time</th>
+            <th class="px-6 py-3 font-semibold text-right">Actions</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+        @foreach($encounters as $encounter)
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150">
+            <td class="px-6 py-4">
+                <div class="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
+                    ENC-{{ str_pad($encounter->id, 5, '0', STR_PAD_LEFT) }}
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="font-medium text-gray-900 dark:text-gray-100">
+                    {{ $encounter->patient->name ?? 'N/A' }}
+                </div>
+                @if($encounter->patient)
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Patient ID: {{ $encounter->patient->id }}
+                </div>
+                @endif
+            </td>
+            <td class="px-6 py-4">
+                @if($encounter->patient && $encounter->patient->card_number)
+                    <div class="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {{ $encounter->patient->card_number }}
+                    </div>
+                @else
+                    <span class="text-xs text-gray-400 dark:text-gray-500 italic">No card</span>
+                @endif
+            </td>
+            <td class="px-6 py-4">
+                @if($encounter->patient && $encounter->patient->gender)
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
+                        @if(strtolower($encounter->patient->gender) === 'male')
+                            bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
+                        @elseif(strtolower($encounter->patient->gender) === 'female')
+                            bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300
+                        @else
+                            bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300
+                        @endif">
+                        @if(strtolower($encounter->patient->gender) === 'male')
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
+                        @elseif(strtolower($encounter->patient->gender) === 'female')
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                            </svg>
                         @endif
-                    </td>
-                    <td class="px-6 py-4">
-                        <span
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
-                            {{ ucfirst($encounter->status) }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900 dark:text-gray-100">
-                            {{ $encounter->created_at->format('d M Y') }}
-                        </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                            {{ $encounter->created_at->format('H:i') }}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex justify-end space-x-2">
-                            <!-- View Button -->
-                            <button
-                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-900 transition-colors">
-                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                View
-                            </button>
+                        {{ ucfirst($encounter->patient->gender) }}
+                    </span>
+                @else
+                    <span class="text-xs text-gray-400 dark:text-gray-500 italic">Unknown</span>
+                @endif
+            </td>
+            <td class="px-6 py-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+                    {{ ucfirst($encounter->status) }}
+                </span>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-gray-900 dark:text-gray-100">
+                    {{ $encounter->created_at->format('d M Y') }}
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ $encounter->created_at->format('H:i') }}
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex justify-end space-x-2">
+                    <!-- View Button -->
+                    <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-900 transition-colors">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        View
+                    </button>
 
-                            <!-- Process Button -->
-                            <button wire:click="openProcessModal({{ $encounter->id }})"
-                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 transition-colors">
-                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
-                                </svg>
-                                Process
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                    <!-- Process Button -->
+                    <button wire:click="openProcessModal({{ $encounter->id }})"
+                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 transition-colors">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7" />
+                        </svg>
+                        Process
+                    </button>
+                </div>
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
     </div>
 
     <!-- Empty State -->
