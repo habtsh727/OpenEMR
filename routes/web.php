@@ -73,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('roles', \App\Livewire\Admin\Roles::class)->name('roles');
         Route::get('employees', EmployeesManage::class)->name('employees');
     });
+    Route::get('/patients/{patient}/profile', \App\Livewire\PatientProfile::class)->name('patients.profile');
 });
 
 require __DIR__ . '/auth.php';
