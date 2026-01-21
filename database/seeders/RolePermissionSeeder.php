@@ -16,6 +16,27 @@ class RolePermissionSeeder extends Seeder
 
         $permissions = [
 
+            // Users & Roles
+            'view_user',
+            'create_user',
+            'update_user',
+            'delete_user',
+            'manage_roles',
+
+            // Departments & Employees
+            'view_department',
+            'create_department',
+            'update_department',
+            'delete_department',
+
+            'view_employee',
+            'create_employee',
+            'update_employee',
+            'delete_employee',
+
+            // Services
+            'manage_services',
+
             // Registration
             'create_patient',
             'view_patient',
@@ -73,6 +94,26 @@ class RolePermissionSeeder extends Seeder
                 'view_reports',
                 'export_reports',
                 'manage_inventory',
+
+                // ADMIN MANAGEMENT
+                'view_user',
+                'create_user',
+                'update_user',
+                'delete_user',
+                'manage_roles',
+
+                // DEPARTMENTS & EMPLOYEES
+                'view_department',
+                'create_department',
+                'update_department',
+                'delete_department',
+                'view_employee',
+                'create_employee',
+                'update_employee',
+                'delete_employee',
+
+                // SERVICES
+                'manage_services',
             ]);
 
         Role::firstOrCreate(['name' => 'registration'])
@@ -87,6 +128,7 @@ class RolePermissionSeeder extends Seeder
                 'create_invoice',
                 'view_invoice',
                 'receive_payment',
+                'refund_payment',
             ]);
 
         Role::firstOrCreate(['name' => 'nurse'])

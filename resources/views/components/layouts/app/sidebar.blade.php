@@ -1,3 +1,4 @@
+{{--
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 
@@ -20,55 +21,55 @@
             </flux:navlist.group>
         </flux:navlist>
         @hasanyrole('super-admin|admin')
-            <flux:sidebar.group expandable heading="Accounts" class="grid">
-                <flux:sidebar.item icon="user" :href="route('admin.users')">Users</flux:sidebar.item>
-                <flux:sidebar.item icon="key" :href="route('admin.roles')">Roles</flux:sidebar.item>
-            </flux:sidebar.group>
+        <flux:sidebar.group expandable heading="Accounts" class="grid">
+            <flux:sidebar.item icon="user" :href="route('admin.users')">Users</flux:sidebar.item>
+            <flux:sidebar.item icon="key" :href="route('admin.roles')">Roles</flux:sidebar.item>
+        </flux:sidebar.group>
         @endhasanyrole
         <flux:sidebar.nav>
             @role('registration')
-                <flux:sidebar.item icon="users" :href="route('patients')">Patients</flux:sidebar.item>
+            <flux:sidebar.item icon="users" :href="route('patients')">Patients</flux:sidebar.item>
             @endrole
 
             @role('cashier')
-                <flux:sidebar.item icon="currency-dollar" :href="route('payments')">Payments</flux:sidebar.item>
+            <flux:sidebar.item icon="currency-dollar" :href="route('payments')">Payments</flux:sidebar.item>
             @endrole
             @hasanyrole('doctor|nurse')
-                <flux:sidebar.group expandable heading="Clinical" class="grid">
-                    @role('nurse')
-                        <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')">Triage
-                        </flux:sidebar.item>
-                    @endrole
-                    @role('doctor')
-                        <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')">Doctor</flux:sidebar.item>
-                    @endrole
-                </flux:sidebar.group>
+            <flux:sidebar.group expandable heading="Clinical" class="grid">
+                @role('nurse')
+                <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')">Triage
+                </flux:sidebar.item>
+                @endrole
+                @role('doctor')
+                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')">Doctor</flux:sidebar.item>
+                @endrole
+            </flux:sidebar.group>
             @endhasanyrole
 
             @hasanyrole('laboratory')
-                <flux:sidebar.group expandable heading="Results" class="grid">
-                    <flux:sidebar.item icon="tag">Lab</flux:sidebar.item>
-                    <flux:sidebar.item icon="tag">Imaging</flux:sidebar.item>
-                    <flux:sidebar.item icon="tag">Radiology</flux:sidebar.item>
-                </flux:sidebar.group>
+            <flux:sidebar.group expandable heading="Results" class="grid">
+                <flux:sidebar.item icon="tag">Lab</flux:sidebar.item>
+                <flux:sidebar.item icon="tag">Imaging</flux:sidebar.item>
+                <flux:sidebar.item icon="tag">Radiology</flux:sidebar.item>
+            </flux:sidebar.group>
             @endhasanyrole
             @hasanyrole('pharmacy')
-                <flux:sidebar.group expandable heading="Pharmacy" class="grid">
-                    <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')">
-                        Pharmacy
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')">Batches / Stock
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+            <flux:sidebar.group expandable heading="Pharmacy" class="grid">
+                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')">
+                    Pharmacy
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')">Batches / Stock
+                </flux:sidebar.item>
+            </flux:sidebar.group>
             @endhasanyrole
             @hasanyrole('super-admin|admin')
-                <flux:sidebar.group expandable heading="Settings" class="grid">
-                    <flux:sidebar.item icon="document-text" :href="route('service-category')">Services Categories
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="server-stack" :href="route('services')">Services</flux:sidebar.item>
-                    <flux:sidebar.item icon="cog" :href="route('card-fee')">Card Fee</flux:sidebar.item>
+            <flux:sidebar.group expandable heading="Settings" class="grid">
+                <flux:sidebar.item icon="document-text" :href="route('service-category')">Services Categories
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="server-stack" :href="route('services')">Services</flux:sidebar.item>
+                <flux:sidebar.item icon="cog" :href="route('card-fee')">Card Fee</flux:sidebar.item>
 
-                </flux:sidebar.group>
+            </flux:sidebar.group>
             @endhasanyrole
         </flux:sidebar.nav>
 
@@ -77,6 +78,210 @@
 
         <flux:spacer />
 
+
+        <!-- Desktop User Menu -->
+        <flux:dropdown position="bottom" align="start">
+            <flux:profile :name="auth()->user()->name" :initials="auth()->user()->initials()"
+                icon-trailing="chevrons-up-down" />
+
+            <flux:menu class="w-[220px]">
+                <flux:menu.radio.group>
+                    <div class="p-0 text-sm font-normal">
+                        <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                            <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
+                                <span
+                                    class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                    {{ auth()->user()->initials() }}
+                                </span>
+                            </span>
+
+                            <div class="grid flex-1 text-left text-sm leading-tight">
+                                <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
+                                <span class="truncate text-xs">{{ auth()->user()->email }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </flux:menu.radio.group>
+
+                <flux:menu.separator />
+
+                <flux:menu.radio.group>
+                    <flux:menu.item href="/settings/profile" icon="cog" wire:navigate>Settings</flux:menu.item>
+                </flux:menu.radio.group>
+
+                <flux:menu.separator />
+
+                <form method="POST" action="{{ route('logout') }}" class="w-full">
+                    @csrf
+                    <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full">
+                        {{ __('Log Out') }}
+                    </flux:menu.item>
+                </form>
+            </flux:menu>
+        </flux:dropdown>
+    </flux:sidebar>
+
+    <!-- Mobile User Menu -->
+    <flux:header class="lg:hidden">
+        <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+
+        <flux:spacer />
+
+        <flux:dropdown position="top" align="end">
+            <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down" />
+
+            <flux:menu>
+                <flux:menu.radio.group>
+                    <div class="p-0 text-sm font-normal">
+                        <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                            <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
+                                <span
+                                    class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                    {{ auth()->user()->initials() }}
+                                </span>
+                            </span>
+
+                            <div class="grid flex-1 text-left text-sm leading-tight">
+                                <span class="truncate font-semibold">{{ auth()->user()->name }}</span>
+                                <span class="truncate text-xs">{{ auth()->user()->email }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </flux:menu.radio.group>
+
+                <flux:menu.separator />
+
+                <flux:menu.radio.group>
+                    <flux:menu.item href="/settings/profile" icon="cog" wire:navigate>Settings</flux:menu.item>
+                </flux:menu.radio.group>
+
+                <flux:menu.separator />
+
+                <form method="POST" action="{{ route('logout') }}" class="w-full">
+                    @csrf
+                    <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full">
+                        {{ __('Log Out') }}
+                    </flux:menu.item>
+                </form>
+            </flux:menu>
+        </flux:dropdown>
+    </flux:header>
+
+    {{ $slot }}
+
+    @fluxScripts
+</body>
+
+</html> --}}
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+
+<head>
+    @include('partials.head')
+</head>
+
+<body class="min-h-screen bg-white dark:bg-zinc-800">
+    <flux:sidebar sticky stashable class="border-r border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+        <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
+
+        <a href="{{ route('dashboard') }}" class="mr-5 flex items-center space-x-2" wire:navigate>
+            <x-app-logo class="size-8" href="#"></x-app-logo>
+        </a>
+
+        <flux:navlist variant="outline">
+            <flux:navlist.group heading="Platform" class="grid">
+                <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                    wire:navigate>Dashboard</flux:navlist.item>
+            </flux:navlist.group>
+        </flux:navlist>
+
+        {{-- ========================= ACCOUNTS ========================= --}}
+        @canany(['view_user','create_user','update_user','delete_user','manage_roles'])
+        <flux:sidebar.group expandable heading="Accounts" class="grid">
+
+            @canany(['view_user','create_user','update_user','delete_user'])
+            <flux:sidebar.item icon="user" :href="route('admin.users')">Users</flux:sidebar.item>
+            @endcanany
+
+            @can('manage_roles')
+            <flux:sidebar.item icon="key" :href="route('admin.roles')">Roles</flux:sidebar.item>
+            @endcan
+
+            @canany(['view_employee','create_employee','update_employee','delete_employee'])
+            <flux:sidebar.item icon="users" :href="route('admin.employees')">Employees</flux:sidebar.item>
+            @endcanany
+
+        </flux:sidebar.group>
+        @endcanany
+
+
+        <flux:sidebar.nav>
+
+            {{-- ========================= PATIENTS ========================= --}}
+            @canany(['create_patient','view_patient','update_patient'])
+            <flux:sidebar.item icon="users" :href="route('patients')">Patients</flux:sidebar.item>
+            @endcanany
+
+            {{-- ========================= PAYMENTS ========================= --}}
+            @canany(['create_invoice','view_invoice','receive_payment','refund_payment'])
+            <flux:sidebar.item icon="currency-dollar" :href="route('payments')">Payments</flux:sidebar.item>
+            @endcanany
+
+            {{-- ========================= CLINICAL ========================= --}}
+            @canany(['record_vitals','update_vitals','create_diagnosis','create_lab_order','create_prescription'])
+            <flux:sidebar.group expandable heading="Clinical" class="grid">
+
+                @canany(['record_vitals','update_vitals'])
+                <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')">Triage</flux:sidebar.item>
+                @endcanany
+
+                @canany(['create_diagnosis','create_lab_order','create_prescription'])
+                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')">Doctor</flux:sidebar.item>
+                @endcanany
+
+            </flux:sidebar.group>
+            @endcanany
+
+
+            {{-- ========================= LABORATORY ========================= --}}
+            @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
+            <flux:sidebar.group expandable heading="Results" class="grid">
+                <flux:sidebar.item icon="tag">Lab</flux:sidebar.item>
+                <flux:sidebar.item icon="tag">Imaging</flux:sidebar.item>
+                <flux:sidebar.item icon="tag">Radiology</flux:sidebar.item>
+            </flux:sidebar.group>
+            @endcanany
+
+
+            {{-- ========================= PHARMACY ========================= --}}
+            @canany(['view_prescription','dispense_drug','manage_drugs'])
+            <flux:sidebar.group expandable heading="Pharmacy" class="grid">
+                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')">
+                    Pharmacy
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')">Batches / Stock
+                </flux:sidebar.item>
+            </flux:sidebar.group>
+            @endcanany
+
+
+            {{-- ========================= SETTINGS ========================= --}}
+            @canany(['view_reports','export_reports','manage_inventory','manage_services'])
+            <flux:sidebar.group expandable heading="Settings" class="grid">
+
+                @canany(['manage_services'])
+                <flux:sidebar.item icon="document-text" :href="route('service-category')">Services Categories
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="server-stack" :href="route('services')">Services</flux:sidebar.item>
+                <flux:sidebar.item icon="cog" :href="route('card-fee')">Card Fee</flux:sidebar.item>
+                @endcanany
+
+            </flux:sidebar.group>
+            @endcanany
+
+        </flux:sidebar.nav>
+
+        <flux:spacer />
 
         <!-- Desktop User Menu -->
         <flux:dropdown position="bottom" align="start">
