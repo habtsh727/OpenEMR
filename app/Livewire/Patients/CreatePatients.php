@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Patients;
 
+use App\Models\CardPayment;
+use App\Models\Encounter;
 use Livewire\Component;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
@@ -113,13 +115,16 @@ class CreatePatients extends Component
             ]);
 
             // Create card payment
-            \App\Models\CardPayment::create([
+            $cardPayment = CardPayment::create([
                 'patient_id' => $patient->id,
                 'amount' => $amount,
                 'payment_date' => now(),
                 'processed_by' => auth()->id(),
             ]);
-
+            Encounter::create([
+                'patient_id' => $patient->id,
+                'card_payment_id' => $cardPayment->id,
+            ]);
 
             DB::commit();
         } catch (\Exception $e) {

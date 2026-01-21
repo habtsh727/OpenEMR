@@ -200,15 +200,15 @@
         <flux:sidebar.group expandable heading="Accounts" class="grid">
 
             @canany(['view_user','create_user','update_user','delete_user'])
-            <flux:sidebar.item icon="user" :href="route('admin.users')">Users</flux:sidebar.item>
+            <flux:sidebar.item icon="user" :href="route('admin.users')" wire:navigate>Users</flux:sidebar.item>
             @endcanany
 
             @can('manage_roles')
-            <flux:sidebar.item icon="key" :href="route('admin.roles')">Roles</flux:sidebar.item>
+            <flux:sidebar.item icon="key" :href="route('admin.roles')" wire:navigate>Roles</flux:sidebar.item>
             @endcan
 
             @canany(['view_employee','create_employee','update_employee','delete_employee'])
-            <flux:sidebar.item icon="users" :href="route('admin.employees')">Employees</flux:sidebar.item>
+            <flux:sidebar.item icon="users" :href="route('admin.employees')" wire:navigate>Employees</flux:sidebar.item>
             @endcanany
 
         </flux:sidebar.group>
@@ -219,12 +219,12 @@
 
             {{-- ========================= PATIENTS ========================= --}}
             @canany(['create_patient','view_patient','update_patient'])
-            <flux:sidebar.item icon="users" :href="route('patients')">Patients</flux:sidebar.item>
+            <flux:sidebar.item icon="users" :href="route('patients')" wire:navigate>Patients</flux:sidebar.item>
             @endcanany
 
             {{-- ========================= PAYMENTS ========================= --}}
             @canany(['create_invoice','view_invoice','receive_payment','refund_payment'])
-            <flux:sidebar.item icon="currency-dollar" :href="route('payments')">Payments</flux:sidebar.item>
+            <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Payments</flux:sidebar.item>
             @endcanany
 
             {{-- ========================= CLINICAL ========================= --}}
@@ -232,11 +232,14 @@
             <flux:sidebar.group expandable heading="Clinical" class="grid">
 
                 @canany(['record_vitals','update_vitals'])
-                <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')">Triage</flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')" wire:navigate>Triage</flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>
+                    Triage New
+                </flux:sidebar.item>
                 @endcanany
 
                 @canany(['create_diagnosis','create_lab_order','create_prescription'])
-                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')">Doctor</flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor</flux:sidebar.item>
                 @endcanany
 
             </flux:sidebar.group>
@@ -246,9 +249,9 @@
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Results" class="grid">
-                <flux:sidebar.item icon="tag">Lab</flux:sidebar.item>
-                <flux:sidebar.item icon="tag">Imaging</flux:sidebar.item>
-                <flux:sidebar.item icon="tag">Radiology</flux:sidebar.item>
+                <flux:sidebar.item icon="tag" wire:navigate>Lab</flux:sidebar.item>
+                <flux:sidebar.item icon="tag" wire:navigate>Imaging</flux:sidebar.item>
+                <flux:sidebar.item icon="tag" wire:navigate>Radiology</flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
 
@@ -256,10 +259,10 @@
             {{-- ========================= PHARMACY ========================= --}}
             @canany(['view_prescription','dispense_drug','manage_drugs'])
             <flux:sidebar.group expandable heading="Pharmacy" class="grid">
-                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')">
+                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')" wire:navigate>
                     Pharmacy
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')">Batches / Stock
+                <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')" wire:navigate>Batches / Stock
                 </flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
@@ -270,10 +273,10 @@
             <flux:sidebar.group expandable heading="Settings" class="grid">
 
                 @canany(['manage_services'])
-                <flux:sidebar.item icon="document-text" :href="route('service-category')">Services Categories
+                <flux:sidebar.item icon="document-text" :href="route('service-category')" wire:navigate>Services Categories
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="server-stack" :href="route('services')">Services</flux:sidebar.item>
-                <flux:sidebar.item icon="cog" :href="route('card-fee')">Card Fee</flux:sidebar.item>
+                <flux:sidebar.item icon="server-stack" :href="route('services')" wire:navigate>Services</flux:sidebar.item>
+                <flux:sidebar.item icon="cog" :href="route('card-fee')" wire:navigate>Card Fee</flux:sidebar.item>
                 @endcanany
 
             </flux:sidebar.group>

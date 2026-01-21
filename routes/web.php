@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Livewire\Employees\Manage;
+use App\Livewire\Encounters\TriageIndex;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -43,8 +44,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('patients', Patients::class)->name('patients');
     Route::get('card-fee', CardFee::class)->name('card-fee');
     Route::get('payments', Payments::class)->name('payments');
+
     // Route::get('payments-detail', PaymentDetail::class)->name('payments-detail'); 
     Route::get('patients/{patient}/payments', PaymentDetail::class)->name('payments-detail');
+    Route::get('/triage/encounters', TriageIndex::class)->name('triage.encounters');
     Route::get('patients/nursing', Nursing::class)->name('patient.nursing');
     Route::get('patients/{patient}/create-triage', NurseTriage::class)->name('create-triage');
     Route::get('patients/{patient}/view-detail', PatientHistory::class)->name('view-detail');
