@@ -61,7 +61,7 @@ class DoctorQueue extends Component
             //     $q->where('is_paid', true);
             // })
             ->whereHas('encounters', function ($query) {
-                $query->where('status', 'triaged');
+                $query->where('status', 'triaged')->where('doctor_id',Auth::user()?->id);
             })
             ->orderBy('id', 'desc')
             ->paginate(10);
