@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Payments;
 
+use App\Models\CardPayment;
+use App\Models\Encounter;
 use Livewire\Component;
 use App\Models\Patient;
 use Flux\Flux;
@@ -27,7 +29,7 @@ class PaymentDetail extends Component
 
 
 
-   
+
     protected $rules = [
         'amount' => 'required|numeric',
         'method' => 'required|string',
@@ -37,15 +39,21 @@ class PaymentDetail extends Component
     {
         $this->paymentId = $paymentId;
         $this->showCreatePaymentModal = true;
+        $cardPayment = CardPayment::find($paymentId);
+        Encounter::create([
+            'patient_id' => $cardPayment->patient_id,
+            'card_payment_id' => $paymentId,
+        ]);
     }
 
 
-    public function save($id){
-      // Create card payment
-      $this->validate([
-        'payment_type' => 'required|string',
-    ]);
-    
+    public function save($id)
+    {
+        // Create card payment
+        $this->validate([
+            'payment_type' => 'required|string',
+        ]);
+
         $cardpay = \App\Models\CardPayment::find($id);
         if ($cardpay) {
             $cardpay->update([
@@ -56,9 +64,9 @@ class PaymentDetail extends Component
             ]);
             session()->flash('success', 'Paid successfully.');
             Flux::modals()->close();
-            $this->redirectRoute('payments',navigate: true);
+            $this->redirectRoute('payments', navigate: true);
         } else {
-            session()->flash('error', 'PAyment  not found.');    
+            session()->flash('error', 'PAyment  not found.');
         }
     }
 
@@ -66,6 +74,4 @@ class PaymentDetail extends Component
     {
         return view('livewire.payments.payment-detail');
     }
-
-    
 }

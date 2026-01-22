@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Auth;
 
 class DoctorQueue extends Component
 {
-     public $search = '';
+    public $search = '';
 
 
-     public function take(Patient $patient)
+    public function take(Patient $patient)
     {
 
         // Check if already taken
@@ -43,27 +43,29 @@ class DoctorQueue extends Component
     {
 
         $patients = Patient::query()
-        // Search filter
-        ->when($this->search, function ($q) {
-            $search = "%{$this->search}%";
-            $q->where(function ($query) use ($search) {
-                $query->where('first_name', 'like', $search)
-                    ->orWhere('middle_name', 'like', $search)
-                    ->orWhere('last_name', 'like', $search)
-                    ->orWhere('mother_name', 'like', $search)
-                    ->orWhere('card_number', 'like', $search)
-                    ->orWhere('phone_number1', 'like', $search)
-                    ->orWhere('phone_number2', 'like', $search);
-            });
-        })
-        // Only patients who have paid
-        ->whereHas('cardPayments', function ($q) {
-            $q->where('is_paid', true);
-        })
-        ->whereHas('vital')
-        ->orderBy('id', 'desc')
-        ->paginate(10);
+            // Search filter
+            ->when($this->search, function ($q) {
+                $search = "%{$this->search}%";
+                $q->where(function ($query) use ($search) {
+                    $query->where('first_name', 'like', $search)
+                        ->orWhere('middle_name', 'like', $search)
+                        ->orWhere('last_name', 'like', $search)
+                        ->orWhere('mother_name', 'like', $search)
+                        ->orWhere('card_number', 'like', $search)
+                        ->orWhere('phone_number1', 'like', $search)
+                        ->orWhere('phone_number2', 'like', $search);
+                });
+            })
+            // Only patients who have paid
+            // ->whereHas('cardPayments', function ($q) {
+            //     $q->where('is_paid', true);
+            // })
+            ->whereHas('encounters', function ($query) {
+                $query->where('status', 'triaged');
+            })
+            ->orderBy('id', 'desc')
+            ->paginate(10);
 
-        return view('livewire.doctor-queue.doctor-queue',compact('patients'));
+        return view('livewire.doctor-queue.doctor-queue', compact('patients'));
     }
 }

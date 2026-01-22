@@ -21,10 +21,18 @@ class Patients extends Component
     {
         $this->dispatch('edit-patients', $id);
     }
-
+    public function addEncounter($id)
+    {
+        $this->dispatch('add-encounter', $id);
+    }
     public function viewDetails($id)
     {
         $this->dispatch('patient-detail', $id);
+    }
+
+    public function createEncounter($patientId)
+    {
+        $this->dispatch('open-create-encounter',  $patientId);
     }
 
     public function render()

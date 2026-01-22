@@ -21,6 +21,15 @@ class Encounter extends Model
     {
         return $this->belongsTo(Patient::class);
     }
+    /**
+     * Get the cardPayment that owns the Encounter
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function cardPayment(): BelongsTo
+    {
+        return $this->belongsTo(CardPayment::class);
+    }
     public function triageBy()
     {
         return $this->belongsTo(User::class, 'triage_by');

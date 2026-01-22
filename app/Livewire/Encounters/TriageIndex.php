@@ -84,7 +84,7 @@ class TriageIndex extends Component
             'doctor_id' => $this->vitals['doctor_id'],
             'triage_by' => auth()->id(),
             'processed_by' => auth()->user()->name,
-            'status' => 'triaged', // Status changes from 'pending' to 'triaged'
+            'status' => 'triaged',
         ]);
 
         // Show success message
@@ -117,19 +117,17 @@ class TriageIndex extends Component
     public function render()
     {
         // Show all encounters for patients who have paid
-        $encounters = Encounter::whereHas('patient.cardPayments', function ($query) {
-                // Only include patients with at least one paid card payment
-                $query->where('is_paid', true);
-            })
+        $encounters = Encounter::where(function ($query) {
+            $query->whereNull('card_payment_id')
+                ->orWhereHas('cardPayment', function ($q) {
+                    $q->where('is_paid', true);
+                });
+        })
             ->with(['patient' => function ($query) {
                 $query->with(['cardPayments' => function ($q) {
                     $q->where('is_paid', true)->latest()->first();
                 }]);
-            }])
-            ->when($this->statusFilter && $this->statusFilter !== 'all', function ($query) {
-                // Filter by specific status if not 'all'
-                return $query->where('status', $this->statusFilter);
-            })
+            }])->where('status', 'pending')
             ->latest()
             ->paginate(15);
 

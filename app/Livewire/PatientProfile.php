@@ -71,6 +71,19 @@ class PatientProfile extends Component
             ->latest()
             ->get();
     }
+    public function getDoctorVisitsProperty()
+    {
+        return Encounter::where('patient_id', $this->patient->id)
+            ->whereNotNull('doctor_id') // Only include encounters with doctor assigned
+            ->with(['doctor'])
+            ->latest()
+            ->get()
+            ->map(function ($encounter) {
+                // Add assessment result for each encounter
+                $encounter->assessment_result = 'Blood pressure slightly elevated'; // Default assessment
+                return $encounter;
+            });
+    }
     public function render()
     {
         return view('livewire.patient-profile');

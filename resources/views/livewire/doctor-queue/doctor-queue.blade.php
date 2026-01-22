@@ -9,19 +9,20 @@
 
     {{-- Success Message --}}
     @session('success')
-        <div class="fixed top-5 right-5 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm p-4 rounded-lg shadow-lg z-50 flex items-center gap-3"
-            x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" role="alert">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clip-rule="evenodd"></path>
-            </svg>
-            {{ $value }}
-        </div>
+    <div class="fixed top-5 right-5 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm p-4 rounded-lg shadow-lg z-50 flex items-center gap-3"
+        x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" role="alert">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"></path>
+        </svg>
+        {{ $value }}
+    </div>
     @endsession
 
     {{-- Modals --}}
-    {{-- <livewire:patients.create-patients />
+    {{--
+    <livewire:patients.create-patients />
     <livewire:patients.edit-patients />
     <livewire:patients.patient-detail /> --}}
 
@@ -73,88 +74,94 @@
                 </thead>
                 <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-100 dark:divide-slate-700">
                     @forelse ($patients as $patient)
-                        <tr class="hover:bg-blue-50 dark:hover:bg-slate-700/50 transition-colors duration-150 group">
-                            <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">
-                                {{ $loop->iteration }}</td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                                {{ $patient->name }}
-                                <div class="text-sm text-gray-400">
-                                    {{ $patient->card_number }}</div>
-                            </td>
+                    <tr class="hover:bg-blue-50 dark:hover:bg-slate-700/50 transition-colors duration-150 group">
+                        <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">
+                            {{ $loop->iteration }}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                            {{ $patient->name }}
+                            <div class="text-sm text-gray-400">
+                                {{ $patient->card_number }}</div>
+                        </td>
 
-                            <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                                <span
-                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                            <span
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
                                     {{ $patient->gender === 'Male' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-pink-300 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300' }}">
-                                    {{ $patient->gender }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                <div class="flex flex-col gap-1">
-                                    <span class="font-medium">{{ $patient->phone_number1 }}</span>
-                                    @if ($patient->phone_number2)
-                                        <span
-                                            class="text-xs text-gray-500 dark:text-gray-500">{{ $patient->phone_number2 }}</span>
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 font-medium">
-                                {{ $patient->region }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $patient->created_at->format('M d, Y') }}</td>
+                                {{ $patient->gender }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                            <div class="flex flex-col gap-1">
+                                <span class="font-medium">{{ $patient->phone_number1 }}</span>
+                                @if ($patient->phone_number2)
+                                <span class="text-xs text-gray-500 dark:text-gray-500">{{ $patient->phone_number2
+                                    }}</span>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 font-medium">
+                            {{ $patient->region }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                            {{ $patient->created_at->format('M d, Y') }}</td>
 
-                            <td class="px-6 py-4 text-sm">
-                                <div class="flex justify-center items-center gap-3">
-                                    {{-- View Detail Button --}}
+                        <td class="px-6 py-4 text-sm">
+                            <div class="flex justify-center items-center gap-3">
+                                {{-- View Detail Button --}}
+                                {{-- <flux:button size="sm" variant="ghost"
+                                    onclick="window.location='{{ route('view-detail', ['patient' => $patient->id]) }}'"
+                                    class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
+                                    <flux:icon.eye class="text-green-500" />
+                                </flux:button> --}}
+                                <a href="{{ route('patients.profile', $patient) }}">
                                     <flux:button size="sm" variant="ghost"
-                                        onclick="window.location='{{ route('view-detail', ['patient' => $patient->id]) }}'"
                                         class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
-                                        <flux:icon.eye class="text-green-500" />
+                                        <flux:icon.eye class="text-yellow-500" />
                                     </flux:button>
-                                    @php
-                                        // Get latest queue for this patient
-                                        $latestQueue = $patient->doctorQueues->sortByDesc('created_at')->first();
-                                    @endphp
+                                </a>
+                                @php
+                                // Get latest queue for this patient
+                                $latestQueue = $patient->doctorQueues->sortByDesc('created_at')->first();
+                                @endphp
 
-                                    @if ($latestQueue?->status === 'in_consultation')
-                                        <flux:button size="sm" variant="primary" 
-                                        onclick="window.location='{{ route('doctor.consult', ['queue' => $latestQueue->id]) }}'"
-                                            class="p-1 rounded opacity-70 cursor-pointer">
-                                            Consulting
-                                        </flux:button>
-                                    @elseif($latestQueue?->status === 'completed')
-                                        <flux:button size="sm" variant="primary" disabled
-                                            class="p-1 rounded opacity-50 cursor-not-allowed">
-                                            Completed
-                                        </flux:button>
-                                    @else
-                                        <flux:button size="sm" variant="ghost"
-                                            onclick="window.location='{{ route('doctor.take', ['patient' => $patient->id]) }}'"
-                                            class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
-                                            <flux:icon.plus-circle class="text-sky-700" />
-                                            Take Patient
-                                        </flux:button>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
+                                @if ($latestQueue?->status === 'in_consultation')
+                                <flux:button size="sm" variant="primary"
+                                    onclick="window.location='{{ route('doctor.consult', ['queue' => $latestQueue->id]) }}'"
+                                    class="p-1 rounded opacity-70 cursor-pointer">
+                                    Consulting
+                                </flux:button>
+                                @elseif($latestQueue?->status === 'completed')
+                                <flux:button size="sm" variant="primary" disabled
+                                    class="p-1 rounded opacity-50 cursor-not-allowed">
+                                    Completed
+                                </flux:button>
+                                @else
+                                <flux:button size="sm" variant="ghost"
+                                    onclick="window.location='{{ route('doctor.take', ['patient' => $patient->id]) }}'"
+                                    class="p-1 hover:bg-gray-100 dark:hover:bg-slate-700/30 rounded">
+                                    <flux:icon.plus-circle class="text-sky-700" />
+                                    Take Patient
+                                </flux:button>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="9" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center justify-center">
-                                    <svg class="w-12 h-12 text-gray-400 dark:text-gray-600 mb-3" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
-                                        </path>
-                                    </svg>
-                                    <p class="text-gray-600 dark:text-gray-400 text-lg font-medium">No patients found
-                                    </p>
-                                    <p class="text-gray-500 dark:text-gray-500 text-sm">Try adjusting your search
-                                        criteria</p>
-                                </div>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="9" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg class="w-12 h-12 text-gray-400 dark:text-gray-600 mb-3" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                    </path>
+                                </svg>
+                                <p class="text-gray-600 dark:text-gray-400 text-lg font-medium">No patients found
+                                </p>
+                                <p class="text-gray-500 dark:text-gray-500 text-sm">Try adjusting your search
+                                    criteria</p>
+                            </div>
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>

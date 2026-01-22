@@ -121,11 +121,7 @@ class CreatePatients extends Component
                 'payment_date' => now(),
                 'processed_by' => auth()->id(),
             ]);
-            Encounter::create([
-                'patient_id' => $patient->id,
-                'card_payment_id' => $cardPayment->id,
-            ]);
-
+            
             DB::commit();
         } catch (\Exception $e) {
 

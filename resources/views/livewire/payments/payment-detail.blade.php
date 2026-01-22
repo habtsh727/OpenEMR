@@ -76,8 +76,6 @@
                                 </div>
                             </div>
 
-
-
                             <flux:button wire:click="payCard({{ $latestCard->id }})" variant="primary" color="zinc"
                                 class="w-full">
                                 Pay Now
