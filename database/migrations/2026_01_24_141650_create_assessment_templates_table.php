@@ -11,8 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('examination_templates', function (Blueprint $table) {
+        Schema::create('assessment_templates', function (Blueprint $table) {
             $table->id();
+            // Diagnosis name
+            $table->string('diagnosis');
+
+            // OPD / ER / IPD
+            $table->string('context')->nullable();
+
+            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }
@@ -22,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('examination_templates');
+        Schema::dropIfExists('assessment_templates');
     }
 };

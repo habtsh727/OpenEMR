@@ -85,9 +85,8 @@ class ChiefComplaint extends Component
     public function next()
     {
         $this->save();
-        return redirect()->route('consultation.examination', $this->encounter);
+        return $this->redirect(route('consultation.examination', $this->encounter), navigate: true);
     }
-
     // public function back()
     // {
     //     return redirect()->route('consultation.medical-history', $this->encounter);

@@ -150,7 +150,7 @@
                                    text-white rounded-lg font-medium transition-colors duration-200
                                    disabled:opacity-50 disabled:cursor-not-allowed
                                    w-full sm:w-auto">
-                        Save & Continue →
+                        Save & Continue to Examination →
                     </button>
                 </div>
             </div>

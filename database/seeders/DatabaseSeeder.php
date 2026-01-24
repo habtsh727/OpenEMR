@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             RolePermissionUserSeeder::class,
             ChiefComplaintTemplateSeeder::class,
             MedicalHistoryTemplateSeeder::class,
+            ExaminationTemplateSeeder::class,
+            AssessmentTemplateSeeder::class,
         ]);
     }
 }

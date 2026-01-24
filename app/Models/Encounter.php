@@ -46,4 +46,13 @@ class Encounter extends Model
     {
         return $this->hasMany(EncounterChiefComplaint::class);
     }
+    public function examinations()
+    {
+        return $this->hasMany(EncounterExamination::class);
+    }
+
+    public function assessments()
+    {
+        return $this->hasMany(EncounterAssessment::class);
+    }
 }

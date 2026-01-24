@@ -22,6 +22,7 @@ use App\Livewire\Config\MedicalHistoryTemplates;
 use App\Livewire\Doctor\ChiefComplaint;
 use App\Livewire\Doctor\ConsultationWorkflow;
 use App\Livewire\Doctor\DoctorQueue;
+use App\Livewire\Doctor\ExaminationForm;
 use App\Livewire\Employees\Manage as EmployeesManage;
 
 Route::get('/', function () {
@@ -101,12 +102,15 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/consultation/{encounter}/chief-complaint', ChiefComplaint::class)
         ->name('consultation.chief-complaint');
+
+    Route::get('/consultation/{encounter}/examination', ExaminationForm::class)
+        ->name('consultation.examination');
 });
 Route::middleware(['auth'])->group(function () {
     // Config Templates
     Route::get('/config/medical-history-templates', MedicalHistoryTemplates::class)
         ->name('config.medical-history-templates');
-   Route::get('/config/chief-complaint-templates', ChiefComplaintTemplates::class)
+    Route::get('/config/chief-complaint-templates', ChiefComplaintTemplates::class)
         ->name('config.chief-complaint-templates');
 });
 require __DIR__ . '/auth.php';
