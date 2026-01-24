@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Patient;
 use App\Models\CardPayment;
 use App\Models\Encounter;
+use App\Models\EncounterMedicalHistory;
 
 class PatientProfile extends Component
 {
@@ -84,6 +85,56 @@ class PatientProfile extends Component
                 return $encounter;
             });
     }
+    // Add this method to your PatientProfile component
+  public function getMedicalHistoryProperty()
+{
+    // Get all medical history entries
+    return EncounterMedicalHistory::whereIn('encounter_id', 
+        $this->patient->encounters()->pluck('id')
+    )->with(['template', 'encounter'])->get();
+}
+
+public function getMedicalHistoryByEncounterProperty()
+{
+    return Encounter::where('patient_id', $this->patient->id)
+        ->with(['medicalHistories.template', 'doctor'])
+        ->whereHas('medicalHistories')
+        ->latest()
+        ->get();
+}
+
+public function getMedicalHistoryStatsProperty()
+{
+    $encounters = Encounter::where('patient_id', $this->patient->id)
+        ->whereHas('medicalHistories')
+        ->with('medicalHistories')
+        ->get();
+    
+    // Count active conditions
+    $activeConditions = 0;
+    $totalConditions = 0;
+    $lastUpdated = null;
+    
+    foreach ($encounters as $encounter) {
+        foreach ($encounter->medicalHistories as $history) {
+            $totalConditions++;
+            if ($history->value === 'yes') {
+                $activeConditions++;
+            }
+            // Get the latest updated_at
+            if (!$lastUpdated || $history->updated_at->gt($lastUpdated)) {
+                $lastUpdated = $history->updated_at;
+            }
+        }
+    }
+    
+    return [
+        'total_conditions' => $totalConditions,
+        'active_conditions' => $activeConditions,
+        'total_encounters' => $encounters->count(),
+        'last_updated' => $lastUpdated, // Add this line
+    ];
+}
     public function render()
     {
         return view('livewire.patient-profile');

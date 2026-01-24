@@ -2,6 +2,7 @@
 
 namespace App\Livewire\DoctorQueue;
 
+use App\Models\Encounter;
 use Livewire\Component;
 use App\Models\Patient;
 use Illuminate\Support\Facades\Auth;
@@ -37,8 +38,15 @@ class DoctorQueue extends Component
             ->with('success', 'Patient taken successfully! You may start consultation.');
     }
 
-
-
+    // In your component method
+    public function getLatestEncounter($patientId)
+    {
+        return Encounter::where('patient_id', $patientId)
+            ->where('doctor_id', auth()->id())
+            ->whereIn('status', ['doctor_assigned', 'in_progress'])
+            ->latest()
+            ->first();
+    }
     public function render()
     {
 
@@ -61,7 +69,7 @@ class DoctorQueue extends Component
             //     $q->where('is_paid', true);
             // })
             ->whereHas('encounters', function ($query) {
-                $query->where('status', 'triaged')->where('doctor_id',Auth::user()?->id);
+                $query->where('status', 'triaged')->where('doctor_id', Auth::user()?->id);
             })
             ->orderBy('id', 'desc')
             ->paginate(10);

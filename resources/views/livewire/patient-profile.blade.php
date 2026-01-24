@@ -659,19 +659,226 @@
             </div>
             @endif
             <!-- Medical History Tab -->
-            @if($activeTab === 'history')
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                    Medical History
-                </h2>
-                <h1 class="text-center text-gray-500 dark:text-gray-400 text-lg py-8">This is Medical History</h1>
-            </div>
-            @endif
+            
+            <!-- Medical History Tab -->
+          @if($activeTab === 'history')
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+                Medical History
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Recorded medical conditions and history</p>
+        </div>
 
+        <!-- Stats -->
+        <div class="flex items-center gap-3">
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+                <span class="font-semibold dark:text-white">{{ $this->medicalHistoryStats['total_conditions'] }}</span> conditions recorded
+            </div>
+        </div>
+    </div>
+
+    @if($this->medicalHistoryByEncounter->isEmpty())
+    <!-- Empty State -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+        <svg class="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No medical history recorded</h3>
+        <p class="text-gray-500 dark:text-gray-400">Medical history will appear here after doctor consultations</p>
+    </div>
+    @else
+    <!-- Medical History Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Conditions</div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $this->medicalHistoryStats['total_conditions'] }}</div>
+                </div>
+                <div class="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                    <svg class="w-5 h-5 text-emerald-500 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Conditions</div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ $this->medicalHistoryStats['active_conditions'] }}</div>
+                </div>
+                <div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <svg class="w-5 h-5 text-red-500 dark:text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Updated</div>
+                    <div class="text-lg font-bold text-gray-900 dark:text-white mt-1">
+                        @if($this->medicalHistoryStats['last_updated'])
+                            {{ $this->medicalHistoryStats['last_updated']->format('d M Y') }}
+                        @else
+                            Never
+                        @endif
+                    </div>
+                </div>
+                <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <svg class="w-5 h-5 text-blue-500 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medical History by Encounter -->
+    <div class="space-y-6">
+        @foreach($this->medicalHistoryByEncounter as $encounter)
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <!-- Encounter Header -->
+            <div class="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-gray-900 dark:text-white">Encounter #{{ $encounter->id }}</h3>
+                        <div class="flex items-center space-x-4 mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            <span>{{ $encounter->created_at->format('d M Y, h:i A') }}</span>
+                            <span>•</span>
+                            @if($encounter->doctor)
+                                <span>Dr. {{ $encounter->doctor->name }}</span>
+                            @endif
+                            <span>•</span>
+                            <span class="capitalize">{{ $encounter->status }}</span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ $encounter->medicalHistories->count() }} conditions
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conditions List -->
+            <div class="p-6">
+                @if($encounter->medicalHistories->isEmpty())
+                    <p class="text-gray-500 dark:text-gray-400 italic">No medical history recorded for this encounter</p>
+                @else
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach($encounter->medicalHistories as $history)
+                        <div class="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <div class="flex items-start justify-between mb-2">
+                                <span class="font-medium text-gray-900 dark:text-white">{{ $history->template->name ?? 'Unknown Condition' }}</span>
+                                @if($history->value === 'yes')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">Yes</span>
+                                @elseif($history->value === 'no')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">No</span>
+                                @else
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $history->value ?? 'Not recorded' }}</span>
+                                @endif
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Updated: {{ $history->updated_at->format('d M Y') }}</div>
+                        </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
+        @endforeach
+    </div>
+
+    <!-- Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Active Conditions -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                Active Conditions
+            </h3>
+            @php
+                $activeConditions = [];
+                foreach($this->medicalHistoryByEncounter as $encounter) {
+                    foreach($encounter->medicalHistories as $history) {
+                        if($history->value === 'yes') {
+                            $activeConditions[$history->template->name ?? 'Unknown'] = $history;
+                        }
+                    }
+                }
+            @endphp
+            @if(empty($activeConditions))
+                <p class="text-gray-500 dark:text-gray-400 text-sm italic">No active conditions</p>
+            @else
+                <div class="space-y-2">
+                    @foreach($activeConditions as $condition => $history)
+                        <div class="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/10 rounded">
+                            <span class="text-sm text-gray-900 dark:text-white">{{ $condition }}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Last: {{ $history->updated_at->format('d M') }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        <!-- Recent Updates -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                </svg>
+                Recent Updates
+            </h3>
+            @php
+                $allHistory = [];
+                foreach($this->medicalHistoryByEncounter as $encounter) {
+                    foreach($encounter->medicalHistories as $history) {
+                        $allHistory[] = $history;
+                    }
+                }
+                usort($allHistory, function($a, $b) {
+                    return $b->updated_at <=> $a->updated_at;
+                });
+                $recentHistory = array_slice($allHistory, 0, 3);
+            @endphp
+            @if(empty($recentHistory))
+                <p class="text-gray-500 dark:text-gray-400 text-sm italic">No recent updates</p>
+            @else
+                <div class="space-y-3">
+                    @foreach($recentHistory as $history)
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0 mt-0.5">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm text-gray-900 dark:text-white">{{ $history->template->name ?? 'Unknown Condition' }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    Updated {{ $history->updated_at->diffForHumans() }}
+                                    <span class="mx-1">•</span>
+                                    Status: <span class="{{ $history->value === 'yes' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
+                                        {{ ucfirst($history->value) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+    @endif
+</div>
+@endif
             <!-- Services Tab -->
             @if($activeTab === 'services')
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -699,191 +906,230 @@
                 <h1 class="text-center text-gray-500 dark:text-gray-400 text-lg py-8">This is Doctor Visits</h1>
             </div>
             @endif --}}
-<!-- Dr Visits Tab -->
-@if($activeTab === 'visits')
-<div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Doctor Consultations
-            </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">All doctor consultations and assessments</p>
-        </div>
-        
-        <!-- Stats -->
-        <div class="flex items-center gap-3">
-            <div class="text-sm text-gray-600 dark:text-gray-400">
-                Total: <span class="font-semibold dark:text-white">{{ $this->doctorVisits->count() }}</span> consultations
-            </div>
-        </div>
-    </div>
+            <!-- Dr Visits Tab -->
+            @if($activeTab === 'visits')
+            <div class="space-y-6">
+                <!-- Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Doctor Consultations
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">All doctor consultations and
+                            assessments</p>
+                    </div>
 
-    @if($this->doctorVisits->isEmpty())
-        <!-- Empty State -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-            <svg class="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No doctor consultations yet</h3>
-            <p class="text-gray-500 dark:text-gray-400">Doctor consultations will appear here after assignment</p>
-        </div>
-    @else
-        <!-- Doctor Visits Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-900/50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                Assigned Doctor
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                Date
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                Assessment Result
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach($this->doctorVisits as $visit)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                            <!-- Assigned Doctor -->
-                            <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 flex items-center justify-center shadow-sm">
-                                        <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="font-medium text-gray-900 dark:text-white">
-                                            @if($visit->doctor)
-                                                Dr. {{ $visit->doctor->name }}
-                                            @else
-                                                <span class="text-gray-400 dark:text-gray-500 italic">Not assigned</span>
-                                            @endif
+                    <!-- Stats -->
+                    <div class="flex items-center gap-3">
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            Total: <span class="font-semibold dark:text-white">{{ $this->doctorVisits->count() }}</span>
+                            consultations
+                        </div>
+                    </div>
+                </div>
+
+                @if($this->doctorVisits->isEmpty())
+                <!-- Empty State -->
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
+                    <svg class="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No doctor consultations yet</h3>
+                    <p class="text-gray-500 dark:text-gray-400">Doctor consultations will appear here after assignment
+                    </p>
+                </div>
+                @else
+                <!-- Doctor Visits Table -->
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900/50">
+                                <tr>
+                                    <th scope="col"
+                                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                        Assigned Doctor
+                                    </th>
+                                    <th scope="col"
+                                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                        Date
+                                    </th>
+                                    <th scope="col"
+                                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th scope="col"
+                                        class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                        Assessment Result
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                @foreach($this->doctorVisits as $visit)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                    <!-- Assigned Doctor -->
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div
+                                                class="h-10 w-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 flex items-center justify-center shadow-sm">
+                                                <svg class="w-5 h-5 text-purple-600 dark:text-purple-400"
+                                                    fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="font-medium text-gray-900 dark:text-white">
+                                                    @if($visit->doctor)
+                                                    Dr. {{ $visit->doctor->name }}
+                                                    @else
+                                                    <span class="text-gray-400 dark:text-gray-500 italic">Not
+                                                        assigned</span>
+                                                    @endif
+                                                </div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                    Encounter #{{ $visit->id }}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            Encounter #{{ $visit->id }}
+                                    </td>
+
+                                    <!-- Date -->
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {{ $visit->created_at->format('d M Y') }}
                                         </div>
-                                    </div>
-                                </div>
-                            </td>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $visit->created_at->format('h:i A') }}
+                                        </div>
+                                    </td>
 
-                            <!-- Date -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                    {{ $visit->created_at->format('d M Y') }}
-                                </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ $visit->created_at->format('h:i A') }}
-                                </div>
-                            </td>
-
-                            <!-- Status -->
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    <!-- Status -->
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                     @if($visit->status === 'pending') bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300
                                     @elseif($visit->status === 'doctor_assigned') bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
                                     @elseif($visit->status === 'completed') bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
                                     @elseif($visit->status === 'cancelled') bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300
                                     @else bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 @endif">
-                                    
-                                    @if($visit->status === 'doctor_assigned')
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                                        </svg>
-                                    @elseif($visit->status === 'completed')
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    @endif
-                                    
-                                    {{ ucfirst($visit->status) }}
-                                </span>
-                            </td>
 
-                            <!-- Assessment Result -->
-                            <td class="px-6 py-4">
-                                <div class="max-w-xs">
-                                    <div class="text-sm text-gray-900 dark:text-white">
-                                        {{ $visit->assessment_result ?? 'No assessment recorded' }}
-                                    </div>
-                                    @if($visit->status === 'completed')
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            Consultation completed
+                                            @if($visit->status === 'doctor_assigned')
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                            @elseif($visit->status === 'completed')
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                            @endif
+
+                                            {{ ucfirst($visit->status) }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Assessment Result -->
+                                    <td class="px-6 py-4">
+                                        <div class="max-w-xs">
+                                            <div class="text-sm text-gray-900 dark:text-white">
+                                                {{ $visit->assessment_result ?? 'No assessment recorded' }}
+                                            </div>
+                                            @if($visit->status === 'completed')
+                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                Consultation completed
+                                            </div>
+                                            @endif
                                         </div>
-                                    @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div
+                                    class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Total Consultations</div>
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {{ $this->doctorVisits->count() }}
                                 </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Summary -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Consultations</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                            {{ $this->doctorVisits->count() }}
+                            </div>
+                            <div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                <svg class="w-5 h-5 text-purple-500 dark:text-purple-400" fill="currentColor"
+                                    viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                    <div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                        <svg class="w-5 h-5 text-purple-500 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Completed</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                            {{ $this->doctorVisits->where('status', 'completed')->count() }}
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div
+                                    class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Completed</div>
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {{ $this->doctorVisits->where('status', 'completed')->count() }}
+                                </div>
+                            </div>
+                            <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                <svg class="w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor"
+                                    viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                    <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <svg class="w-5 h-5 text-green-500 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pending</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                            {{ $this->doctorVisits->whereIn('status', ['pending', 'doctor_assigned'])->count() }}
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div
+                                    class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Pending</div>
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                    {{ $this->doctorVisits->whereIn('status', ['pending', 'doctor_assigned'])->count()
+                                    }}
+                                </div>
+                            </div>
+                            <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                                <svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400" fill="currentColor"
+                                    viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                    <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                        <svg class="w-5 h-5 text-yellow-500 dark:text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
                 </div>
+                @endif
             </div>
-        </div>
-    @endif
-</div>
-@endif
+            @endif
             <!-- Financial Tab -->
             @if($activeTab === 'financial')
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">

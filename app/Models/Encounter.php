@@ -38,4 +38,8 @@ class Encounter extends Model
     {
         return $this->belongsTo(User::class, 'doctor_id');
     }
+    public function medicalHistories()
+    {
+        return $this->hasMany(EncounterMedicalHistory::class);
+    }
 }

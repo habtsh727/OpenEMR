@@ -16,6 +16,7 @@ use App\Livewire\PatientHistory\PatientHistory;
 use App\Livewire\DoctorQueue\DoctorQueue;
 use App\Livewire\DoctorConsultation\DoctorConsultation;
 use App\Livewire\Admin\Users;
+use App\Livewire\Doctor\ConsultationWorkflow;
 use App\Livewire\Employees\Manage as EmployeesManage;
 
 Route::get('/', function () {
@@ -74,6 +75,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('employees', EmployeesManage::class)->name('employees');
     });
     Route::get('/patients/{patient}/profile', \App\Livewire\PatientProfile::class)->name('patients.profile');
+    Route::get('/consultation/{encounter}/medical-history', 
+    ConsultationWorkflow::class)
+    ->name('consultation.medical-history');
 });
 
 require __DIR__ . '/auth.php';
