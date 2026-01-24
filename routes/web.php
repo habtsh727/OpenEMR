@@ -16,7 +16,9 @@ use App\Livewire\NurseTriage\NurseTriage;
 use App\Livewire\PatientHistory\PatientHistory;
 
 use App\Livewire\Admin\Users;
+use App\Livewire\Config\AssessmentTemplates;
 use App\Livewire\Config\ChiefComplaintTemplates;
+use App\Livewire\Config\ExaminationTemplates;
 // use App\Livewire\Config\ChiefComplaintTemplates;
 use App\Livewire\Config\MedicalHistoryTemplates;
 use App\Livewire\Doctor\AssessmentForm;
@@ -108,7 +110,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('consultation.examination');
 
     Route::get('/consultation/{encounter}/assessment', AssessmentForm::class)
-    ->name('consultation.assessment');
+        ->name('consultation.assessment');
 });
 Route::middleware(['auth'])->group(function () {
     // Config Templates
@@ -116,5 +118,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('config.medical-history-templates');
     Route::get('/config/chief-complaint-templates', ChiefComplaintTemplates::class)
         ->name('config.chief-complaint-templates');
+    Route::get('/config/examinations', ExaminationTemplates::class)->name('examination-templates');
+Route::get('/config/assessment-templates', AssessmentTemplates::class)->name('config.assessment-templates');
 });
 require __DIR__ . '/auth.php';

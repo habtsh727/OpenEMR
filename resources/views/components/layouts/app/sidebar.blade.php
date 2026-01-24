@@ -272,7 +272,8 @@
             @endcanany
 
             {{-- ========================= CONFIGURATION ========================= --}}
-            @canany(['manage_medical_history_templates', 'manage_chief_complaint_templates'])
+            @canany(['manage_medical_history_templates', 'manage_chief_complaint_templates',
+            'manage_examination_templates', 'manage_assessment_templates'])
             <flux:sidebar.group expandable heading="Configuration" class="grid">
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('config.medical-history-templates')"
                     wire:navigate>
@@ -281,6 +282,14 @@
                 <flux:sidebar.item icon="exclamation-triangle" :href="route('config.chief-complaint-templates')"
                     wire:navigate>
                     Chief Complaint
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="document-magnifying-glass" :href="route('examination-templates')"
+                    wire:navigate>
+                    Examination
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-check" :href="route('config.assessment-templates')"
+                    wire:navigate>
+                    Assessment
                 </flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
