@@ -16,6 +16,9 @@ use App\Livewire\NurseTriage\NurseTriage;
 use App\Livewire\PatientHistory\PatientHistory;
 
 use App\Livewire\Admin\Users;
+use App\Livewire\Config\ChiefComplaintTemplates;
+// use App\Livewire\Config\ChiefComplaintTemplates;
+use App\Livewire\Config\MedicalHistoryTemplates;
 use App\Livewire\Doctor\ChiefComplaint;
 use App\Livewire\Doctor\ConsultationWorkflow;
 use App\Livewire\Doctor\DoctorQueue;
@@ -77,22 +80,33 @@ Route::middleware(['auth'])->group(function () {
         Route::get('employees', EmployeesManage::class)->name('employees');
     });
     Route::get('/patients/{patient}/profile', \App\Livewire\PatientProfile::class)->name('patients.profile');
-    Route::get('/consultation/{encounter}/medical-history', 
-    ConsultationWorkflow::class)
-    ->name('consultation.medical-history');
-    Route::get('/consultation/{encounter}/chief-complaint', 
-    ChiefComplaint::class)
-    ->name('consultation.chief-complaint');
+    Route::get(
+        '/consultation/{encounter}/medical-history',
+        ConsultationWorkflow::class
+    )
+        ->name('consultation.medical-history');
+    Route::get(
+        '/consultation/{encounter}/chief-complaint',
+        ChiefComplaint::class
+    )
+        ->name('consultation.chief-complaint');
 });
 Route::middleware(['auth'])->group(function () {
     // Doctor queue page
     Route::get('/doctor/queue', DoctorQueue::class)->name('doctor.queue');
-    
+
     // Consultation workflow routes
     Route::get('/consultation/{encounter}/medical-history', ConsultationWorkflow::class)
         ->name('consultation.medical-history');
-        
+
     Route::get('/consultation/{encounter}/chief-complaint', ChiefComplaint::class)
         ->name('consultation.chief-complaint');
+});
+Route::middleware(['auth'])->group(function () {
+    // Config Templates
+    Route::get('/config/medical-history-templates', MedicalHistoryTemplates::class)
+        ->name('config.medical-history-templates');
+   Route::get('/config/chief-complaint-templates', ChiefComplaintTemplates::class)
+        ->name('config.chief-complaint-templates');
 });
 require __DIR__ . '/auth.php';

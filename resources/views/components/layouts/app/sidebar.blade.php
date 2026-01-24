@@ -224,7 +224,8 @@
 
             {{-- ========================= PAYMENTS ========================= --}}
             @canany(['create_invoice','view_invoice','receive_payment','refund_payment'])
-            <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Payments</flux:sidebar.item>
+            <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Payments
+            </flux:sidebar.item>
             @endcanany
 
             {{-- ========================= CLINICAL ========================= --}}
@@ -232,17 +233,20 @@
             <flux:sidebar.group expandable heading="Clinical" class="grid">
 
                 @canany(['record_vitals','update_vitals'])
-                <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')" wire:navigate>Triage</flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')" wire:navigate>Triage
+                </flux:sidebar.item>
                 <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>
                     Triage New
                 </flux:sidebar.item>
                 @endcanany
 
                 @canany(['create_diagnosis','create_lab_order','create_prescription'])
-                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor</flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor
+                </flux:sidebar.item>
                 @endcanany
 
             </flux:sidebar.group>
+
             @endcanany
 
 
@@ -267,15 +271,29 @@
             </flux:sidebar.group>
             @endcanany
 
-
+            {{-- ========================= CONFIGURATION ========================= --}}
+            @canany(['manage_medical_history_templates', 'manage_chief_complaint_templates'])
+            <flux:sidebar.group expandable heading="Configuration" class="grid">
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('config.medical-history-templates')"
+                    wire:navigate>
+                    Medical History
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="exclamation-triangle" :href="route('config.chief-complaint-templates')"
+                    wire:navigate>
+                    Chief Complaint
+                </flux:sidebar.item>
+            </flux:sidebar.group>
+            @endcanany
             {{-- ========================= SETTINGS ========================= --}}
             @canany(['view_reports','export_reports','manage_inventory','manage_services'])
             <flux:sidebar.group expandable heading="Settings" class="grid">
 
                 @canany(['manage_services'])
-                <flux:sidebar.item icon="document-text" :href="route('service-category')" wire:navigate>Services Categories
+                <flux:sidebar.item icon="document-text" :href="route('service-category')" wire:navigate>Services
+                    Categories
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="server-stack" :href="route('services')" wire:navigate>Services</flux:sidebar.item>
+                <flux:sidebar.item icon="server-stack" :href="route('services')" wire:navigate>Services
+                </flux:sidebar.item>
                 <flux:sidebar.item icon="cog" :href="route('card-fee')" wire:navigate>Card Fee</flux:sidebar.item>
                 @endcanany
 

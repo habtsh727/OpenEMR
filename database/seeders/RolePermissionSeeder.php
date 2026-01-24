@@ -15,7 +15,8 @@ class RolePermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
-
+            'manage_medical_history_templates',
+            'manage_chief_complaint_templates',
             // Users & Roles
             'view_user',
             'create_user',
@@ -91,6 +92,8 @@ class RolePermissionSeeder extends Seeder
 
         Role::firstOrCreate(['name' => 'admin'])
             ->givePermissionTo([
+                'manage_medical_history_templates', // ADD
+                'manage_chief_complaint_templates', // ADD
                 'view_reports',
                 'export_reports',
                 'manage_inventory',
@@ -145,6 +148,8 @@ class RolePermissionSeeder extends Seeder
                 'create_lab_order',
                 'create_prescription',
                 'view_lab_result',
+                'manage_medical_history_templates', // ADD
+                'manage_chief_complaint_templates', // ADD
             ]);
 
         Role::firstOrCreate(['name' => 'laboratory'])

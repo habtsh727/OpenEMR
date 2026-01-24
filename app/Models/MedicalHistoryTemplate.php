@@ -8,4 +8,7 @@ class MedicalHistoryTemplate extends Model
 {
     //
         protected $fillable = ['name', 'field_type', 'is_active'];
+        protected $casts = [
+        'is_active' => 'boolean',
+    ];
 }
