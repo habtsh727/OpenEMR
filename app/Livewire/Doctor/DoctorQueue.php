@@ -11,7 +11,8 @@ use Livewire\WithPagination;
 class DoctorQueue extends Component
 {
     use WithPagination;
-    
+    public $statusFilter = null;
+
     public $search = '';
     
     // public function takePatient($encounterId)
@@ -105,7 +106,27 @@ class DoctorQueue extends Component
             ->paginate(10);
             
         $stats = $this->getQueueStats();
+        $doctorId = Auth::id();
+    
+    $encounters = Encounter::with('patient')
+        ->where('doctor_id', $doctorId)
+        ->when($this->statusFilter, function ($query) {
+            $query->where('status', $this->statusFilter);
+        })
+        ->when($this->search, function ($query) {
+            $query->whereHas('patient', function ($q) {
+                $search = "%{$this->search}%";
+                $q->where('first_name', 'like', $search)
+                    ->orWhere('last_name', 'like', $search)
+                    ->orWhere('card_number', 'like', $search)
+                    ->orWhere('phone_number1', 'like', $search);
+            });
+        })
+        ->orderByRaw("FIELD(priority, 'high', 'medium', 'low')")
+        ->orderBy('created_at', 'asc')
+        ->paginate(10);
         
+    $stats = $this->getQueueStats();
         return view('livewire.doctor.doctor-queue', [
             'encounters' => $encounters,
             'stats' => $stats

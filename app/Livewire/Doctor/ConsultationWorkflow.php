@@ -115,7 +115,7 @@ class ConsultationWorkflow extends Component
     public function nextToChiefComplaint()
     {
         $this->saveMedicalHistory();
-        return redirect()->route('consultation.chief-complaint', $this->encounter);
+        return $this->redirect(route('consultation.chief-complaint', $this->encounter), navigate: true);
     }
     private function getPriorityClass($priority)
     {

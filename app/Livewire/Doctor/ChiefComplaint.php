@@ -22,7 +22,7 @@ class ChiefComplaint extends Component
         }
 
         $this->encounter = $encounter->load(['patient', 'chiefComplaints.template']);
-        
+
         // Load existing data
         foreach ($this->encounter->chiefComplaints as $existing) {
             $this->selected[] = $existing->chief_complaint_template_id;
@@ -41,7 +41,7 @@ class ChiefComplaint extends Component
             $this->selected = array_diff($this->selected, [$id]);
         } else {
             $this->selected[] = $id;
-            
+
             // Initialize details if not exists
             if (!isset($this->details[$id])) {
                 $this->details[$id] = [
@@ -88,15 +88,19 @@ class ChiefComplaint extends Component
         return redirect()->route('consultation.examination', $this->encounter);
     }
 
+    // public function back()
+    // {
+    //     return redirect()->route('consultation.medical-history', $this->encounter);
+    // }
     public function back()
     {
-        return redirect()->route('consultation.medical-history', $this->encounter);
+        $this->redirectRoute('consultation.medical-history', ['encounter' => $this->encounter], navigate: true);
     }
 
     public function render()
     {
         $templates = ChiefComplaintTemplate::where('is_active', true)->get();
-        
+
         return view('livewire.doctor.chief-complaint', [
             'templates' => $templates
         ]);
