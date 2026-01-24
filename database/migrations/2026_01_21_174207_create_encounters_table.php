@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('spo2')->nullable();
             $table->string('priority')->nullable();
             $table->string('processed_by')->nullable();
-            $table->enum('status', ['pending', 'triaged', 'doctor_assigned', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'triaged', 'doctor_assigned','in_progress', 'completed', 'cancelled'])->default('pending');
             $table->timestamps();
         });
     }

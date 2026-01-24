@@ -82,4 +82,11 @@ class Patient extends Model
     {
         return $this->hasOne(NurseTriage::class)->latestOfMany();
     }
+    public function currentEncounter()
+{
+    return $this->encounters()
+        ->whereIn('status', ['triaged', 'doctor_assigned', 'in_progress'])
+        ->latest()
+        ->first();
+}
 }

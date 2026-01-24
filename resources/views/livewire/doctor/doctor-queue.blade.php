@@ -162,7 +162,7 @@
     {{-- Updated Continue button to go to medical history page --}}
     <a href="{{ route('consultation.medical-history', ['encounter' => $encounter->id]) }}" 
        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
-        Continue to Medical History
+        Continue
     </a>
     
     <button wire:click="completeConsultation({{ $encounter->id }})" 

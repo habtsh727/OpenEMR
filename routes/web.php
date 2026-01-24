@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Livewire\Employees\Manage;
+
 use App\Livewire\Encounters\TriageIndex;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
@@ -13,11 +14,11 @@ use App\Livewire\Payments\PaymentDetail;
 use App\Livewire\Nursing\Nursing;
 use App\Livewire\NurseTriage\NurseTriage;
 use App\Livewire\PatientHistory\PatientHistory;
-use App\Livewire\DoctorQueue\DoctorQueue;
-use App\Livewire\DoctorConsultation\DoctorConsultation;
+
 use App\Livewire\Admin\Users;
 use App\Livewire\Doctor\ChiefComplaint;
 use App\Livewire\Doctor\ConsultationWorkflow;
+use App\Livewire\Doctor\DoctorQueue;
 use App\Livewire\Employees\Manage as EmployeesManage;
 
 Route::get('/', function () {
@@ -54,10 +55,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('patients/{patient}/create-triage', NurseTriage::class)->name('create-triage');
     Route::get('patients/{patient}/view-detail', PatientHistory::class)->name('view-detail');
 
-    Route::get('/doctor/queue', DoctorQueue::class)->name('doctor.queue');
-    Route::get('patients/{patient}/take', [DoctorQueue::class, 'take'])->name('doctor.take');
+    // Route::get('/doctor/queue', DoctorQueue::class)->name('doctor.queue');
+    // Route::get('patients/{patient}/take', [DoctorQueue::class, 'take'])->name('doctor.take');
 
-    Route::get('doctor/consult/{queue}', DoctorConsultation::class)->name('doctor.consult');
+    // Route::get('doctor/consult/{queue}', DoctorConsultation::class)->name('doctor.consult');
 
     Route::prefix('pharmacy')->group(function () {
         Route::get('/items', \App\Livewire\Pharmacy\Item\Index::class)->name('pharmacy.items');
@@ -83,5 +84,15 @@ Route::middleware(['auth'])->group(function () {
     ChiefComplaint::class)
     ->name('consultation.chief-complaint');
 });
-
+Route::middleware(['auth'])->group(function () {
+    // Doctor queue page
+    Route::get('/doctor/queue', DoctorQueue::class)->name('doctor.queue');
+    
+    // Consultation workflow routes
+    Route::get('/consultation/{encounter}/medical-history', ConsultationWorkflow::class)
+        ->name('consultation.medical-history');
+        
+    Route::get('/consultation/{encounter}/chief-complaint', ChiefComplaint::class)
+        ->name('consultation.chief-complaint');
+});
 require __DIR__ . '/auth.php';
