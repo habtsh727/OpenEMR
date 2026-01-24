@@ -15,6 +15,9 @@ class MedicalHistoryTemplates extends Component
     public $is_active = true;
     public $templateId;
     public $isEditing = false;
+    public $showForm = false;
+    public $filterActive = null;
+    public $search = '';
     
     protected $rules = [
         'name' => 'required|string|min:2|max:255',
@@ -24,7 +27,16 @@ class MedicalHistoryTemplates extends Component
     
     public function render()
     {
-        $templates = MedicalHistoryTemplate::latest()->paginate(10);
+        $templates = MedicalHistoryTemplate::query()
+            ->when($this->filterActive !== null, function ($query) {
+                $query->where('is_active', $this->filterActive);
+            })
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%');
+            })
+            ->latest()
+            ->paginate(10);
+            
         return view('livewire.config.medical-history-templates', compact('templates'));
     }
     
@@ -50,6 +62,7 @@ class MedicalHistoryTemplates extends Component
         $this->field_type = $template->field_type;
         $this->is_active = $template->is_active;
         $this->isEditing = true;
+        $this->showForm = true;
     }
     
     public function update()
@@ -80,9 +93,10 @@ class MedicalHistoryTemplates extends Component
         session()->flash('success', 'Template status updated!');
     }
     
-    private function resetForm()
+    // CHANGE FROM private TO public
+    public function resetForm()
     {
-        $this->reset(['name', 'field_type', 'is_active', 'templateId', 'isEditing']);
+        $this->reset(['name', 'field_type', 'is_active', 'templateId', 'isEditing', 'showForm']);
         $this->is_active = true;
         $this->field_type = 'yes_no';
     }

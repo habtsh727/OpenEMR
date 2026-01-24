@@ -14,6 +14,9 @@ class ChiefComplaintTemplates extends Component
     public $is_active = true;
     public $templateId;
     public $isEditing = false;
+    public $showForm = false;
+    public $filterActive = null;
+    public $search = '';
     
     protected $rules = [
         'name' => 'required|string|min:2|max:255',
@@ -22,7 +25,16 @@ class ChiefComplaintTemplates extends Component
     
     public function render()
     {
-        $templates = ChiefComplaintTemplate::latest()->paginate(10);
+        $templates = ChiefComplaintTemplate::query()
+            ->when($this->filterActive !== null, function ($query) {
+                $query->where('is_active', $this->filterActive);
+            })
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%');
+            })
+            ->latest()
+            ->paginate(10);
+            
         return view('livewire.config.chief-complaint-templates', compact('templates'));
     }
     
@@ -46,6 +58,7 @@ class ChiefComplaintTemplates extends Component
         $this->name = $template->name;
         $this->is_active = $template->is_active;
         $this->isEditing = true;
+        $this->showForm = true;
     }
     
     public function update()
@@ -75,9 +88,10 @@ class ChiefComplaintTemplates extends Component
         session()->flash('success', 'Template status updated!');
     }
     
-    private function resetForm()
+    // CHANGE FROM private TO public
+    public function resetForm()
     {
-        $this->reset(['name', 'is_active', 'templateId', 'isEditing']);
+        $this->reset(['name', 'is_active', 'templateId', 'isEditing', 'showForm']);
         $this->is_active = true;
     }
 }
