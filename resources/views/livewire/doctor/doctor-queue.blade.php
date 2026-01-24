@@ -211,7 +211,7 @@
                                                         : 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 dark:from-green-900/30 dark:to-green-800/30 dark:text-green-300 border border-green-200 dark:border-green-800') }}">
                                             {{ ucfirst($encounter->priority) }} Priority
                                         </span>
-                                        
+
                                     </div>
                                     @else
                                     <span class="text-gray-400 text-sm">No priority set</span>
@@ -228,66 +228,85 @@
                                                 class="w-2 h-2 rounded-full inline-block mr-2 {{ $encounter->status === 'in_progress' ? 'bg-purple-500' : 'bg-blue-500' }}"></span>
                                             {{ $encounter->status === 'in_progress' ? 'In Consultation' : 'Waiting' }}
                                         </span>
-                                      
+
                                     </div>
                                 </td>
-                                
-                               <td class="px-6 py-4">
-    <div class="flex items-center space-x-2">
-        {{-- View Patient Profile --}}
-        <a href="{{ route('patients.profile', $patient) }}" 
-           wire:navigate
-           class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200 group/profile"
-           title="View Patient Profile">
-            <svg class="w-5 h-5 text-gray-500 group-hover/profile:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-            </svg>
-        </a>
 
-        {{-- Action Buttons --}}
-        @if($encounter->status === 'triaged')
-            <button wire:click="takePatient({{ $encounter->id }})" 
-                    wire:loading.attr="disabled"
-                    wire:target="takePatient"
-                    class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" wire:loading.remove wire:target="takePatient">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                </svg>
-                <svg class="w-4 h-4 animate-spin hidden" wire:loading wire:target="takePatient" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                <span wire:loading.remove wire:target="takePatient">Take Patient</span>
-                <span wire:loading wire:target="takePatient">Processing...</span>
-            </button>
-        @elseif($encounter->status === 'in_progress')
-            <div class="flex items-center space-x-2">
-                <a href="{{ route('consultation.medical-history', ['encounter' => $encounter->id]) }}" 
-                   wire:navigate
-                   class="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
-                    </svg>
-                    <span>Continue</span>
-                </a>
-                <button wire:click="completeConsultation({{ $encounter->id }})" 
-                        wire:loading.attr="disabled"
-                        wire:target="completeConsultation"
-                        onclick="return confirm('Complete this consultation?')"
-                        class="px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" wire:loading.remove wire:target="completeConsultation">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <svg class="w-4 h-4 animate-spin hidden" wire:loading wire:target="completeConsultation" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    <span wire:loading.remove wire:target="completeConsultation">Complete</span>
-                    <span wire:loading wire:target="completeConsultation">...</span>
-                </button>
-            </div>
-        @endif
-    </div>
-</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center space-x-2">
+                                        {{-- View Patient Profile --}}
+                                        <a href="{{ route('patients.profile', $patient) }}" wire:navigate
+                                            class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200 group/profile"
+                                            title="View Patient Profile">
+                                            <svg class="w-5 h-5 text-gray-500 group-hover/profile:text-blue-500"
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                                </path>
+                                            </svg>
+                                        </a>
+
+                                        {{-- Action Buttons --}}
+                                        @if($encounter->status === 'triaged')
+                                        <button wire:click="takePatient({{ $encounter->id }})"
+                                            wire:loading.attr="disabled" wire:target="takePatient"
+                                            class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                wire:loading.remove wire:target="takePatient">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
+                                                </path>
+                                            </svg>
+                                            <svg class="w-4 h-4 animate-spin hidden" wire:loading
+                                                wire:target="takePatient" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                </path>
+                                            </svg>
+                                            <span wire:loading.remove wire:target="takePatient">Take Patient</span>
+                                            <span wire:loading wire:target="takePatient">Processing...</span>
+                                        </button>
+                                        @elseif($encounter->status === 'in_progress')
+                                        <div class="flex items-center space-x-2">
+                                            <a href="{{ route('consultation.medical-history', ['encounter' => $encounter->id]) }}"
+                                                wire:navigate
+                                                class="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                                                </svg>
+                                                <span>Continue</span>
+                                            </a>
+                                            <button wire:click="completeConsultation({{ $encounter->id }})"
+                                                wire:loading.attr="disabled" wire:target="completeConsultation"
+                                                onclick="return confirm('Complete this consultation?')"
+                                                class="px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-1">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24" wire:loading.remove
+                                                    wire:target="completeConsultation">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                                <svg class="w-4 h-4 animate-spin hidden" wire:loading
+                                                    wire:target="completeConsultation" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                                    </path>
+                                                </svg>
+                                                <span wire:loading.remove
+                                                    wire:target="completeConsultation">Complete</span>
+                                                <span wire:loading wire:target="completeConsultation">...</span>
+                                            </button>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </td>
                             </tr>
                             @empty
                             <tr>
