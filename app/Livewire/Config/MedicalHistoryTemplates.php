@@ -11,6 +11,7 @@ class MedicalHistoryTemplates extends Component
     use WithPagination;
     
     public $name;
+    public $fieldTypeFilter = null;
     public $field_type = 'yes_no';
     public $is_active = true;
     public $templateId;
@@ -26,19 +27,22 @@ class MedicalHistoryTemplates extends Component
     ];
     
     public function render()
-    {
-        $templates = MedicalHistoryTemplate::query()
-            ->when($this->filterActive !== null, function ($query) {
-                $query->where('is_active', $this->filterActive);
-            })
-            ->when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%');
-            })
-            ->latest()
-            ->paginate(10);
-            
-        return view('livewire.config.medical-history-templates', compact('templates'));
-    }
+{
+    $templates = MedicalHistoryTemplate::query()
+        ->when($this->filterActive !== null, function ($query) {
+            $query->where('is_active', $this->filterActive);
+        })
+        ->when($this->fieldTypeFilter, function ($query) {
+            $query->where('field_type', $this->fieldTypeFilter);
+        })
+        ->when($this->search, function ($query) {
+            $query->where('name', 'like', '%' . $this->search . '%');
+        })
+        ->latest()
+        ->paginate(10);
+        
+    return view('livewire.config.medical-history-templates', compact('templates'));
+}
     
     public function create()
     {
