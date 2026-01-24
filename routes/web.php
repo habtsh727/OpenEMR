@@ -16,6 +16,7 @@ use App\Livewire\PatientHistory\PatientHistory;
 use App\Livewire\DoctorQueue\DoctorQueue;
 use App\Livewire\DoctorConsultation\DoctorConsultation;
 use App\Livewire\Admin\Users;
+use App\Livewire\Doctor\ChiefComplaint;
 use App\Livewire\Doctor\ConsultationWorkflow;
 use App\Livewire\Employees\Manage as EmployeesManage;
 
@@ -78,6 +79,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/consultation/{encounter}/medical-history', 
     ConsultationWorkflow::class)
     ->name('consultation.medical-history');
+    Route::get('/consultation/{encounter}/chief-complaint', 
+    ChiefComplaint::class)
+    ->name('consultation.chief-complaint');
 });
 
 require __DIR__ . '/auth.php';
