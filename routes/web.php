@@ -19,6 +19,7 @@ use App\Livewire\Admin\Users;
 use App\Livewire\Config\ChiefComplaintTemplates;
 // use App\Livewire\Config\ChiefComplaintTemplates;
 use App\Livewire\Config\MedicalHistoryTemplates;
+use App\Livewire\Doctor\AssessmentForm;
 use App\Livewire\Doctor\ChiefComplaint;
 use App\Livewire\Doctor\ConsultationWorkflow;
 use App\Livewire\Doctor\DoctorQueue;
@@ -105,6 +106,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/consultation/{encounter}/examination', ExaminationForm::class)
         ->name('consultation.examination');
+
+    Route::get('/consultation/{encounter}/assessment', AssessmentForm::class)
+    ->name('consultation.assessment');
 });
 Route::middleware(['auth'])->group(function () {
     // Config Templates

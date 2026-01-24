@@ -9,6 +9,7 @@ use Livewire\Component;
 
 class ExaminationForm extends Component
 {
+    
     public $encounter;
     public $patient;
 
@@ -34,9 +35,9 @@ class ExaminationForm extends Component
             abort(403, 'This patient is not assigned to you.');
         }
 
-        if ($this->encounter->status !== 'in_progress') {
-            abort(400, 'Patient is not in consultation.');
-        }
+        // if ($this->encounter->status !== 'in_progress') {
+        //     abort(400, 'Patient is not in consultation.');
+        // }
 
         // Load existing examination values
         $this->loadExistingExaminations();
@@ -81,24 +82,15 @@ class ExaminationForm extends Component
 
     public function saveExamination()
     {
-        // Get all active templates
         $templates = ExaminationTemplate::where('active', true)->get();
 
         foreach ($templates as $template) {
             $value = $this->getValueForTemplate($template);
 
-            // Skip if no value provided (optional fields)
             if ($value === null || $value === '') {
                 continue;
             }
 
-            // Validate based on field type
-            if ($template->field_type === 'number' && !is_numeric($value)) {
-                $this->addError("examination.{$template->id}", "{$template->name} must be a number");
-                continue;
-            }
-
-            // Update or create examination record
             EncounterExamination::updateOrCreate(
                 [
                     'encounter_id' => $this->encounter->id,
@@ -106,12 +98,8 @@ class ExaminationForm extends Component
                 ],
                 ['value' => $value]
             );
+             session()->flash('success', 'Examination findings saved successfully.');
         }
-
-        session()->flash('success', 'Examination saved successfully!');
-
-        // Return to consultation or go to next step
-        return $this->redirect(route('consultation.examination', $this->encounter), navigate: true);
     }
 
     private function getValueForTemplate($template)
@@ -131,28 +119,9 @@ class ExaminationForm extends Component
         return null;
     }
 
-    public function completeConsultation()
-    {
-        // Save examination data first
-        $this->saveExamination();
 
-        // Update encounter status to completed
-        $this->encounter->update([
-            'status' => 'completed',
-            'processed_by' => auth()->id(),
-        ]);
 
-        session()->flash('success', 'Consultation completed successfully!');
-        return $this->redirect(route('doctor.queue'), navigate: true);
-    }
 
-    public function backToChiefComplaint()
-    {
-        // Save before leaving
-        $this->saveExamination();
-
-        return $this->redirect(route('consultation.chief-complaint', $this->encounter), navigate: true);
-    }
 
     public function getCompletedCount()
     {
@@ -186,6 +155,23 @@ class ExaminationForm extends Component
     {
         $total = ExaminationTemplate::where('active', true)->count();
         return $total - $this->getCompletedCount() - $this->getInProgressCount();
+    }
+    public function backToChiefComplaint()
+    {
+        // Save before leaving
+        $this->saveExamination();
+
+        return $this->redirect(route('consultation.chief-complaint', $this->encounter), navigate: true);
+    }
+
+    public function nextToAssessment()
+    {
+        $this->saveExamination();
+
+        return $this->redirect(
+            route('consultation.assessment', $this->encounter->id),
+            navigate: true
+        );
     }
     public function render()
     {
