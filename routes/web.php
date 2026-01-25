@@ -121,4 +121,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/config/examinations', ExaminationTemplates::class)->name('examination-templates');
 Route::get('/config/assessment-templates', AssessmentTemplates::class)->name('config.assessment-templates');
 });
+
 require __DIR__ . '/auth.php';
