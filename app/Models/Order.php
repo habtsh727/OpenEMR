@@ -15,6 +15,11 @@ class Order extends Model
         'completed_at',
         'notes'
     ];
+    protected $casts = [
+        'ordered_at' => 'datetime',
+        'completed_at' => 'datetime',
+    ];
+
 
     public function encounter()
     {

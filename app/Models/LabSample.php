@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LabSample extends Model
 {
@@ -15,13 +16,15 @@ class LabSample extends Model
         'collected_by',
         'rejection_reason'
     ];
-
+    protected $casts = [
+        'collected_at' => 'datetime',
+    ];
     public function labOrder()
     {
         return $this->belongsTo(LabOrder::class);
     }
 
-    public function collector()
+    public function collectedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'collected_by');
     }

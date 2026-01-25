@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LabOrder extends Model
 {
@@ -16,7 +17,10 @@ class LabOrder extends Model
         'paid_at',
         'status'
     ];
-
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'price' => 'decimal:2',
+    ];
     public function order()
     {
         return $this->belongsTo(Order::class);
@@ -36,11 +40,18 @@ class LabOrder extends Model
     {
         return $this->hasMany(LabResult::class);
     }
-      public function cashier()
+    // public function cashier()
+    // {
+    //     return $this->belongsTo(User::class, 'paid_by');
+    // }
+    public function paidBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paid_by');
     }
-
+    public function collectedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'collected_by');
+    }
     // Helper function
     public function isPaid()
     {

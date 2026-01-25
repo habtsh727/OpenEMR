@@ -15,7 +15,10 @@ class LabTest extends Model
         'price',
         'active'
     ];
-
+    protected $casts = [
+        'price' => 'decimal:2',
+        'active' => 'boolean',
+    ];
     public function labOrders()
     {
         return $this->hasMany(LabOrder::class);
