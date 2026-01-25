@@ -13,6 +13,14 @@ return new class extends Migration
     {
         Schema::create('lab_tests', function (Blueprint $table) {
             $table->id();
+            $table->string('code')->unique(); // CBC
+            $table->string('name');           // Complete Blood Count
+            $table->string('sample_type');    // blood | urine | stool
+
+            $table->string('department')->nullable();
+            $table->decimal('price', 10, 2);
+
+            $table->boolean('active')->default(true);
             $table->timestamps();
         });
     }

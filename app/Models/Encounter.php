@@ -55,4 +55,17 @@ class Encounter extends Model
     {
         return $this->hasMany(EncounterAssessment::class);
     }
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+    public function labOrders()
+    {
+        return $this->hasManyThrough(
+            LabOrder::class,
+            Order::class,
+            'encounter_id',
+            'order_id'
+        )->where('order_type', 'lab');
+    }
 }
