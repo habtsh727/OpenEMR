@@ -59,7 +59,16 @@ class User extends Authenticatable // implements MustVerifyEmail
             ->implode('');
     }
     public function employee()
-{
-    return $this->hasOne(\App\Models\Employee::class);
-}
+    {
+        return $this->hasOne(\App\Models\Employee::class);
+    }
+    public function labOrdersPaid()
+    {
+        return $this->hasMany(LabOrder::class, 'paid_by');
+    }
+
+    public function labSamplesCollected()
+    {
+        return $this->hasMany(LabSample::class, 'collected_by');
+    }
 }

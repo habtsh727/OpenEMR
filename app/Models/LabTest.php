@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class LabTest extends Model
 {
     //
-      protected $fillable = [
+    protected $fillable = [
         'code',
         'name',
         'sample_type',

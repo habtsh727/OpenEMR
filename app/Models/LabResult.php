@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class LabResult extends Model
 {
     //
-     protected $fillable = [
+    protected $fillable = [
         'lab_order_id',
         'parameter',
         'value',

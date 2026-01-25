@@ -7,10 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class LabOrder extends Model
 {
     //
-       protected $fillable = [
+    protected $fillable = [
         'order_id',
         'lab_test_id',
         'priority',
+        'payment_status',
+        'paid_by',
+        'paid_at',
         'status'
     ];
 
@@ -32,5 +35,15 @@ class LabOrder extends Model
     public function results()
     {
         return $this->hasMany(LabResult::class);
+    }
+      public function cashier()
+    {
+        return $this->belongsTo(User::class, 'paid_by');
+    }
+
+    // Helper function
+    public function isPaid()
+    {
+        return $this->payment_status === 'paid';
     }
 }

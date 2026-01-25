@@ -25,8 +25,12 @@ return new class extends Migration
             $table->string('priority')->default('routine');
             // routine | urgent | stat
 
+            $table->string('payment_status')->default('unpaid'); // unpaid | paid | refunded
+            $table->foreignId('paid_by')->nullable()->constrained('users'); // cashier
+            $table->timestamp('paid_at')->nullable();
+            
             $table->string('status')->default('pending');
-            // pending | sample_collected | processing | verified | reported
+            // pending | sample_collected | processing | verified | reported | cancelled
             $table->timestamps();
         });
     }

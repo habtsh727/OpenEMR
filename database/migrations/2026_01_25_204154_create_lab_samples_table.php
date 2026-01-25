@@ -16,16 +16,17 @@ return new class extends Migration
     {
         Schema::create('lab_samples', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(LabSample::class)
-                ->constrained()
-                ->cascadeOnDelete();
 
+            $table->foreignId('lab_order_id')
+                ->constrained('lab_orders')
+                ->cascadeOnDelete();
+                
             $table->string('sample_type'); // blood, urine
             $table->string('status')->default('pending');
             // pending | collected | accepted | rejected
 
             $table->timestamp('collected_at')->nullable();
-            $table->foreignIdFor(User::class, 'collected_by')->nullable();
+            $table->foreignId('collected_by')->nullable()->constrained('users');
 
             $table->text('rejection_reason')->nullable();
             $table->timestamps();

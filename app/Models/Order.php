@@ -12,6 +12,7 @@ class Order extends Model
         'order_type',
         'status',
         'ordered_at',
+        'completed_at',
         'notes'
     ];
 
