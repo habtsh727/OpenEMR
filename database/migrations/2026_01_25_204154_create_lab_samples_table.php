@@ -1,7 +1,8 @@
 <?php
 
-use App\Livewire\Admin\Users;
+// use App\Livewire\Admin\Users;
 use App\Models\LabSample;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -24,7 +25,7 @@ return new class extends Migration
             // pending | collected | accepted | rejected
 
             $table->timestamp('collected_at')->nullable();
-            $table->foreignIdFor(Users::class, 'collected_by')->nullable();
+            $table->foreignIdFor(User::class, 'collected_by')->nullable();
 
             $table->text('rejection_reason')->nullable();
             $table->timestamps();
