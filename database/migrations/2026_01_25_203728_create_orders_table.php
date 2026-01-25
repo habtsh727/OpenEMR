@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Encounter;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +14,19 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Encounter::class)
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->string('order_type');
+            // lab | medication | imaging | service | bed | referral
+
+            $table->string('status')->default('pending');
+            // pending | in_progress | completed | cancelled
+
+            $table->timestamp('ordered_at')->useCurrent();
+            $table->timestamp('completed_at')->nullable();
+
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
