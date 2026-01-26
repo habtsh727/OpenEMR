@@ -31,8 +31,7 @@ class DoctorLabOrderCreate extends Component
 
     public function mount(Encounter $encounter)
     {
-        Gate::authorize('create lab order');
-
+        Gate::authorize('create_lab_order');
         $this->encounter = $encounter;
     }
 
@@ -49,13 +48,31 @@ class DoctorLabOrderCreate extends Component
         $this->selectedTestIds = array_values($this->selectedTestIds);
     }
 
+    public function clearAllTests()
+    {
+        $this->selectedTestIds = [];
+    }
+
+    public function skipOrder()
+    {
+        return $this->redirect(route('consultation.assessment', $this->encounter), navigate: true);
+    }
+
     public function getSelectedTestsProperty()
     {
+        if (empty($this->selectedTestIds)) {
+            return collect();
+        }
+
         return LabTest::whereIn('id', $this->selectedTestIds)->get();
     }
 
     public function getTotalAmountProperty()
     {
+        if (empty($this->selectedTestIds)) {
+            return 0;
+        }
+
         return LabTest::whereIn('id', $this->selectedTestIds)->sum('price');
     }
 
@@ -68,7 +85,7 @@ class DoctorLabOrderCreate extends Component
             'encounter_id' => $this->encounter->id,
             'order_type' => 'lab',
             'status' => 'pending',
-            'notes' => $this->notes, // Save notes to Order model
+            'notes' => $this->notes,
             'ordered_at' => now(),
         ]);
 
@@ -80,7 +97,7 @@ class DoctorLabOrderCreate extends Component
                 'order_id' => $order->id,
                 'lab_test_id' => $testId,
                 'priority' => $this->priority,
-                'notes' => $this->notes, // Save notes to LabOrder model
+                'notes' => $this->notes,
                 'payment_status' => 'unpaid',
                 'status' => 'pending',
             ]);
@@ -93,10 +110,10 @@ class DoctorLabOrderCreate extends Component
             ]);
         }
 
-        session()->flash('message', 'Lab order created successfully.');
+        session()->flash('success', 'Lab order created successfully.');
 
-        // Redirect appropriately
-        return redirect()->to('/dashboard');
+        // Just show success message, no redirect
+        $this->reset(['selectedTestIds', 'priority', 'notes', 'search']);
     }
 
     public function render()

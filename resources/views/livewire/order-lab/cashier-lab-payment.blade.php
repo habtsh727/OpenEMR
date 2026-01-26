@@ -80,7 +80,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-green-600">
-                            ${{ number_format($order->labTest->price, 2) }}
+                            {{ number_format($order->labTest->price, 2) }}Birr
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
