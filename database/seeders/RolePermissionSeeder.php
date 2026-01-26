@@ -157,6 +157,7 @@ class RolePermissionSeeder extends Seeder
             ->givePermissionTo([
                 'view_lab_order',
                 'enter_lab_result',
+                'view_lab_result',
                 'verify_lab_result',
             ]);
 

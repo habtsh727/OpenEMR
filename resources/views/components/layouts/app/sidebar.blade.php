@@ -233,36 +233,33 @@
             </flux:sidebar.item>
             @endcanany
             {{-- ========================= CLINICAL ========================= --}}
-            @canany(['record_vitals','update_vitals','create_diagnosis','create_lab_order','create_prescription'])
+            @if(auth()->user()->hasRole(['doctor', 'nurse', 'clinician','super-admin']))
             <flux:sidebar.group expandable heading="Clinical" class="grid">
 
-                @canany(['record_vitals','update_vitals'])
+                @if(auth()->user()->hasRole(['nurse','super-admin']))
                 <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')" wire:navigate>Triage
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>
-                    Triage New
+                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage New
                 </flux:sidebar.item>
-                @endcanany
+                @endif
 
-                @canany(['create_diagnosis','create_lab_order','create_prescription'])
+                @if(auth()->user()->hasRole(['doctor', 'clinician']))
                 <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor
                 </flux:sidebar.item>
-
-                <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>
-                    Lab Results
-                </flux:sidebar.item>
-                @endcanany
-
-
+                @endif
             </flux:sidebar.group>
+            @endif
 
+
+            @canany( 'view_lab_result')
+            <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>
+                Lab Results
+            </flux:sidebar.item>
             @endcanany
-
-
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Orders" class="grid">
-                <flux:sidebar.item icon="tag"  :href="route('lab.dashboard')" wire:navigate>Lab</flux:sidebar.item>
+                <flux:sidebar.item icon="tag" :href="route('lab.dashboard')" wire:navigate>Lab</flux:sidebar.item>
                 <flux:sidebar.item icon="tag" wire:navigate>Imaging</flux:sidebar.item>
                 <flux:sidebar.item icon="tag" wire:navigate>Radiology</flux:sidebar.item>
             </flux:sidebar.group>
