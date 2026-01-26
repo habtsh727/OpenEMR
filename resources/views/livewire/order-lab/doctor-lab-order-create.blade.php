@@ -22,7 +22,7 @@
                         <span class="text-sm text-gray-500 ml-2">({{ $test->code }})</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <span class="text-green-600 font-medium">${{ number_format($test->price, 2) }}</span>
+                        <span class="text-green-600 font-medium">ETB{{ number_format($test->price, 2) }}</span>
                         <button wire:click="removeTest({{ array_search($test->id, $selectedTestIds) }})"
                             class="text-red-500 hover:text-red-700">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,8 +127,8 @@
                                     <span class="text-sm text-gray-500">{{ $test->department }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="text-sm font-medium text-green-600">${{ number_format($test->price, 2)
-                                        }}</span>
+                                    <span class="text-sm font-medium text-green-600">{{ number_format($test->price, 2)
+                                        }}Birr</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @if(in_array($test->id, $selectedTestIds))
