@@ -227,7 +227,11 @@
             <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Payments
             </flux:sidebar.item>
             @endcanany
-
+            @canany(['super-admin', 'receive_payment'])
+            <flux:sidebar.item icon="beaker" :href="route('lab-orders.payments')" wire:navigate>
+                Lab Orders Payment
+            </flux:sidebar.item>
+            @endcanany
             {{-- ========================= CLINICAL ========================= --}}
             @canany(['record_vitals','update_vitals','create_diagnosis','create_lab_order','create_prescription'])
             <flux:sidebar.group expandable heading="Clinical" class="grid">
@@ -243,7 +247,12 @@
                 @canany(['create_diagnosis','create_lab_order','create_prescription'])
                 <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor
                 </flux:sidebar.item>
+
+                <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>
+                    Lab Results
+                </flux:sidebar.item>
                 @endcanany
+
 
             </flux:sidebar.group>
 
@@ -252,8 +261,8 @@
 
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
-            <flux:sidebar.group expandable heading="Results" class="grid">
-                <flux:sidebar.item icon="tag" wire:navigate>Lab</flux:sidebar.item>
+            <flux:sidebar.group expandable heading="Orders" class="grid">
+                <flux:sidebar.item icon="tag"  :href="route('lab.dashboard')" wire:navigate>Lab</flux:sidebar.item>
                 <flux:sidebar.item icon="tag" wire:navigate>Imaging</flux:sidebar.item>
                 <flux:sidebar.item icon="tag" wire:navigate>Radiology</flux:sidebar.item>
             </flux:sidebar.group>

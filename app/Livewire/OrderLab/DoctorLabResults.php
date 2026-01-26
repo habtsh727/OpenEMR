@@ -13,7 +13,7 @@ class DoctorLabResults extends Component
     use WithPagination;
 
     public $search = '';
-    public $filterStatus = 'reported';
+    public $filterStatus = '';
     public $filterPatient = '';
     public $patient = null;
     public $selectedResult = null;
@@ -31,8 +31,12 @@ class DoctorLabResults extends Component
     public function viewResult($labOrderId)
     {
         $this->selectedResult = $labOrderId;
-        // Dispatch browser event to open modal
         $this->dispatch('open-modal', 'view-result');
+    }
+
+    public function clearFilters()
+    {
+        $this->reset(['search', 'filterStatus', 'filterPatient']);
     }
 
     public function render()
@@ -44,16 +48,22 @@ class DoctorLabResults extends Component
             'labSamples'
         ])
             ->whereHas('order.encounter', function ($query) {
-                // Doctor can only see results from encounters they're assigned to
                 if (auth()->user()->hasRole('doctor')) {
                     $query->where('doctor_id', auth()->id());
                 }
             })
-            ->whereIn('status', ['reported', 'verified']) // Only show completed results
+            ->whereIn('status', ['reported', 'verified'])
             ->when($this->search, function ($query) {
-                $query->whereHas('labTest', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('code', 'like', '%' . $this->search . '%');
+                $query->where(function ($q) {
+                    $q->whereHas('labTest', function ($q2) {
+                        $q2->where('name', 'like', '%' . $this->search . '%')
+                            ->orWhere('code', 'like', '%' . $this->search . '%');
+                    })
+                    ->orWhereHas('order.encounter.patient', function ($q2) {
+                        $q2->where('first_name', 'like', '%' . $this->search . '%')
+                            ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                            ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+                    });
                 });
             })
             ->when($this->filterStatus, function ($query) {
@@ -65,21 +75,40 @@ class DoctorLabResults extends Component
                 });
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(12);
 
-        // Get patients for filter dropdown
         $patients = Patient::when($this->search, function ($query) {
-            $query->where('first_name', 'like', '%' . $this->search . '%')
-                ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
-        })
+                $query->where('first_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+            })
             ->orderBy('first_name')
             ->limit(50)
             ->get();
 
+        // Calculate stats
+        $totalResults = $labOrders->total();
+        $reportedCount = LabOrder::whereHas('order.encounter', function ($query) {
+                if (auth()->user()->hasRole('doctor')) {
+                    $query->where('doctor_id', auth()->id());
+                }
+            })
+            ->where('status', 'reported')
+            ->count();
+        $verifiedCount = LabOrder::whereHas('order.encounter', function ($query) {
+                if (auth()->user()->hasRole('doctor')) {
+                    $query->where('doctor_id', auth()->id());
+                }
+            })
+            ->where('status', 'verified')
+            ->count();
+
         return view('livewire.order-lab.doctor-lab-results', [
             'labOrders' => $labOrders,
             'patients' => $patients,
+            'totalResults' => $totalResults,
+            'reportedCount' => $reportedCount,
+            'verifiedCount' => $verifiedCount,
         ]);
     }
 }

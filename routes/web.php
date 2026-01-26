@@ -129,7 +129,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Doctor Routes
-    Route::get('/encounters/{encounter}/lab-orders/create', DoctorLabOrderCreate::class)
+    Route::get('/doctor/{encounter}/lab-orders/create', DoctorLabOrderCreate::class)
         ->middleware(['can:create lab order'])
         ->name('lab-orders.create');
     // Cashier Routes

@@ -9,6 +9,7 @@ use Livewire\Component;
 class ViewLabResult extends Component
 {
     public LabOrder $labOrder;
+    public $printMode = false;
 
     public function mount(LabOrder $labOrder)
     {
@@ -18,13 +19,23 @@ class ViewLabResult extends Component
             'labTest',
             'labResults',
             'labSamples',
-            // Don't load verifiedBy until column exists
         ]);
+        
+        // Load verifiedBy if column exists
+        if (isset($this->labOrder->verified_by)) {
+            $this->labOrder->load('verifiedBy');
+        }
     }
 
     public function printResult()
     {
-        $this->dispatch('print-lab-result', labOrderId: $this->labOrder->id);
+        $this->printMode = true;
+        $this->dispatch('print-initiated');
+        
+        // Use JavaScript to trigger print
+        $this->dispatchBrowserEvent('print-lab-result', [
+            'labOrderId' => $this->labOrder->id
+        ]);
     }
 
     public function render()
