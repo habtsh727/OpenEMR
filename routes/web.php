@@ -3,6 +3,7 @@
 use App\Http\Livewire\Employees\Manage;
 
 use App\Livewire\Encounters\TriageIndex;
+use App\Livewire\OrderLab\LabDashboard;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -27,6 +28,10 @@ use App\Livewire\Doctor\ConsultationWorkflow;
 use App\Livewire\Doctor\DoctorQueue;
 use App\Livewire\Doctor\ExaminationForm;
 use App\Livewire\Employees\Manage as EmployeesManage;
+use App\Livewire\OrderLab\CashierLabPayment;
+use App\Livewire\OrderLab\DoctorLabOrderCreate;
+use App\Livewire\OrderLab\DoctorLabResults;
+use App\Models\Encounter;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -119,7 +124,25 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/config/chief-complaint-templates', ChiefComplaintTemplates::class)
         ->name('config.chief-complaint-templates');
     Route::get('/config/examinations', ExaminationTemplates::class)->name('examination-templates');
-Route::get('/config/assessment-templates', AssessmentTemplates::class)->name('config.assessment-templates');
+    Route::get('/config/assessment-templates', AssessmentTemplates::class)->name('config.assessment-templates');
 });
 
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Doctor Routes
+    Route::get('/encounters/{encounter}/lab-orders/create', DoctorLabOrderCreate::class)
+        ->middleware(['can:create lab order'])
+        ->name('lab-orders.create');
+    // Cashier Routes
+    Route::get('/lab-orders/payments', CashierLabPayment::class)
+        ->middleware(['can:pay lab order'])
+        ->name('lab-orders.payments');
+
+    // Laboratory Routes
+    Route::get('/lab-dashboard', LabDashboard::class)
+        ->middleware(['can:collect sample'])
+        ->name('lab.dashboard');
+    Route::get('/doctor/lab-results', action: DoctorLabResults::class)->name('doctor.lab-results');
+    Route::get('/doctor/patients/{patient}/lab-results', DoctorLabResults::class)->name('doctor.patient.lab-results');
+    // Modal routes (will be called via Livewire)
+});
 require __DIR__ . '/auth.php';

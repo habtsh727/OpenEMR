@@ -15,6 +15,7 @@ class RolePermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
+            
             'manage_medical_history_templates',
             'manage_chief_complaint_templates',
             // Users & Roles

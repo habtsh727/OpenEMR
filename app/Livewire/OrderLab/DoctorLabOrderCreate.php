@@ -6,6 +6,7 @@ use App\Models\Encounter;
 use App\Models\LabTest;
 use App\Models\Order;
 use App\Models\LabOrder;
+use App\Models\LabSample;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -31,7 +32,7 @@ class DoctorLabOrderCreate extends Component
     public function mount(Encounter $encounter)
     {
         Gate::authorize('create lab order');
-        
+
         $this->encounter = $encounter;
     }
 
@@ -67,43 +68,46 @@ class DoctorLabOrderCreate extends Component
             'encounter_id' => $this->encounter->id,
             'order_type' => 'lab',
             'status' => 'pending',
-            'notes' => $this->notes,
+            'notes' => $this->notes, // Save notes to Order model
             'ordered_at' => now(),
         ]);
 
         // Create lab orders for each selected test
         foreach ($this->selectedTestIds as $testId) {
             $labTest = LabTest::find($testId);
-            
-            LabOrder::create([
+
+            $labOrder = LabOrder::create([
                 'order_id' => $order->id,
                 'lab_test_id' => $testId,
                 'priority' => $this->priority,
+                'notes' => $this->notes, // Save notes to LabOrder model
                 'payment_status' => 'unpaid',
                 'status' => 'pending',
             ]);
 
             // Create initial sample record
             LabSample::create([
-                'lab_order_id' => $order->labOrders()->latest()->first()->id,
+                'lab_order_id' => $labOrder->id,
                 'sample_type' => $labTest->sample_type,
                 'status' => 'pending',
             ]);
         }
 
         session()->flash('message', 'Lab order created successfully.');
-        return redirect()->route('encounters.show', $this->encounter);
+
+        // Redirect appropriately
+        return redirect()->to('/dashboard');
     }
 
     public function render()
     {
         $labTests = LabTest::when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('code', 'like', '%' . $this->search . '%')
-                      ->orWhere('department', 'like', '%' . $this->search . '%');
-                });
-            })
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('code', 'like', '%' . $this->search . '%')
+                    ->orWhere('department', 'like', '%' . $this->search . '%');
+            });
+        })
             ->where('active', true)
             ->paginate(10);
 

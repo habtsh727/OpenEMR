@@ -20,6 +20,11 @@ class RolePermissionUserSeeder extends Seeder
 
         $permissions = [
             // Users & Roles
+            'create lab order',
+            'pay lab order',
+            'collect sample',
+            'report lab result',
+
             'view_user',
             'create_user',
             'update_user',
@@ -98,6 +103,11 @@ class RolePermissionUserSeeder extends Seeder
         $superAdminRole->givePermissionTo(Permission::all());
 
         $adminRole->givePermissionTo([
+            'create lab order',
+            'pay lab order',
+            'collect sample',
+            'report lab result',
+
             'view_reports',
             'export_reports',
             'manage_inventory',
@@ -114,12 +124,14 @@ class RolePermissionUserSeeder extends Seeder
         ]);
 
         $registrationRole->givePermissionTo([
+
             'create_patient',
             'view_patient',
             'update_patient',
         ]);
 
         $cashierRole->givePermissionTo([
+            'pay lab order',
             'create_invoice',
             'view_invoice',
             'receive_payment',
@@ -133,6 +145,7 @@ class RolePermissionUserSeeder extends Seeder
         ]);
 
         $doctorRole->givePermissionTo([
+            'create lab order',
             'view_patient',
             'create_diagnosis',
             'create_lab_order',
@@ -141,6 +154,8 @@ class RolePermissionUserSeeder extends Seeder
         ]);
 
         $laboratoryRole->givePermissionTo([
+            'collect sample', 
+            'report lab result',
             'view_lab_order',
             'enter_lab_result',
             'verify_lab_result',

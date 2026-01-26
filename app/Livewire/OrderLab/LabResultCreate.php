@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\OrderLab;
+
 use App\Models\LabOrder;
 use App\Models\LabResult;
 use Illuminate\Support\Facades\Gate;
@@ -26,14 +27,18 @@ class LabResultCreate extends Component
 
     public function mount(LabOrder $labOrder)
     {
-        Gate::authorize('report lab result');
+        $this->authorize('enter_lab_result');
         $this->labOrder = $labOrder;
         $this->loadExistingResults();
     }
 
     public function loadExistingResults()
     {
-        $this->results = $this->labOrder->labResults->toArray();
+        // Load the relationship if not already loaded
+        $this->labOrder->load('labResults');
+
+        // Use the collection, ensuring we always have one
+        $this->results = $this->labOrder->labResults ? $this->labOrder->labResults->toArray() : [];
     }
 
     public function addResult()
@@ -52,7 +57,7 @@ class LabResultCreate extends Component
         // Reset form
         $this->reset(['parameter', 'value', 'unit', 'referenceRange', 'flag']);
         $this->loadExistingResults();
-        
+
         session()->flash('message', 'Result added successfully.');
     }
 
@@ -70,10 +75,26 @@ class LabResultCreate extends Component
 
         $this->dispatch('resultAdded');
         $this->dispatch('close-modal');
-        
+
         session()->flash('message', 'Lab results reported successfully.');
     }
+    public function verifyResult()
+    {
+        // Check if columns exist
+        if (!Schema::hasColumn('lab_orders', 'verified_at')) {
+            session()->flash('error', 'Verification feature not available yet.');
+            return;
+        }
 
+        $this->labOrder->update([
+            'status' => 'verified',
+            'verified_at' => now(),
+            'verified_by' => auth()->id(),
+        ]);
+
+        $this->dispatch('resultVerified');
+        session()->flash('message', 'Lab results verified successfully.');
+    }
     public function render()
     {
         return view('livewire.order-lab.lab-result-create');

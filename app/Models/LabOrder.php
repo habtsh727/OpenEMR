@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LabOrder extends Model
 {
@@ -15,12 +16,21 @@ class LabOrder extends Model
         'payment_status',
         'paid_by',
         'paid_at',
-        'status'
+        'status',
+        'notes',
+        'verified_at',       // Add this
+        'verified_by',       // Add this
+        'verification_notes', // Add this
     ];
     protected $casts = [
         'paid_at' => 'datetime',
         'price' => 'decimal:2',
+        'verified_at' => 'datetime', // Add this
     ];
+    public function verifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
     public function order()
     {
         return $this->belongsTo(Order::class);
@@ -31,15 +41,19 @@ class LabOrder extends Model
         return $this->belongsTo(LabTest::class);
     }
 
-    public function samples()
+    public function labSamples(): HasMany
     {
         return $this->hasMany(LabSample::class);
     }
-
-    public function results()
+    public function labResults(): HasMany
     {
-        return $this->hasMany(LabResult::class);
+        return $this->hasMany(related: LabResult::class);
     }
+
+    // public function results()
+    // {
+    //     return $this->hasMany(LabResult::class);
+    // }
     // public function cashier()
     // {
     //     return $this->belongsTo(User::class, 'paid_by');

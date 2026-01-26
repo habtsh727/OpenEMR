@@ -21,7 +21,7 @@ class LabSampleCollect extends Component
 
     public function mount(LabOrder $labOrder)
     {
-        Gate::authorize('collect sample');
+        $this->authorize('enter_lab_result');
         $this->labOrder = $labOrder;
     }
 
@@ -32,6 +32,14 @@ class LabSampleCollect extends Component
         // Update sample
         $sample = $this->labOrder->labSamples()->first();
         
+        if (!$sample) {
+            $sample = LabSample::create([
+                'lab_order_id' => $this->labOrder->id,
+                'sample_type' => $this->labOrder->labTest->sample_type,
+                'status' => 'pending',
+            ]);
+        }
+
         $sampleData = [
             'status' => $this->status,
         ];
