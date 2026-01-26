@@ -17,7 +17,7 @@ class DoctorLabResults extends Component
     public $filterPatient = '';
     public $patient = null;
     public $selectedResult = null;
-
+    public $dateFilter = ''; // Add this property for date filtering
     public function mount(Patient $patient = null)
     {
         $this->authorize('view_lab_result');
@@ -44,7 +44,9 @@ class DoctorLabResults extends Component
         $labOrders = LabOrder::with([
             'order.encounter.patient',
             'labTest',
-            'labResults',
+            'labResults' => function ($query) {
+                $query->latest()->limit(5); // Get latest 5 results
+            },
             'labSamples'
         ])
             ->whereHas('order.encounter', function ($query) {
@@ -59,11 +61,15 @@ class DoctorLabResults extends Component
                         $q2->where('name', 'like', '%' . $this->search . '%')
                             ->orWhere('code', 'like', '%' . $this->search . '%');
                     })
-                    ->orWhereHas('order.encounter.patient', function ($q2) {
-                        $q2->where('first_name', 'like', '%' . $this->search . '%')
-                            ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                            ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
-                    });
+                        ->orWhereHas('order.encounter.patient', function ($q2) {
+                            $q2->where('first_name', 'like', '%' . $this->search . '%')
+                                ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                                ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+                        })
+                        ->orWhereHas('labResults', function ($q2) {
+                            $q2->where('result', 'like', '%' . $this->search . '%')
+                                ->orWhere('notes', 'like', '%' . $this->search . '%');
+                        });
                 });
             })
             ->when($this->filterStatus, function ($query) {
@@ -74,33 +80,48 @@ class DoctorLabResults extends Component
                     $q->where('id', $this->filterPatient);
                 });
             })
-            ->orderBy('created_at', 'desc')
+            ->when($this->dateFilter, function ($query) {
+                $startDate = now()->subDays($this->dateFilter)->startOfDay();
+                $query->where('created_at', '>=', $startDate);
+            })
+            ->withCount(['labResults'])
+            ->orderBy('updated_at', 'desc') // Changed to updated_at for latest activity
+            ->orderBy('created_at', 'desc') // Then by creation date
             ->paginate(12);
 
         $patients = Patient::when($this->search, function ($query) {
-                $query->where('first_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
-            })
+            $query->where('first_name', 'like', '%' . $this->search . '%')
+                ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+        })
             ->orderBy('first_name')
             ->limit(50)
             ->get();
 
-        // Calculate stats
+        // Calculate stats with the same filters
         $totalResults = $labOrders->total();
         $reportedCount = LabOrder::whereHas('order.encounter', function ($query) {
-                if (auth()->user()->hasRole('doctor')) {
-                    $query->where('doctor_id', auth()->id());
-                }
-            })
+            if (auth()->user()->hasRole('doctor')) {
+                $query->where('doctor_id', auth()->id());
+            }
+        })
             ->where('status', 'reported')
-            ->count();
-        $verifiedCount = LabOrder::whereHas('order.encounter', function ($query) {
-                if (auth()->user()->hasRole('doctor')) {
-                    $query->where('doctor_id', auth()->id());
-                }
+            ->when($this->dateFilter, function ($query) {
+                $startDate = now()->subDays($this->dateFilter)->startOfDay();
+                $query->where('created_at', '>=', $startDate);
             })
+            ->count();
+
+        $verifiedCount = LabOrder::whereHas('order.encounter', function ($query) {
+            if (auth()->user()->hasRole('doctor')) {
+                $query->where('doctor_id', auth()->id());
+            }
+        })
             ->where('status', 'verified')
+            ->when($this->dateFilter, function ($query) {
+                $startDate = now()->subDays($this->dateFilter)->startOfDay();
+                $query->where('created_at', '>=', $startDate);
+            })
             ->count();
 
         return view('livewire.order-lab.doctor-lab-results', [

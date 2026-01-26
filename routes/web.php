@@ -31,6 +31,7 @@ use App\Livewire\Employees\Manage as EmployeesManage;
 use App\Livewire\OrderLab\CashierLabPayment;
 use App\Livewire\OrderLab\DoctorLabOrderCreate;
 use App\Livewire\OrderLab\DoctorLabResults;
+use App\Livewire\OrderLab\LabTestManager;
 use App\Models\Encounter;
 
 Route::get('/', function () {
@@ -144,5 +145,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/doctor/lab-results', action: DoctorLabResults::class)->name('doctor.lab-results');
     Route::get('/doctor/patients/{patient}/lab-results', DoctorLabResults::class)->name('doctor.patient.lab-results');
     // Modal routes (will be called via Livewire)
+    Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
 });
 require __DIR__ . '/auth.php';

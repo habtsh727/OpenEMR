@@ -15,7 +15,11 @@ class RolePermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
-            
+            'view_lab_tests',
+            'create_lab_test',
+            'edit_lab_test',
+            'delete_lab_test',
+
             'manage_medical_history_templates',
             'manage_chief_complaint_templates',
             // Users & Roles
@@ -159,6 +163,10 @@ class RolePermissionSeeder extends Seeder
                 'enter_lab_result',
                 'view_lab_result',
                 'verify_lab_result',
+                'view_lab_tests',
+                'create_lab_test',
+                'edit_lab_test',
+                'delete_lab_test',
             ]);
 
         Role::firstOrCreate(['name' => 'pharmacy'])
