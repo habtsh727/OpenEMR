@@ -66,6 +66,6 @@ class Encounter extends Model
             Order::class,
             'encounter_id',
             'order_id'
-        )->where('order_type', 'lab');
+        )->where('orders.order_type', 'lab'); // Specify table
     }
 }
