@@ -17,7 +17,8 @@ $maxWidth = [
 @endphp
 
 <div x-data="{ show: false }"
-     x-on:open-modal.window="$event.detail === '{{ $name }}' ? show = true : null"
+     {{-- x-on:open-modal.window="$event.detail === '{{ $name }}' ? show = true : null" --}}
+     x-on:open-modal.window="if ($event.detail === '{{ $name }}') show = true"
      x-on:close-modal.window="show = false; $wire.dispatch('closeModal')"
      x-on:keydown.escape.window="show = false; $wire.dispatch('closeModal')"
      x-on:click.self="show = false; $wire.dispatch('closeModal')"

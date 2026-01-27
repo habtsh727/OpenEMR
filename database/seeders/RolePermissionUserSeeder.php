@@ -60,20 +60,24 @@ class RolePermissionUserSeeder extends Seeder
             'create_lab_order',
             'create_prescription',
             'view_lab_result',
+            'create_imaging_order',  // Added for radiology
+            'view_imaging_result',   // Added for radiology
 
             // Laboratory
             'view_lab_order',
             'enter_lab_result',
             'verify_lab_result',
 
+            // Radiology - Added new permissions
+            'view_imaging_order',
+            'upload_imaging_result',
+            'verify_imaging_result',
+            'manage_imaging_equipment',
+
             // Pharmacy
             'view_prescription',
             'dispense_drug',
             'manage_drugs',
-
-            // Radiology
-            'view_imaging_order',
-            'upload_imaging_result',
 
             // Store
             'manage_inventory',
@@ -98,6 +102,7 @@ class RolePermissionUserSeeder extends Seeder
         $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
         $laboratoryRole = Role::firstOrCreate(['name' => 'laboratory']);
         $pharmacyRole = Role::firstOrCreate(['name' => 'pharmacy']);
+        $radiologyRole = Role::firstOrCreate(['name' => 'radiology']);  // Added Radiology role
 
         // Give permissions to roles
         $superAdminRole->givePermissionTo(Permission::all());
@@ -124,7 +129,6 @@ class RolePermissionUserSeeder extends Seeder
         ]);
 
         $registrationRole->givePermissionTo([
-
             'create_patient',
             'view_patient',
             'update_patient',
@@ -151,6 +155,8 @@ class RolePermissionUserSeeder extends Seeder
             'create_lab_order',
             'create_prescription',
             'view_lab_result',
+            'create_imaging_order',  // Doctors can create imaging orders
+            'view_imaging_result',   // Doctors can view imaging results
         ]);
 
         $laboratoryRole->givePermissionTo([
@@ -165,6 +171,15 @@ class RolePermissionUserSeeder extends Seeder
             'view_prescription',
             'dispense_drug',
             'manage_drugs',
+        ]);
+
+        // Radiology role permissions
+        $radiologyRole->givePermissionTo([
+            'view_imaging_order',
+            'upload_imaging_result',
+            'verify_imaging_result',
+            'manage_imaging_equipment',
+            'view_patient',  // Radiology staff may need to view patient info
         ]);
 
         // Create Super Admin user
@@ -186,6 +201,7 @@ class RolePermissionUserSeeder extends Seeder
             ['name' => 'Doctor User', 'email' => 'doctor@example.com', 'role' => 'doctor'],
             ['name' => 'Lab User', 'email' => 'lab@example.com', 'role' => 'laboratory'],
             ['name' => 'Pharmacy User', 'email' => 'pharmacy@example.com', 'role' => 'pharmacy'],
+            ['name' => 'Radiology User', 'email' => 'radiology@example.com', 'role' => 'radiology'],  // Added Radiology user
         ];
 
         foreach ($users as $u) {
@@ -205,7 +221,7 @@ class RolePermissionUserSeeder extends Seeder
                 ['user_id' => $user->id],
                 [
                     'role' => $u['role'],
-                    'employee_code' => strtoupper($u['role']) . '-001',
+                    'employee_code' => strtoupper(substr($u['role'], 0, 3)) . '-001',  // Modified to handle longer role names
                     'status' => 'active',
                 ]
             );

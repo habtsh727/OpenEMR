@@ -19,7 +19,18 @@ class DoctorLabResults extends Component
     public $patient = null;
     public $selectedEncounter = null;
     public $dateFilter = '';
-    
+    public $selectedEncounterForMedication = null;
+    public function viewEncounterResults($encounterId)
+    {
+        $this->selectedEncounter = $encounterId;
+        $this->dispatch('open-modal', 'view-encounter-results');
+    }
+
+    public function orderMedication($encounterId)
+    {
+        $this->selectedEncounterForMedication = $encounterId; // Use different property
+        $this->dispatch('open-modal', 'order-medication');
+    }
     public function mount(Patient $patient = null)
     {
         $this->authorize('view_lab_result');
@@ -30,17 +41,22 @@ class DoctorLabResults extends Component
         }
     }
 
-    public function viewEncounterResults($encounterId)
-    {
-        $this->selectedEncounter = $encounterId;
-        $this->dispatch('open-modal', 'view-encounter-results');
-    }
+    // public function viewEncounterResults($encounterId)
+    // {
+    //     $this->selectedEncounter = $encounterId;
+    //     $this->dispatch('open-modal', 'view-encounter-results');
+    // }
 
     public function clearFilters()
     {
         $this->reset(['search', 'filterStatus', 'filterPatient']);
     }
 
+// public function orderMedication($encounterId)
+// {
+//     $this->selectedEncounter = $encounterId;
+//     $this->dispatch('open-modal', 'order-medication'); // Changed to 'order-medication'
+// }
     public function render()
     {
         // Get encounters with lab results
@@ -56,7 +72,7 @@ class DoctorLabResults extends Component
         ])
             ->whereHas('labOrders', function ($query) {
                 $query->whereIn('lab_orders.status', ['reported', 'verified']); // Specify table
-                
+
                 if (auth()->user()->hasRole('doctor')) {
                     $query->whereHas('order.encounter', function ($q) {
                         $q->where('encounters.doctor_id', auth()->id()); // Specify table
@@ -70,11 +86,11 @@ class DoctorLabResults extends Component
                             ->orWhere('last_name', 'like', '%' . $this->search . '%')
                             ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
                     })
-                    ->orWhereHas('labOrders.labTest', function ($q2) {
-                        $q2->where('name', 'like', '%' . $this->search . '%')
-                            ->orWhere('code', 'like', '%' . $this->search . '%');
-                    })
-                    ->orWhere('encounters.id', 'like', '%' . $this->search . '%'); // Specify table
+                        ->orWhereHas('labOrders.labTest', function ($q2) {
+                            $q2->where('name', 'like', '%' . $this->search . '%')
+                                ->orWhere('code', 'like', '%' . $this->search . '%');
+                        })
+                        ->orWhere('encounters.id', 'like', '%' . $this->search . '%'); // Specify table
                 });
             })
             ->when($this->filterPatient, function ($query) {
@@ -94,7 +110,7 @@ class DoctorLabResults extends Component
 
         // Calculate stats - need to update this to be encounter-based
         $totalEncounters = $encounters->total();
-        
+
         // For total lab orders count with doctor filter
         $totalLabOrdersQuery = LabOrder::whereIn('status', ['reported', 'verified'])
             ->when(auth()->user()->hasRole('doctor'), function ($query) {
@@ -114,6 +130,7 @@ class DoctorLabResults extends Component
             });
         }
 
+
         if ($this->search) {
             $totalLabOrdersQuery->where(function ($q) {
                 $q->whereHas('order.encounter.patient', function ($q2) {
@@ -121,10 +138,10 @@ class DoctorLabResults extends Component
                         ->orWhere('last_name', 'like', '%' . $this->search . '%')
                         ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
                 })
-                ->orWhereHas('labTest', function ($q2) {
-                    $q2->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('code', 'like', '%' . $this->search . '%');
-                });
+                    ->orWhereHas('labTest', function ($q2) {
+                        $q2->where('name', 'like', '%' . $this->search . '%')
+                            ->orWhere('code', 'like', '%' . $this->search . '%');
+                    });
             });
         }
 
@@ -132,10 +149,10 @@ class DoctorLabResults extends Component
 
         // For patient filter dropdown
         $patients = Patient::when($this->search, function ($query) {
-                $query->where('first_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
-            })
+            $query->where('first_name', 'like', '%' . $this->search . '%')
+                ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+        })
             ->orderBy('first_name')
             ->limit(50)
             ->get();

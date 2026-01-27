@@ -68,4 +68,13 @@ class Encounter extends Model
             'order_id'
         )->where('orders.order_type', 'lab'); // Specify table
     }
+    public function medicationOrder()
+    {
+        return $this->hasOne(MedicationOrder::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class);
+    }
 }

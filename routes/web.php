@@ -17,6 +17,7 @@ use App\Livewire\NurseTriage\NurseTriage;
 use App\Livewire\PatientHistory\PatientHistory;
 
 use App\Livewire\Admin\Users;
+use App\Livewire\Cashier\MedicationOrders;
 use App\Livewire\Config\AssessmentTemplates;
 use App\Livewire\Config\ChiefComplaintTemplates;
 use App\Livewire\Config\ExaminationTemplates;
@@ -32,6 +33,7 @@ use App\Livewire\OrderLab\CashierLabPayment;
 use App\Livewire\OrderLab\DoctorLabOrderCreate;
 use App\Livewire\OrderLab\DoctorLabResults;
 use App\Livewire\OrderLab\LabTestManager;
+use App\Livewire\OrderLab\OrderMedicationPage;
 use App\Models\Encounter;
 
 Route::get('/', function () {
@@ -146,5 +148,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/doctor/patients/{patient}/lab-results', DoctorLabResults::class)->name('doctor.patient.lab-results');
     // Modal routes (will be called via Livewire)
     Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
+    Route::get('/doctor/encounter/{encounter}/order-medication', OrderMedicationPage::class)
+        ->name('doctor.order-medication');
+});
+Route::middleware(['auth'])->group(function () {
+    
+    
+    Route::get('/cashier/medication-orders', MedicationOrders::class)
+        ->name('cashier.medication-orders');
 });
 require __DIR__ . '/auth.php';

@@ -93,6 +93,10 @@ class ViewEncounterResults extends Component
             'message' => 'All tests verified successfully!'
         ]);
     }
+    public function orderMedication()
+    {
+        $this->dispatch('open-modal', 'order-medication');
+    }
 
 
     public function render()

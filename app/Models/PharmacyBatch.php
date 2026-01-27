@@ -25,4 +25,22 @@ class PharmacyBatch extends Model
     {
         return $this->belongsTo(PharmacyItem::class, 'medicine_id');
     }
+    public function reserveStock($quantity)
+    {
+        if ($this->quantity - $this->reserved_quantity >= $quantity) {
+            $this->increment('reserved_quantity', $quantity);
+            return true;
+        }
+        return false;
+    }
+
+    public function releaseReservedStock($quantity)
+    {
+        $this->decrement('reserved_quantity', $quantity);
+    }
+
+    public function getAvailableQuantityAttribute()
+    {
+        return $this->quantity - $this->reserved_quantity;
+    }
 }

@@ -71,4 +71,13 @@ class LabOrder extends Model
     {
         return $this->payment_status === 'paid';
     }
+    public function medicationOrder()
+    {
+        return $this->hasOne(MedicationOrder::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class);
+    }
 }
