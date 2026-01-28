@@ -44,14 +44,14 @@ class ViewImagingResults extends Component
 
         // Apply date filter
         if ($this->dateRange !== 'all') {
-            $days = match($this->dateRange) {
+            $days = match ($this->dateRange) {
                 'today' => 1,
                 'week' => 7,
                 'month' => 30,
                 'year' => 365,
                 default => 0,
             };
-            
+
             if ($days > 0) {
                 $query->whereHas('imagingResult', function ($q) use ($days) {
                     $q->where('reported_at', '>=', now()->subDays($days));
@@ -94,10 +94,12 @@ class ViewImagingResults extends Component
     {
         return [
             'total' => $this->orders->count(),
-            'today' => $this->orders->filter(fn($order) => 
+            'today' => $this->orders->filter(
+                fn($order) =>
                 $order->imagingResult && $order->imagingResult->reported_at->isToday()
             )->count(),
-            'last_week' => $this->orders->filter(fn($order) => 
+            'last_week' => $this->orders->filter(
+                fn($order) =>
                 $order->imagingResult && $order->imagingResult->reported_at->gte(now()->subWeek())
             )->count(),
         ];
@@ -106,8 +108,9 @@ class ViewImagingResults extends Component
     public function downloadReport($resultId)
     {
         // This would trigger a download in a real application
-        $this->dispatch('notify', 
-            type: 'info', 
+        $this->dispatch(
+            'notify',
+            type: 'info',
             message: 'Report download will be available soon.'
         );
     }
@@ -116,7 +119,10 @@ class ViewImagingResults extends Component
     {
         $this->dispatch('print-report', resultId: $resultId);
     }
-
+    public function BackToImaging()
+    {
+        return $this->redirect(route('doctor.imaging.order', $this->encounter), navigate: true);
+    }
     public function render()
     {
         return view('livewire.doctor.view-imaging-results', [

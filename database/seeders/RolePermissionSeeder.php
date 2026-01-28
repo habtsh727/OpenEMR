@@ -175,5 +175,10 @@ class RolePermissionSeeder extends Seeder
                 'dispense_drug',
                 'manage_drugs',
             ]);
+        Role::firstOrCreate(['name' => 'radiology'])
+            ->givePermissionTo([
+                'view_imaging_order',
+                'upload_imaging_result',
+            ]);
     }
 }

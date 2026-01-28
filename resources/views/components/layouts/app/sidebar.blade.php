@@ -258,14 +258,17 @@
             <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>
                 Lab Results
             </flux:sidebar.item>
-        @endcanany
+            @endcanany
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Orders" class="grid">
                 <flux:sidebar.item icon="tag" :href="route('lab.dashboard')" wire:navigate>Lab</flux:sidebar.item>
-                <flux:sidebar.item icon="tag" wire:navigate>Radiology</flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
+            @canany([ 'view_imaging_order','upload_imaging_result',])
+            <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
+            </flux:sidebar.item>
+            @endcan
             @can('view_lab_tests')
             <li>
                 <a href="{{ route('lab-tests.index') }}"

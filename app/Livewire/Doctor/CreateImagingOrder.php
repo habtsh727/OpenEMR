@@ -99,6 +99,14 @@ class CreateImagingOrder extends Component
     {
         $this->dispatch('open-result-modal', orderId: $orderId);
     }
+     public function skipImaging()
+    {
+        return $this->redirect(route('doctor.order-medication', $this->encounter), navigate: true);
+    }
+     public function backToLabOrder()
+    {
+        return $this->redirect(route('lab-orders.create', $this->encounter), navigate: true);
+    }
 
     public function render()
     {

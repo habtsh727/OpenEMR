@@ -41,7 +41,7 @@
             </div>
 
             {{-- Workflow Indicator --}}
-            <div class="mb-6">
+            {{-- <div class="mb-6">
                 <div class="flex items-center justify-center">
                     <div class="flex items-center">
                         <div class="flex flex-col items-center">
@@ -91,6 +91,25 @@
                         </div>
                     </div>
                 </div>
+            </div> --}}
+
+            <div class="flex flex-wrap justify-between">
+                <button type="button"  wire:click="backToLabOrder"
+                    class="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 flex items-center space-x-2 hover:shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
+                        </path>
+                    </svg>
+                    <span>Back To Lab Order</span>
+                </button>
+
+                <button type="button" wire:click="skipImaging"
+                    class="px-6 py-3 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl text-sm font-medium text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all duration-200 flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                    <span>Skip Imaging Order</span>
+                </button>
             </div>
         </div>
 
