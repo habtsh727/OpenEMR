@@ -14,7 +14,7 @@
                                 Imaging Results
                             </h1>
                             <p class="text-gray-600 dark:text-gray-400">
-                                {{ $patient->full_name ?? 'Patient' }} • Encounter #{{ $encounter->id }}
+                                {{ $patient->first_name ?? 'Patient' }} • Encounter #{{ $encounter->id }}
                             </p>
                         </div>
                     </div>
@@ -168,7 +168,7 @@
                                             {{ $order->imagingType->name }}
                                         </span>
                                         <span class="text-gray-900 dark:text-white font-medium">
-                                            ${{ number_format($order->amount, 2) }}
+                                            {{ number_format($order->amount, 2) }}Birr
                                         </span>
                                     </div>
                                     <div class="text-sm text-gray-600 dark:text-gray-400">

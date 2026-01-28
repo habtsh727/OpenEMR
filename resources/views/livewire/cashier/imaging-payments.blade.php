@@ -28,7 +28,7 @@
                         <div class="text-sm font-medium text-blue-500 dark:text-blue-300">Pending Orders</div>
                     </div>
                     <div class="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl px-4 py-3">
-                        <div class="text-2xl font-bold text-green-600 dark:text-green-400">${{ number_format($summaryStats['total_amount'], 2) }}</div>
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400">ETB{{ number_format($summaryStats['total_amount'], 2) }}</div>
                         <div class="text-sm font-medium text-green-500 dark:text-green-300">Total Amount</div>
                     </div>
                     <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl px-4 py-3">
@@ -97,7 +97,7 @@
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Pending Imaging Payments</h2>
                     </div>
                     <span class="text-sm text-gray-500 dark:text-gray-400">
-                        {{ $pendingOrders->count() }} order(s) • ${{ number_format($summaryStats['total_amount'], 2) }} total
+                        {{ $pendingOrders->count() }} order(s) • ETB{{ number_format($summaryStats['total_amount'], 2) }} total
                     </span>
                 </div>
             </div>
@@ -147,7 +147,7 @@
                                     <td class="px-6 py-4">
                                         <div class="space-y-1">
                                             <div class="font-medium text-gray-900 dark:text-white">
-                                                {{ $order->encounter->patient->full_name ?? 'N/A' }}
+                                                {{ $order->encounter->patient->first_name ?? 'N/A' }}
                                             </div>
                                             <div class="text-sm text-gray-500 dark:text-gray-400">
                                                 @if($order->encounter->patient->date_of_birth ?? false)
@@ -161,7 +161,7 @@
                                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                                 </svg>
-                                                {{ $order->encounter->patient->phone ?? 'N/A' }}
+                                                {{ $order->encounter->patient->phone_number1 ?? 'N/A' }}
                                             </div>
                                         </div>
                                     </td>
@@ -189,7 +189,7 @@
                                     <td class="px-6 py-4">
                                         <div class="space-y-2">
                                             <div class="text-2xl font-bold text-green-600 dark:text-green-400">
-                                                ${{ number_format($order->amount, 2) }}
+                                                {{ number_format($order->amount, 2) }}Birr
                                             </div>
                                             <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -264,7 +264,7 @@
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Average Amount</p>
                             <p class="text-xl font-semibold text-gray-900 dark:text-white">
-                                ${{ number_format($pendingOrders->avg('amount') ?? 0, 2) }}
+                                {{ number_format($pendingOrders->avg('amount') ?? 0, 2) }}Birr
                             </p>
                         </div>
                         <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -279,7 +279,7 @@
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Urgent Priority Amount</p>
                             <p class="text-xl font-semibold text-orange-600 dark:text-orange-400">
-                                ${{ number_format($summaryStats['urgent_amount'], 2) }}
+                                {{ number_format($summaryStats['urgent_amount'], 2) }}Birr
                             </p>
                         </div>
                         <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">

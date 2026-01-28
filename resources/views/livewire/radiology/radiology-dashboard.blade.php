@@ -92,7 +92,7 @@
                                                 <div class="space-y-2">
                                                     <div>
                                                         <div class="font-medium text-gray-900 dark:text-white">
-                                                            {{ $order->encounter->patient->full_name ?? 'N/A' }}
+                                                            {{ $order->encounter->patient->first_name ?? 'N/A' }}
                                                         </div>
                                                         <div class="text-sm text-gray-600 dark:text-gray-400">
                                                             {{ $order->imagingType->name }}
@@ -157,7 +157,7 @@
                                     <div>
                                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Upload Results</h2>
                                         <p class="text-sm text-gray-600 dark:text-gray-400">
-                                            Order #{{ $selectedOrder->id }} • {{ $selectedOrder->encounter->patient->full_name ?? 'Patient' }}
+                                            Order #{{ $selectedOrder->id }} • {{ $selectedOrder->encounter->patient->first_name ?? 'Patient' }}
                                         </p>
                                     </div>
                                 </div>

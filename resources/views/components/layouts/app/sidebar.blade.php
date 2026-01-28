@@ -268,6 +268,10 @@
             @canany([ 'view_imaging_order','upload_imaging_result',])
             <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
             </flux:sidebar.item>
+             <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
+            </flux:sidebar.item>
+             <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
+            </flux:sidebar.item>
             @endcan
             @can('view_lab_tests')
             <li>

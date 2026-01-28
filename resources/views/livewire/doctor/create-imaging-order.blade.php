@@ -11,7 +11,7 @@
                         </svg>
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {{ $patient->full_name ?? 'Patient' }}
+                                {{ $patient->first_name ?? 'Patient' }}
                             </h1>
                             <p class="text-gray-600 dark:text-gray-400">
                                 Encounter #{{ $encounter->id }} • {{ $encounter->created_at->format('M d, Y') }}
@@ -265,28 +265,6 @@
                                         </label>
                                     </div>
                                 </div>
-
-                                {{-- Fee Display --}}
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Estimated Fee
-                                    </label>
-                                    <div class="relative">
-                                        <div
-                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <span class="text-gray-500 dark:text-gray-400">$</span>
-                                        </div>
-                                        <div
-                                            class="pl-8 w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 dark:text-white">
-                                            <div class="text-lg font-semibold text-gray-900 dark:text-white">
-                                                {{ number_format($fee, 2) }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        Patient will pay at cashier
-                                    </p>
-                                </div>
                             </div>
 
                             {{-- Clinical Notes --}}
@@ -428,7 +406,7 @@
                                                 {{ $order->bodyPart->name }}
                                             </div>
                                             <div class="text-gray-600 dark:text-gray-400">
-                                                ${{ number_format($order->amount, 2) }}
+                                                {{ number_format($order->amount, 2) }}Birr
                                             </div>
                                         </div>
                                     </td>
