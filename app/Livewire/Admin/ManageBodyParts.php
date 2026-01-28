@@ -3,21 +3,29 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\BodyPart;
 
 class ManageBodyParts extends Component
 {
-    public $bodyParts = [];
+    use WithPagination;
+    
     public $name = '';
     public $code = '';
     public $description = '';
     public $is_active = true;
     public $editingId = null;
+    public $search = '';
+    public $activeFilter = null;
+    public $sortField = 'name';
+    public $sortDirection = 'asc';
+    public $perPage = 10;
+    public $showForm = false;
 
     protected $rules = [
-        'name' => 'required|string|max:255|unique:body_parts,name',
-        'code' => 'nullable|string|max:50|unique:body_parts,code',
-        'description' => 'nullable|string',
+        'name' => 'required|string|max:255',
+        'code' => 'nullable|string|max:50',
+        'description' => 'nullable|string|max:500',
         'is_active' => 'boolean'
     ];
 
@@ -29,24 +37,21 @@ class ManageBodyParts extends Component
 
     public function mount()
     {
-        $this->loadBodyParts();
-    }
-
-    public function loadBodyParts()
-    {
-        $this->bodyParts = BodyPart::orderBy('name')->get();
+        $this->resetPage();
     }
 
     public function updated($propertyName)
     {
-        // Clear unique validation when editing
-        if ($this->editingId) {
-            if ($propertyName === 'name') {
-                $this->rules['name'] = 'required|string|max:255|unique:body_parts,name,' . $this->editingId;
-            }
-            if ($propertyName === 'code') {
-                $this->rules['code'] = 'nullable|string|max:50|unique:body_parts,code,' . $this->editingId;
-            }
+        $this->validateOnly($propertyName);
+        
+        if ($this->editingId && in_array($propertyName, ['name', 'code'])) {
+            $this->rules['name'] = 'required|string|max:255|unique:body_parts,name,' . $this->editingId;
+            $this->rules['code'] = 'nullable|string|max:50|unique:body_parts,code,' . $this->editingId;
+        }
+        
+        // Auto-generate code from name when editing and code is empty
+        if ($propertyName === 'name' && !$this->editingId && empty($this->code)) {
+            $this->code = strtoupper(preg_replace('/[^A-Z0-9]/', '_', $this->name));
         }
     }
 
@@ -54,83 +59,130 @@ class ManageBodyParts extends Component
     {
         $this->validate();
 
-        $data = [
-            'name' => $this->name,
-            'code' => $this->code ?: null,
-            'description' => $this->description,
-            'is_active' => $this->is_active,
-        ];
+        $data = $this->getData();
 
         if ($this->editingId) {
             $bodyPart = BodyPart::find($this->editingId);
             $bodyPart->update($data);
-            session()->flash('message', 'Body part updated successfully!');
+            session()->flash('success', 'Body part updated successfully!');
         } else {
             BodyPart::create($data);
-            session()->flash('message', 'Body part created successfully!');
+            session()->flash('success', 'Body part created successfully!');
         }
 
         $this->resetForm();
-        $this->loadBodyParts();
+        $this->resetPage();
     }
 
     public function edit($id)
     {
-        $bodyPart = BodyPart::find($id);
+        $bodyPart = BodyPart::findOrFail($id);
         $this->editingId = $bodyPart->id;
         $this->name = $bodyPart->name;
         $this->code = $bodyPart->code ?? '';
         $this->description = $bodyPart->description ?? '';
         $this->is_active = $bodyPart->is_active;
-
-        // Update validation rules for editing
+        $this->showForm = true;
+        
+        // Update validation rules
         $this->rules['name'] = 'required|string|max:255|unique:body_parts,name,' . $id;
         $this->rules['code'] = 'nullable|string|max:50|unique:body_parts,code,' . $id;
     }
 
     public function delete($id)
     {
-        $bodyPart = BodyPart::find($id);
+        $bodyPart = BodyPart::findOrFail($id);
         
-        // Check if body part is used in any orders
+        // Check if body part is used
         if ($bodyPart->imagingOrders()->exists()) {
-            session()->flash('error', 'Cannot delete body part. It is being used in imaging orders.');
+            session()->flash('error', 'Cannot delete body part. It is being used in ' . $bodyPart->imagingOrders()->count() . ' imaging order(s).');
             return;
         }
 
         $bodyPart->delete();
-        session()->flash('message', 'Body part deleted successfully!');
-        $this->loadBodyParts();
+        session()->flash('success', 'Body part deleted successfully!');
+        $this->resetPage();
+    }
+
+    public function confirmDelete($id)
+    {
+        $bodyPart = BodyPart::findOrFail($id);
+        
+        $this->dispatch('swal:confirm', [
+            'title' => 'Delete Body Part',
+            'text' => "Are you sure you want to delete '{$bodyPart->name}'?",
+            'icon' => 'warning',
+            'confirmText' => 'Yes, delete it!',
+            'cancelText' => 'Cancel',
+            'method' => 'delete',
+            'params' => [$id]
+        ]);
     }
 
     public function toggleStatus($id)
     {
-        $bodyPart = BodyPart::find($id);
+        $bodyPart = BodyPart::findOrFail($id);
         $bodyPart->update(['is_active' => !$bodyPart->is_active]);
-        $this->loadBodyParts();
-        session()->flash('message', 'Status updated successfully!');
+        
+        $status = $bodyPart->is_active ? 'activated' : 'deactivated';
+        session()->flash('success', "Body part {$status} successfully!");
+        $this->resetPage();
+    }
+
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+    }
+
+    public function getBodyPartsProperty()
+    {
+        return BodyPart::query()
+            ->when($this->search, function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')
+                      ->orWhere('code', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%');
+            })
+            ->when($this->activeFilter !== null, function ($query) {
+                $query->where('is_active', $this->activeFilter);
+            })
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate($this->perPage);
+    }
+
+    private function getData()
+    {
+        return [
+            'name' => trim($this->name),
+            'code' => $this->code ? trim($this->code) : null,
+            'description' => trim($this->description),
+            'is_active' => $this->is_active,
+        ];
     }
 
     private function resetForm()
     {
-        $this->reset(['name', 'code', 'description', 'is_active', 'editingId']);
+        $this->reset(['name', 'code', 'description', 'is_active', 'editingId', 'showForm']);
         $this->resetValidation();
         // Reset rules to default
         $this->rules = [
-            'name' => 'required|string|max:255|unique:body_parts,name',
-            'code' => 'nullable|string|max:50|unique:body_parts,code',
-            'description' => 'nullable|string',
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:50',
+            'description' => 'nullable|string|max:500',
             'is_active' => 'boolean'
         ];
     }
 
-    public function cancelEdit()
-    {
-        $this->resetForm();
-    }
-
     public function render()
     {
-        return view('livewire.admin.manage-body-parts');
+        $bodyParts = $this->bodyParts;
+        $totalCount = BodyPart::count();
+        $activeCount = BodyPart::where('is_active', true)->count();
+        
+        return view('livewire.admin.manage-body-parts', compact('bodyParts', 'totalCount', 'activeCount'));
     }
 }
