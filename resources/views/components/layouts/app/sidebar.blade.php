@@ -224,12 +224,15 @@
 
             {{-- ========================= PAYMENTS ========================= --}}
             @canany(['create_invoice','view_invoice','receive_payment','refund_payment'])
-            <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Payments
+            <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Register Payments
             </flux:sidebar.item>
             @endcanany
             @canany(['super-admin', 'receive_payment'])
             <flux:sidebar.item icon="beaker" :href="route('lab-orders.payments')" wire:navigate>
                 Lab Orders Payment
+            </flux:sidebar.item>
+            <flux:sidebar.item icon="beaker" :href="route('cashier.imaging')" wire:navigate>
+                Imaging Orders Payment
             </flux:sidebar.item>
             @endcanany
             {{-- ========================= CLINICAL ========================= --}}
@@ -260,7 +263,6 @@
             @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Orders" class="grid">
                 <flux:sidebar.item icon="tag" :href="route('lab.dashboard')" wire:navigate>Lab</flux:sidebar.item>
-                <flux:sidebar.item icon="tag" wire:navigate>Imaging</flux:sidebar.item>
                 <flux:sidebar.item icon="tag" wire:navigate>Radiology</flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
