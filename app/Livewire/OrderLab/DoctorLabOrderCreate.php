@@ -57,7 +57,10 @@ class DoctorLabOrderCreate extends Component
     {
         return $this->redirect(route('consultation.assessment', $this->encounter), navigate: true);
     }
-
+ public function imagingOrder()
+    {
+        return $this->redirect(route('doctor.imaging.order', $this->encounter), navigate: true);
+    }
     public function getSelectedTestsProperty()
     {
         if (empty($this->selectedTestIds)) {

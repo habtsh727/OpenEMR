@@ -258,7 +258,7 @@
             <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>
                 Lab Results
             </flux:sidebar.item>
-            @endcanany
+        @endcanany
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Orders" class="grid">
