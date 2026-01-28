@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Livewire\Employees\Manage;
-
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +34,14 @@ use App\Livewire\OrderLab\DoctorLabResults;
 use App\Livewire\OrderLab\LabTestManager;
 use App\Livewire\OrderLab\OrderMedicationPage;
 use App\Models\Encounter;
+
+
+use App\Livewire\Doctor\CreateImagingOrder;  // Updated namespace
+use App\Livewire\Doctor\ViewImagingResults;
+use App\Livewire\Cashier\ImagingPayments;
+use App\Livewire\Radiology\RadiologyDashboard;
+use App\Livewire\Admin\ManageImagingTypes;
+use App\Livewire\Admin\ManageBodyParts;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -152,9 +159,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('doctor.order-medication');
 });
 Route::middleware(['auth'])->group(function () {
-    
-    
+
+
     Route::get('/cashier/medication-orders', MedicationOrders::class)
         ->name('cashier.medication-orders');
 });
+
+Route::middleware(['auth'])->group(function () {
+    // Doctor
+    Route::get('/doctor/encounter/{encounter}/imaging/order', CreateImagingOrder::class)
+        ->name('doctor.imaging.order');
+    
+    Route::get('/doctor/encounter/{encounter}/imaging/results', ViewImagingResults::class)
+        ->name('doctor.imaging.results');
+    
+    // Cashier
+    Route::get('/cashier/imaging-payments', ImagingPayments::class)
+        ->name('cashier.imaging');
+    
+    // Radiology
+    Route::get('/radiology/dashboard', RadiologyDashboard::class)
+        ->name('radiology.dashboard');
+    
+    // Admin
+    Route::get('/admin/imaging-types', ManageImagingTypes::class)
+        ->name('admin.imaging-types');
+    
+    Route::get('/admin/body-parts', ManageBodyParts::class)
+        ->name('admin.body-parts');
+});
+
 require __DIR__ . '/auth.php';
