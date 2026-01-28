@@ -10,7 +10,7 @@ use App\Models\BodyPart;
 
 class CreateImagingOrder extends Component
 {
-    public $encounter;
+    public Encounter $encounter;
     public $imagingTypes = [];
     public $bodyParts = [];
     public $selectedImagingType = null;
@@ -19,6 +19,7 @@ class CreateImagingOrder extends Component
     public $clinicalNotes = '';
     public $orders = [];
     public $fee = 0;
+    public $showInstructions = false;
 
     protected $listeners = ['orderCreated' => 'loadOrders'];
 
@@ -31,25 +32,26 @@ class CreateImagingOrder extends Component
 
     public function loadData()
     {
-        $this->imagingTypes = ImagingType::where('is_active', true)->get();
-        $this->bodyParts = BodyPart::where('is_active', true)->get();
+        $this->imagingTypes = ImagingType::where('is_active', true)->orderBy('name')->get();
+        $this->bodyParts = BodyPart::where('is_active', true)->orderBy('name')->get();
     }
 
     public function loadOrders()
     {
         $this->orders = $this->encounter->imagingOrders()
-            ->with(['imagingType', 'bodyPart', 'imagingResult'])
+            ->with(['imagingType', 'bodyPart', 'imagingResult.radiologist'])
             ->latest()
             ->get();
     }
 
-    public function getFeeProperty()
+    public function updatedSelectedImagingType($value)
     {
-        if ($this->selectedImagingType) {
-            $type = ImagingType::find($this->selectedImagingType);
-            return $type ? $type->fee : 0;
+        if ($value) {
+            $type = ImagingType::find($value);
+            $this->fee = $type ? $type->fee : 0;
+        } else {
+            $this->fee = 0;
         }
-        return 0;
     }
 
     public function createOrder()
@@ -58,7 +60,7 @@ class CreateImagingOrder extends Component
             'selectedImagingType' => 'required|exists:imaging_types,id',
             'selectedBodyPart' => 'required|exists:body_parts,id',
             'priority' => 'required|in:routine,urgent',
-            'clinicalNotes' => 'nullable|string',
+            'clinicalNotes' => 'nullable|string|max:1000',
         ]);
 
         ImagingOrder::create([
@@ -72,8 +74,11 @@ class CreateImagingOrder extends Component
             'status' => 'pending',
         ]);
 
-        $this->reset(['selectedImagingType', 'selectedBodyPart', 'priority', 'clinicalNotes']);
-        $this->dispatch('notify', type: 'success', message: 'Imaging order created!');
+        $this->reset(['selectedImagingType', 'selectedBodyPart', 'priority', 'clinicalNotes', 'fee']);
+        $this->dispatch('notify', 
+            type: 'success', 
+            message: 'Imaging order created successfully!'
+        );
         $this->loadOrders();
     }
 
@@ -83,12 +88,28 @@ class CreateImagingOrder extends Component
         if ($order && $order->status == 'pending') {
             $order->update(['status' => 'cancelled']);
             $this->loadOrders();
-            $this->dispatch('notify', ['type' => 'success', 'message' => 'Order cancelled!']);
+            $this->dispatch('notify', 
+                type: 'success', 
+                message: 'Order cancelled successfully!'
+            );
         }
+    }
+
+    public function viewResult($orderId)
+    {
+        $this->dispatch('open-result-modal', orderId: $orderId);
     }
 
     public function render()
     {
-        return view('livewire.doctor.create-imaging-order');
+        $pendingCount = $this->orders->where('status', 'pending')->count();
+        $completedCount = $this->orders->where('status', 'completed')->count();
+        
+        return view('livewire.doctor.create-imaging-order', [
+            'pendingCount' => $pendingCount,
+            'completedCount' => $completedCount,
+            'totalCount' => $this->orders->count(),
+            'patient' => $this->encounter->patient,
+        ]);
     }
 }

@@ -73,7 +73,7 @@ class RadiologyDashboard extends Component
             $this->selectedOrder->update(['status' => 'completed']);
         }
 
-        $this->dispatchBrowserEvent('notify', ['type' => 'success', 'message' => 'Results submitted!']);
+        $this->dispatch('notify', ['type' => 'success', 'message' => 'Results submitted!']);
         $this->reset(['selectedOrder', 'images', 'report']);
         $this->loadOrders();
     }

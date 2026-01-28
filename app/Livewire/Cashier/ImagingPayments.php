@@ -36,7 +36,7 @@ class ImagingPayments extends Component
         if ($order) {
             $order->update(['status' => 'paid']);
             $this->loadOrders();
-            $this->dispatchBrowserEvent('notify', [
+            $this->dispatch('notify', [
                 'type' => 'success', 
                 'message' => 'Order marked as paid!'
             ]);
