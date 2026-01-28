@@ -9,7 +9,7 @@ use Livewire\Component;
 
 class ExaminationForm extends Component
 {
-    
+
     public $encounter;
     public $patient;
 
@@ -42,7 +42,10 @@ class ExaminationForm extends Component
         // Load existing examination values
         $this->loadExistingExaminations();
     }
-
+    public function skipExamination()
+    {
+        return $this->redirect(route('consultation.assessment', $this->encounter), navigate: true);
+    }
     private function loadExistingExaminations()
     {
         // Load all active examination templates
@@ -98,7 +101,7 @@ class ExaminationForm extends Component
                 ],
                 ['value' => $value]
             );
-             session()->flash('success', 'Examination findings saved successfully.');
+            session()->flash('success', 'Examination findings saved successfully.');
         }
     }
 

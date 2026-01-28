@@ -44,7 +44,10 @@ class ConsultationWorkflow extends Component
             ];
         }
     }
-
+ public function skipMedicalHistory()
+    {
+        return $this->redirect(route('consultation.chief-complaint', $this->encounter), navigate: true);
+    }
     private function getPlaceholder($fieldType)
     {
         return match ($fieldType) {

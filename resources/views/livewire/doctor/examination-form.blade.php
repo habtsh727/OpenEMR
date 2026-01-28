@@ -319,19 +319,13 @@
                                     </svg>
                                     <span>Save Examination Findings</span>
                                 </button>
-                                <button type="button" wire:click="nextToAssessment" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 
-           text-white font-medium rounded-xl shadow-lg 
-           hover:shadow-xl transition-all duration-200 
-           flex items-center space-x-2
-           disabled:opacity-60 disabled:cursor-not-allowed">
-
-                                    <!-- icon -->
+                                <button type="button" wire:click="skipExamination"
+                                    class="px-6 py-3 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl text-sm font-medium text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all duration-200 flex items-center space-x-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            d="M9 5l7 7-7 7"></path>
                                     </svg>
-
-                                    <span>Next: Assessment</span>
+                                    <span>Skip Examination</span>
                                 </button>
                             </div>
                         </div>

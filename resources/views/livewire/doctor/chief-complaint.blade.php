@@ -135,15 +135,16 @@
                 </button>
                 
                 <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <button wire:click="save"
-                            wire:loading.attr="disabled"
-                            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 
-                                   text-white rounded-lg font-medium transition-colors duration-200
-                                   disabled:opacity-50 disabled:cursor-not-allowed
-                                   w-full sm:w-auto">
-                        Save
-                    </button>
+                 
                     
+                     <button type="button"
+                                wire:click="skipChiefComplaint"
+                                class="px-6 py-3 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl text-sm font-medium text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all duration-200 flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            <span>Skip Chief Complaint</span>
+                        </button>
                     <button wire:click="next"
                             wire:loading.attr="disabled"
                             class="px-5 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 

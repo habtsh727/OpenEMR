@@ -53,6 +53,10 @@ class ChiefComplaint extends Component
         }
     }
 
+ public function skipChiefComplaint()
+    {
+        return $this->redirect(route('consultation.examination', $this->encounter), navigate: true);
+    }
     public function save()
     {
         $this->isSubmitting = true;
