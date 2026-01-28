@@ -240,9 +240,9 @@
             <flux:sidebar.group expandable heading="Clinical" class="grid">
 
                 @if(auth()->user()->hasRole(['nurse','super-admin']))
-                <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')" wire:navigate>Triage
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage New
+                {{-- <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')" wire:navigate>Triage
+                </flux:sidebar.item> --}}
+                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage 
                 </flux:sidebar.item>
                 @endif
 

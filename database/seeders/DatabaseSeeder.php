@@ -27,6 +27,8 @@ class DatabaseSeeder extends Seeder
             ExaminationTemplateSeeder::class,
             AssessmentTemplateSeeder::class,
             LabTestSeeder::class,
+            BodyPartsSeeder::class,
+            ImagingSetupSeeder::class,
         ]);
     }
 }
