@@ -236,26 +236,6 @@
                                         View Report
                                     </button>
                                     <div class="flex space-x-2">
-                                        <button wire:click="downloadReport({{ $order->imagingResult->id }})"
-                                            class="flex-1 inline-flex items-center justify-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 text-xs">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                                </path>
-                                            </svg>
-                                            PDF
-                                        </button>
-                                        <button wire:click="printReport({{ $order->imagingResult->id }})"
-                                            class="flex-1 inline-flex items-center justify-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 text-xs">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-                                                </path>
-                                            </svg>
-                                            Print
-                                        </button>
                                     </div>
                                 </div>
                             </td>
@@ -320,8 +300,12 @@
                                     Imaging Report
                                 </h3>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ $selectedResult->order_details->imagingType->name }} • {{
-                                    $selectedResult->order_details->bodyPart->name }}
+                                    @if($selectedResult && $selectedResult->order_details)
+                                    {{ $selectedResult->order_details->imagingType->name ?? 'No Imaging Type' }} •
+                                    {{ $selectedResult->order_details->bodyPart->name ?? 'No Body Part' }}
+                                    @else
+                                    No order details available
+                                    @endif
                                 </p>
                             </div>
                         </div>
@@ -445,28 +429,29 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-4">
                                     <div>
-                                        <h5 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Order
-                                            Information</h5>
+                                        <h5 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                            Order Information
+                                        </h5>
                                         <div class="space-y-2">
                                             <div class="flex justify-between">
                                                 <span class="text-gray-600 dark:text-gray-400">Order ID:</span>
-                                                <span class="font-medium text-gray-900 dark:text-white">#{{
-                                                    $selectedResult->order_details->id }}</span>
+                                                <span class="font-medium text-gray-900 dark:text-white">
+                                                    #{{ optional($selectedResult->order_details)->id ?? 'N/A' }}
+                                                </span>
                                             </div>
                                             <div class="flex justify-between">
-                                                <span class="text-gray-600 dark:text-gray-400">Imaging Type:</span>
-                                                <span class="font-medium text-gray-900 dark:text-white">{{
-                                                    $selectedResult->order_details->imagingType->name }}</span>
+                                                <span class="text-gray-600 dark:text-gray-400">Accession Number:</span>
+                                                <span class="font-medium text-gray-900 dark:text-white">
+                                                    {{ optional($selectedResult->order_details)->accession_number ??
+                                                    'N/A' }}
+                                                </span>
                                             </div>
                                             <div class="flex justify-between">
-                                                <span class="text-gray-600 dark:text-gray-400">Body Part:</span>
-                                                <span class="font-medium text-gray-900 dark:text-white">{{
-                                                    $selectedResult->order_details->bodyPart->name }}</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-600 dark:text-gray-400">Amount:</span>
-                                                <span class="font-medium text-green-600 dark:text-green-400">${{
-                                                    number_format($selectedResult->order_details->amount, 2) }}</span>
+                                                <span class="text-gray-600 dark:text-gray-400">Order Date:</span>
+                                                <span class="font-medium text-gray-900 dark:text-white">
+                                                    {{ optional($selectedResult->order_details)->created_at?->format('M
+                                                    d, Y') ?? 'N/A' }}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -512,23 +497,26 @@
                         <span x-text="`Zoom: ${Math.round(zoomLevel * 100)}%`"></span>
                     </div>
                     <div class="flex space-x-3">
-                        <button wire:click="downloadReport({{ $selectedResult->id }})"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        <button wire:click="printReport({{ $selectedResult->id }})" wire:loading.attr="disabled"
+                            wire:target="printReport"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg wire:loading wire:target="printReport"
+                                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                                 </path>
                             </svg>
-                            Download PDF
-                        </button>
-                        <button wire:click="printReport({{ $selectedResult->id }})"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg wire:loading.remove wire:target="printReport" class="w-4 h-4 mr-2" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
                                 </path>
                             </svg>
-                            Print Report
+                            <span wire:loading.remove wire:target="printReport">Print/Download Report</span>
+                            <span wire:loading wire:target="printReport">Generating PDF...</span>
                         </button>
                     </div>
                 </div>

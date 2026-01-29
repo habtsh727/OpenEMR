@@ -95,6 +95,7 @@ class Encounter extends Model
         return $this->hasMany(ImagingOrder::class);
     }
 
+    
     public function imagingResults()
     {
         return $this->hasManyThrough(
