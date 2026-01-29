@@ -65,6 +65,10 @@ class OrderMedicationPage extends Component
         // Load frequencies
         $this->frequencies = PharmacyFrequency::all();
     }
+    public function BackToImaging()
+    {
+        return $this->redirect(route('doctor.imaging.order', $this->encounter), navigate: true);
+    }
 
     public function updatedSearch($value)
     {
