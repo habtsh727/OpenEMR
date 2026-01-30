@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('medication_order_items', function (Blueprint $table) {
-              $table->id();
+            $table->id();
 
             $table->foreignId('medication_order_id')->constrained()->cascadeOnDelete();
 
@@ -21,7 +21,8 @@ return new class extends Migration
 
             // Custom medication
             $table->foreignId('custom_medication_id')->nullable()->constrained('custom_medications')->nullOnDelete();
-
+            $table->enum('discount_type', ['percentage', 'fixed'])->nullable();
+            $table->decimal('discount_value', 10, 2)->nullable();
             // Order-specific overrides
             $table->string('dosage')->nullable();
             $table->foreignId('frequency_id')->nullable()->constrained('pharmacy_frequencies')->nullOnDelete();

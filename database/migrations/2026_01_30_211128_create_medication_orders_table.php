@@ -17,7 +17,8 @@ return new class extends Migration
 
             $table->enum('order_type', ['internal', 'external'])->default('internal');
             $table->enum('status', ['draft', 'ordered', 'paid', 'dispensed', 'cancelled'])->default('draft');
-
+            $table->enum('discount_type', ['percentage', 'fixed'])->nullable();
+            $table->decimal('discount_value', 10, 2)->nullable();
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->decimal('payable_amount', 10, 2)->default(0);
