@@ -156,28 +156,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Modal routes (will be called via Livewire)
     Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
 });
+// Doctor Routes
+Route::middleware(['auth', 'role:doctor'])->group(function () {
+    Route::get('/doctor/encounter/{encounter}/medication-order', function (Encounter $encounter) {
+        return view('doctor.medication-order', ['encounter' => $encounter]);
+    })->name('doctor.medication-order');
+});
 
+// Cashier Routes
+Route::middleware(['auth', 'role:cashier'])->group(function () {
+    Route::get('/cashier/medication-orders', function () {
+        return view('cashier.orders');
+    })->name('cashier.orders');
+});
+
+// Pharmacy Routes
+Route::middleware(['auth', 'role:pharmacist'])->group(function () {
+    Route::get('/pharmacy/orders', function () {
+        return view('pharmacy.orders');
+    })->name('pharmacy.orders');
+});
 
 Route::middleware(['auth'])->group(function () {
     // Doctor
     Route::get('/doctor/encounter/{encounter}/imaging/order', CreateImagingOrder::class)
         ->name('doctor.imaging.order');
-    
+
     Route::get('/doctor/encounter/{encounter}/imaging/results', ViewImagingResults::class)
         ->name('doctor.imaging.results');
-    
+
     // Cashier
     Route::get('/cashier/imaging-payments', ImagingPayments::class)
         ->name('cashier.imaging');
-    
+
     // Radiology
     Route::get('/radiology/dashboard', RadiologyDashboard::class)
         ->name('radiology.dashboard');
-    
+
     // Admin
     Route::get('/admin/imaging-types', ManageImagingTypes::class)
         ->name('admin.imaging-types');
-    
+
     Route::get('/admin/body-parts', ManageBodyParts::class)
         ->name('admin.body-parts');
 });
