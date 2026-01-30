@@ -155,15 +155,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/doctor/patients/{patient}/lab-results', DoctorLabResults::class)->name('doctor.patient.lab-results');
     // Modal routes (will be called via Livewire)
     Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
-    Route::get('/doctor/encounter/{encounter}/order-medication', OrderMedicationPage::class)
-        ->name('doctor.order-medication');
 });
-Route::middleware(['auth'])->group(function () {
 
-
-    Route::get('/cashier/medication-orders', MedicationOrders::class)
-        ->name('cashier.medication-orders');
-});
 
 Route::middleware(['auth'])->group(function () {
     // Doctor
