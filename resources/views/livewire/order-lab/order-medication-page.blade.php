@@ -4,6 +4,13 @@
         <!-- Header -->
         <div class="mb-8">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <button type="button" wire:click="BackToImaging"
+        class="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 flex items-center space-x-2 hover:shadow-md">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span>Back to Imaging</span>
+    </button>
                 <div>
                     <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                         Order Medication

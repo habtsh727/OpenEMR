@@ -119,18 +119,7 @@ class RadiologyDashboard extends Component
             $uploadedImages[] = $path;
         }
 
-        // Create imaging result
-        ImagingResult::create([
-            'imaging_order_id' => $this->selectedOrder->id,
-            'radiologist_id' => auth()->id(),
-            'report' => $this->report,
-            'images' => $uploadedImages,
-            'findings' => $this->findings,
-            'measurements' => $this->measurements,
-            'status' => $this->status,
-            'reported_at' => now(),
-        ]);
-
+        
         // Update order status if completed
         if ($this->status === 'completed') {
             $this->selectedOrder->update([

@@ -24,7 +24,17 @@ class ImagingOrder extends Model
     protected $casts = [
         'amount' => 'decimal:2'
     ];
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class);
+    }
 
+  
+
+    public function result()
+    {
+        return $this->hasOne(ImagingResult::class);
+    }
     // Relationships
     public function encounter()
     {
@@ -71,4 +81,5 @@ class ImagingOrder extends Model
     {
         return $query->where('status', 'completed');
     }
+    
 }

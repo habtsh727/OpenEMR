@@ -46,4 +46,5 @@ class ImagingResult extends Model
             'encounter_id'
         );
     }
+
 }

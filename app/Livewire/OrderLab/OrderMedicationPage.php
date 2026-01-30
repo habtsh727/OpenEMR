@@ -58,12 +58,16 @@ class OrderMedicationPage extends Component
         $this->labOrder = $labOrder;
 
         // Check if encounter has verified lab orders
-        if ($encounter->labOrders()->where('lab_orders.status', 'verified')->count() === 0) {
-            abort(403, 'Cannot order medication: No verified lab results found for this encounter.');
-        }
+        // if ($encounter->labOrders()->where('lab_orders.status', 'verified')->count() === 0) {
+        //     abort(403, 'Cannot order medication: No verified lab results found for this encounter.');
+        // }
 
         // Load frequencies
         $this->frequencies = PharmacyFrequency::all();
+    }
+    public function BackToImaging()
+    {
+        return $this->redirect(route('doctor.imaging.order', $this->encounter), navigate: true);
     }
 
     public function updatedSearch($value)

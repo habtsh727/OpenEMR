@@ -3,6 +3,7 @@
 use App\Http\Livewire\Employees\Manage;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
+use App\Livewire\Referral\ReferralQueue;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -42,6 +43,9 @@ use App\Livewire\Cashier\ImagingPayments;
 use App\Livewire\Radiology\RadiologyDashboard;
 use App\Livewire\Admin\ManageImagingTypes;
 use App\Livewire\Admin\ManageBodyParts;
+use App\Livewire\Referral\CreateReferral;
+use App\Livewire\Referral\PrintReferral;
+use App\Livewire\Referral\SubmitResultModal;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -169,24 +173,41 @@ Route::middleware(['auth'])->group(function () {
     // Doctor
     Route::get('/doctor/encounter/{encounter}/imaging/order', CreateImagingOrder::class)
         ->name('doctor.imaging.order');
-    
+
     Route::get('/doctor/encounter/{encounter}/imaging/results', ViewImagingResults::class)
         ->name('doctor.imaging.results');
-    
+
     // Cashier
     Route::get('/cashier/imaging-payments', ImagingPayments::class)
         ->name('cashier.imaging');
-    
+
     // Radiology
     Route::get('/radiology/dashboard', RadiologyDashboard::class)
         ->name('radiology.dashboard');
-    
+
     // Admin
     Route::get('/admin/imaging-types', ManageImagingTypes::class)
         ->name('admin.imaging-types');
-    
+
     Route::get('/admin/body-parts', ManageBodyParts::class)
         ->name('admin.body-parts');
 });
 
+// routes/web.php (add these routes)
+Route::middleware(['auth'])->group(function () {
+    // Referral Routes
+    Route::get('/referrals/create/{encounter}', App\Livewire\Referral\CreateReferral::class)
+        ->name('referrals.create');
+
+    Route::get('/referrals/queue', App\Livewire\Referral\ReferralQueue::class)
+        ->name('referrals.queue');
+
+    Route::get('/referrals/{referral}', App\Livewire\Referral\ViewReferral::class)
+        ->name('referrals.view');
+
+    Route::get('/referrals/{referral}/submit-result', App\Livewire\Referral\SubmitResult::class)
+        ->name('referrals.submit-result');
+    Route::get('/referrals/{referral}/print', PrintReferral::class)
+        ->name('referrals.print');
+});
 require __DIR__ . '/auth.php';

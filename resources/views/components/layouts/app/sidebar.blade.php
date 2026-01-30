@@ -242,12 +242,15 @@
                 @if(auth()->user()->hasRole(['nurse','super-admin']))
                 {{-- <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')" wire:navigate>Triage
                 </flux:sidebar.item> --}}
-                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage 
+                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage
                 </flux:sidebar.item>
                 @endif
 
                 @if(auth()->user()->hasRole(['doctor', 'clinician']))
                 <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="paper-airplane" :href="route('referrals.queue')" wire:navigate>
+                    Referral
                 </flux:sidebar.item>
                 @endif
             </flux:sidebar.group>
@@ -259,6 +262,7 @@
                 Lab Results
             </flux:sidebar.item>
             @endcanany
+
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Orders" class="grid">
@@ -268,9 +272,9 @@
             @canany([ 'view_imaging_order','upload_imaging_result',])
             <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
             </flux:sidebar.item>
-             <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
+            <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
             </flux:sidebar.item>
-             <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
+            <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
             </flux:sidebar.item>
             @endcan
             @can('view_lab_tests')
