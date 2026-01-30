@@ -37,6 +37,10 @@ class Patient extends Model
     {
         return "{$this->first_name} {$this->middle_name} {$this->last_name}";
     }
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class);
+    }
 
     public function cardPayments()
     {
