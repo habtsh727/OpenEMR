@@ -58,7 +58,7 @@ class CreateReferral extends Component
             $this->encounter = Encounter::with('patient')->findOrFail($encounter);
         }
         
-        $this->patientName = $this->encounter->patient->full_name ?? 'Unknown';
+        $this->patientName = $this->encounter->patient->first_name ?? 'Unknown';
         
         // Check if user is authorized (doctor or admin)
         if (!Auth::user()->hasRole(['doctor', 'admin', 'super_admin'])) {

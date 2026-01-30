@@ -174,7 +174,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Patient Name</p>
-                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ $referral->encounter->patient->full_name ?? 'N/A' }}</p>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ $referral->encounter->patient->first_name ?? 'N/A' }}</p>
                             </div>
                             <div class="space-y-2">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Encounter ID</p>
@@ -192,12 +192,6 @@
                                         <p class="text-xs text-gray-500 dark:text-gray-400">Gender</p>
                                         <p class="text-sm font-medium text-gray-900 dark:text-white">
                                             {{ $referral->encounter->patient->gender ?? 'N/A' }}
-                                        </p>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Medical Record #</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $referral->encounter->patient->medical_record_number ?? 'N/A' }}
                                         </p>
                                     </div>
                                 </div>
@@ -519,7 +513,7 @@
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
                         <div class="space-y-3">
-                            <a href="#" class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                            <a href="{{ route('referrals.print', $referral->id) }}" class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
                                 <div class="flex items-center space-x-3">
                                     <div class="h-8 w-8 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                                         <svg class="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

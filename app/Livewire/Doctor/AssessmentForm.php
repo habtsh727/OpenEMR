@@ -376,6 +376,10 @@ class AssessmentForm extends Component
     {
         return $this->redirect(route('doctor.order-medication', $this->encounter), navigate: true);
     }
+    public function orderReferral()
+    {
+        return $this->redirect(route('referrals.create', $this->encounter), navigate: true);
+    }
 
     public function nextToOrders()
     {
