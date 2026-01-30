@@ -69,7 +69,7 @@ class Encounter extends Model
     }
 
     // Imaging-specific methods
-    
+
 
     public function labOrders()
     {
@@ -84,11 +84,6 @@ class Encounter extends Model
     public function medicationOrder()
     {
         return $this->hasOne(MedicationOrder::class);
-    }
-
-    public function prescriptions()
-    {
-        return $this->hasMany(Prescription::class);
     }
     public function imagingOrders()
     {
@@ -105,5 +100,14 @@ class Encounter extends Model
             'id',
             'id'
         );
+    }
+    public function medicationOrders()
+    {
+        return $this->hasMany(MedicationOrder::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasManyThrough(Prescription::class, MedicationOrder::class);
     }
 }
