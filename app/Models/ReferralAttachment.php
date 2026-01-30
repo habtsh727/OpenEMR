@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttachmentType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 class ReferralAttachment extends Model
@@ -16,6 +17,14 @@ class ReferralAttachment extends Model
         'file_name',
     ];
 
+     protected $casts = [
+        'attachment_type' => AttachmentType::class,
+    ];
+     
+    public function uploadedBy()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
     /* =========================
      | Relationships
      ========================= */

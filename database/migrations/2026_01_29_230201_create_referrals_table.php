@@ -22,7 +22,7 @@ return new class extends Migration
             // Destination hospital / higher-level clinic
             $table->string('facility_name');          // Name of hospital/clinic
             $table->string('facility_type')->nullable(); // e.g., hospital, clinic, tertiary center
-            $table->string('facility_location')->nullable();
+            $table->string(column: 'facility_location')->nullable();
 
             // Clinical info
             $table->enum('urgency', ['routine', 'urgent', 'emergency'])->default('routine');

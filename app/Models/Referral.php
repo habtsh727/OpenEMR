@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Enums\ReferralStatus;
+use App\Enums\ReferralUrgency;
 class Referral extends Model
 {
     //
@@ -24,8 +26,16 @@ class Referral extends Model
         'status',
         'referred_at',
     ];
+    
+   
+    public function uploadedBy()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
 
-    protected $casts = [
+     protected $casts = [
+        'status' => ReferralStatus::class,
+        'urgency' => ReferralUrgency::class,
         'referred_at' => 'datetime',
     ];
 
