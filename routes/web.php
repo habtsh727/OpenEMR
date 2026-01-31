@@ -43,6 +43,7 @@ use App\Livewire\Radiology\RadiologyDashboard;
 use App\Livewire\Admin\ManageImagingTypes;
 use App\Livewire\Admin\ManageBodyParts;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
+use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
 use App\Livewire\Pharmacy\PharmacyQueueComponent;
@@ -212,10 +213,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/doctor/custom-medications/manage', CustomMedicationFormComponent::class)
         ->name('doctor.custom-medications.manage');
-
+ Route::get('/cashier/medication-orders/queue', OrderQueueComponent::class)
+        ->name('cashier.medication.orders');
     // Cashier Side
-    // Route::get('/cashier/medication-orders/queue', CashierOrderQueueComponent::class)
-    //     ->name('cashier.medication.orders');
 
     // Pharmacy Side
     // Route::get('/pharmacy/medication-orders/queue', PharmacyQueueComponent::class)

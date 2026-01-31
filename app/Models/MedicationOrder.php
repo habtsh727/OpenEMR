@@ -21,12 +21,42 @@ class MedicationOrder extends Model
     {
         return $this->belongsTo(Encounter::class);
     }
+    public function payment()
+    {
+        return $this->hasOne(MedicationPayment::class, 'medication_order_id');
+    }
+    
 
     public function items()
     {
         return $this->hasMany(MedicationOrderItem::class);
     }
-
+    public function patient()
+    {
+        return $this->hasOneThrough(
+            Patient::class,
+            Encounter::class,
+            'id', // Foreign key on Encounter table
+            'id', // Foreign key on Patient table
+            'encounter_id', // Local key on MedicationOrder table
+            'patient_id' // Local key on Encounter table
+        );
+    }
+    
+    /**
+     * Get the doctor through encounter.
+     */
+    public function doctor()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            Encounter::class,
+            'id', // Foreign key on Encounter table
+            'id', // Foreign key on User table
+            'encounter_id', // Local key on MedicationOrder table
+            'doctor_id' // Local key on Encounter table
+        )->where('role', 'doctor'); // Optional: filter by role
+    }
     public function payments()
     {
         return $this->hasMany(MedicationPayment::class);
