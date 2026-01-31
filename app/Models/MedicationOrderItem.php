@@ -12,7 +12,8 @@ class MedicationOrderItem extends Model
     protected $fillable = [
         'medication_order_id', 'drug_id', 'custom_medication_id',
         'dosage', 'frequency_id', 'duration', 'instructions',
-        'unit_price', 'quantity', 'total_price'
+        'unit_price', 'quantity', 'total_price',
+        'discount_value','discount_type'
     ];
 
     // Relationships

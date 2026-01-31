@@ -42,6 +42,10 @@ use App\Livewire\Cashier\ImagingPayments;
 use App\Livewire\Radiology\RadiologyDashboard;
 use App\Livewire\Admin\ManageImagingTypes;
 use App\Livewire\Admin\ManageBodyParts;
+use App\Livewire\Cashier\CashierOrderQueueComponent;
+use App\Livewire\Doctor\CustomMedicationFormComponent;
+use App\Livewire\Doctor\DoctorMedicationOrderComponent;
+use App\Livewire\Pharmacy\PharmacyQueueComponent;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -201,4 +205,29 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.body-parts');
 });
 
+Route::middleware(['auth'])->group(function () {
+    // Doctor Side
+    Route::get('/doctor/encounter/{encounter}/medication/order', DoctorMedicationOrderComponent::class)
+        ->name('doctor.medication.order');
+
+    Route::get('/doctor/custom-medications/manage', CustomMedicationFormComponent::class)
+        ->name('doctor.custom-medications.manage');
+
+    // Cashier Side
+    // Route::get('/cashier/medication-orders/queue', CashierOrderQueueComponent::class)
+    //     ->name('cashier.medication.orders');
+
+    // Pharmacy Side
+    // Route::get('/pharmacy/medication-orders/queue', PharmacyQueueComponent::class)
+    //     ->name('pharmacy.medication.orders');
+
+    // Shared Components
+    // Route::get('/prescription/{order}/view', PrescriptionViewComponent::class)
+    //     ->name('prescription.view');
+
+    // Reports
+    Route::get('/reports/medications', DoctorMedicationOrderComponent::class)
+        ->middleware('role:admin|pharmacist')
+        ->name('reports.medications');
+});
 require __DIR__ . '/auth.php';

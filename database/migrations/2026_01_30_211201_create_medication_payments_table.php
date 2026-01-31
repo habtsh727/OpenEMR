@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('medication_order_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('cashier_id')->constrained('users')->nullOnDelete();
+            $table->foreignId('cashier_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->decimal('amount', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);

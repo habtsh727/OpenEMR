@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             LabTestSeeder::class,
             BodyPartsSeeder::class,
             ImagingSetupSeeder::class,
+            PharmacySystemSeeder::class,
         ]);
     }
 }
