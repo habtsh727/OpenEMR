@@ -11,7 +11,9 @@ class MedicationOrder extends Model
 
     protected $fillable = [
         'encounter_id', 'order_type', 'status',
-        'total_amount', 'discount_amount', 'payable_amount', 'ordered_at'
+        'total_amount', 'discount_amount', 'payable_amount', 'ordered_at',
+        'discount_type',      // Make sure this is here
+        'discount_value', 
     ];
 
     // Relationships
