@@ -4,6 +4,7 @@ use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
+use App\Livewire\Referral\ReferralQueue;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -48,6 +49,9 @@ use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
 use App\Livewire\Pharmacy\PharmacyQueueComponent;
+use App\Livewire\Referral\CreateReferral;
+use App\Livewire\Referral\PrintReferral;
+use App\Livewire\Referral\SubmitResultModal;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -207,6 +211,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.body-parts');
 });
 
+
 Route::middleware(['auth'])->group(function () {
     // Doctor Side
     Route::get('/doctor/encounter/{encounter}/medication/order', DoctorMedicationOrderComponent::class)
@@ -236,5 +241,23 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/pharmacy/custom-medications', \App\Livewire\Pharmacy\CustomMedicationComponent::class)
         ->name('pharmacy.custom-medications');
+});
+
+// routes/web.php (add these routes)
+Route::middleware(['auth'])->group(function () {
+    // Referral Routes
+    Route::get('/referrals/create/{encounter}', App\Livewire\Referral\CreateReferral::class)
+        ->name('referrals.create');
+
+    Route::get('/referrals/queue', App\Livewire\Referral\ReferralQueue::class)
+        ->name('referrals.queue');
+
+    Route::get('/referrals/{referral}', App\Livewire\Referral\ViewReferral::class)
+        ->name('referrals.view');
+
+    Route::get('/referrals/{referral}/submit-result', App\Livewire\Referral\SubmitResult::class)
+        ->name('referrals.submit-result');
+    Route::get('/referrals/{referral}/print', PrintReferral::class)
+        ->name('referrals.print');
 });
 require __DIR__ . '/auth.php';

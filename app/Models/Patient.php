@@ -27,10 +27,19 @@ class Patient extends Model
         'created_by',
 
     ];
-
+    public function getNameAttributes()
+    {
+        return trim($this->first_name . ' ' .
+            ($this->middle_name ? $this->middle_name . ' ' : '') .
+            $this->last_name);
+    }
     public function getNameAttribute()
     {
         return "{$this->first_name} {$this->middle_name} {$this->last_name}";
+    }
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class);
     }
 
     public function cardPayments()
@@ -83,10 +92,10 @@ class Patient extends Model
         return $this->hasOne(NurseTriage::class)->latestOfMany();
     }
     public function currentEncounter()
-{
-    return $this->encounters()
-        ->whereIn('status', ['triaged', 'doctor_assigned', 'in_progress'])
-        ->latest()
-        ->first();
-}
+    {
+        return $this->encounters()
+            ->whereIn('status', ['triaged', 'doctor_assigned', 'in_progress'])
+            ->latest()
+            ->first();
+    }
 }

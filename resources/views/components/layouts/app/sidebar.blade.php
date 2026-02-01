@@ -256,6 +256,9 @@
                 @if(auth()->user()->hasRole(['doctor', 'clinician']))
                 <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="paper-airplane" :href="route('referrals.queue')" wire:navigate>
+                    Referral
+                </flux:sidebar.item>
                 @endif
             </flux:sidebar.group>
             @endif
@@ -266,6 +269,7 @@
                 Lab Results
             </flux:sidebar.item>
             @endcanany
+
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Orders" class="grid">

@@ -71,4 +71,8 @@ class User extends Authenticatable // implements MustVerifyEmail
     {
         return $this->hasMany(LabSample::class, 'collected_by');
     }
+    public function referralsMade()
+    {
+        return $this->hasMany(Referral::class, 'referring_doctor_id');
+    }
 }

@@ -90,6 +90,7 @@ class Encounter extends Model
         return $this->hasMany(ImagingOrder::class);
     }
 
+
     public function imagingResults()
     {
         return $this->hasManyThrough(
@@ -100,6 +101,10 @@ class Encounter extends Model
             'id',
             'id'
         );
+    }
+    public function referrals()
+    {
+        return $this->hasMany(Referral::class);
     }
     public function medicationOrders()
     {

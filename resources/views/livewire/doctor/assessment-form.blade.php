@@ -425,12 +425,16 @@
                         </button>
                         
                         <button type="button"
-                                wire:click="skipAssessment"
+                                wire:click="skipImaging"
                                 class="px-6 py-3 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl text-sm font-medium text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all duration-200 flex items-center space-x-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                            <span>Skip Assessment</span>
+                            
+                            <span>Order Medication</span>
+                        </button>
+                         <button type="button"
+                                wire:click="orderReferral"
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900">
+                            
+                            <span>Order Referral</span>
                         </button>
                     </div>
                     
