@@ -223,17 +223,24 @@
             @endcanany
 
             {{-- ========================= PAYMENTS ========================= --}}
-            @canany(['create_invoice','view_invoice','receive_payment','refund_payment'])
-            <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Register Payments
-            </flux:sidebar.item>
-            @endcanany
+
             @canany(['super-admin', 'receive_payment'])
-            <flux:sidebar.item icon="beaker" :href="route('lab-orders.payments')" wire:navigate>
-                Lab Orders Payment
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="beaker" :href="route('cashier.imaging')" wire:navigate>
-                Imaging Orders Payment
-            </flux:sidebar.item>
+            <flux:sidebar.group expandable heading="Payment" class="grid">
+                @canany(['create_invoice','view_invoice','receive_payment','refund_payment'])
+                <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Register Payments
+                </flux:sidebar.item>
+                @endcanany
+                <flux:sidebar.item icon="currency-dollar" :href="route('lab-orders.payments')" wire:navigate>
+                    Lab Payment
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.imaging')" wire:navigate>
+                    Imaging Payment
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
+                    Pharmacy Payment
+                </flux:sidebar.item>
+            </flux:sidebar.group>
+
             @endcanany
             {{-- ========================= CLINICAL ========================= --}}
             @if(auth()->user()->hasRole(['doctor', 'nurse', 'clinician','super-admin']))
@@ -242,7 +249,7 @@
                 @if(auth()->user()->hasRole(['nurse','super-admin']))
                 {{-- <flux:sidebar.item icon="home-modern" :href="route('patient.nursing')" wire:navigate>Triage
                 </flux:sidebar.item> --}}
-                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage 
+                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage
                 </flux:sidebar.item>
                 @endif
 
@@ -268,9 +275,9 @@
             @canany([ 'view_imaging_order','upload_imaging_result',])
             <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
             </flux:sidebar.item>
-             <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
+            <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
             </flux:sidebar.item>
-             <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
+            <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
             </flux:sidebar.item>
             @endcan
             @can('view_lab_tests')
@@ -293,6 +300,12 @@
                     Pharmacy
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')" wire:navigate>Batches / Stock
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.dashboard')" wire:navigate>
+                    pharmacy Queue
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.custom-medications')" wire:navigate>
+                    Custom Medications
                 </flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany

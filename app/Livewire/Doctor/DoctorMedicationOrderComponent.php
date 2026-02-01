@@ -13,6 +13,7 @@ use App\Models\CustomMedication;
 use App\Models\PharmacyFrequency;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use App\Models\Prescription;
 
 class DoctorMedicationOrderComponent extends Component
 {
@@ -59,13 +60,17 @@ class DoctorMedicationOrderComponent extends Component
     public bool $showAddItemModal = false;
     public bool $showCustomMedicationModal = false;
     public bool $showSubmitConfirm = false;
-
+    public bool $showPrescriptionModal = false; // NEW
+    public bool $showPrescriptionChoice = false; // NEW
     // Calculations
     public $subtotal = 0;
     public $totalDiscount = 0;
     public $totalAmount = 0;
     public $payableAmount = 0;
-    
+
+    // Prescription properties
+    public $prescriptionNotes = '';
+    public $prescriptionWarnings = '';
 
     protected $listeners = [
         'customMedicationCreated' => 'handleCustomMedicationCreated'
@@ -181,182 +186,123 @@ class DoctorMedicationOrderComponent extends Component
         $this->showAddItemModal = true;
     }
 
-    // public function addItem()
-    // {
-    //     $this->validate([
-    //     'itemType' => 'required|in:standard,custom',
-    //     'drugId' => 'required_if:itemType,standard',
-    //     'customMedicationId' => 'required_if:itemType,custom',
-    //     'dosage' => 'required',
-    //     'quantity' => 'required|numeric|min:1',
-    //     'unitPrice' => 'required|numeric|min:0',
-    //     'duration' => 'required',
-    //     'itemDiscountType' => 'nullable|in:percentage,fixed',
-    //     'itemDiscountValue' => [
-    //         'nullable',
-    //         'numeric',
-    //         'min:0',
-    //         function ($attribute, $value, $fail) {
-    //             if ($this->itemDiscountType === 'percentage' && $value > 100) {
-    //                 $fail('Percentage discount cannot exceed 100%');
-    //             }
-    //             if ($this->itemDiscountType === 'fixed' && $value > ($this->quantity * $this->unitPrice)) {
-    //                 $fail('Fixed discount cannot exceed item total');
-    //             }
-    //         },
-    //     ],
-    // ]);
-
-    //     $totalPrice = $this->quantity * $this->unitPrice;
-    //     $discountedPrice = $this->calculateDiscountedPrice($totalPrice, $this->itemDiscountType, $this->itemDiscountValue);
-
-    //     $data = [
-    //         'drug_id' => $this->itemType === 'standard' ? $this->drugId : null,
-    //         'custom_medication_id' => $this->itemType === 'custom' ? $this->customMedicationId : null,
-    //         'dosage' => $this->dosage,
-    //         'frequency_id' => $this->frequencyId,
-    //         'duration' => $this->duration,
-    //         'instructions' => $this->instructions,
-    //         'quantity' => $this->quantity,
-    //         'unit_price' => $this->unitPrice,
-    //         'discount_type' => $this->itemDiscountType,
-    //         'discount_value' => $this->itemDiscountValue,
-    //         'total_price' => $discountedPrice
-    //     ];
-
-    //     if ($this->editingItemId) {
-    //         $item = MedicationOrderItem::find($this->editingItemId);
-    //         $item->update($data);
-    //     } else {
-    //         $data['medication_order_id'] = $this->order->id;
-    //         MedicationOrderItem::create($data);
-    //     }
-
-    //     $this->resetItemForm();
-    //     $this->calculateTotals();
-    //     $this->showAddItemModal = false;
-
-    //     $this->dispatch('item-saved');
-    // }
-
-   
+    
     public function addItem()
-{
-    // Convert empty discount values to null for validation
-    $discountType = $this->itemDiscountType === '' ? null : $this->itemDiscountType;
-    $discountValue = $this->itemDiscountValue === '' ? null : $this->itemDiscountValue;
-    
-    // Validate with proper rules
-    $this->validate([
-        'itemType' => 'required|in:standard,custom',
-        'drugId' => 'required_if:itemType,standard',
-        'customMedicationId' => 'required_if:itemType,custom',
-        'dosage' => 'required|string|max:100',
-        'frequencyId' => 'nullable|exists:pharmacy_frequencies,id',
-        'duration' => 'required|string|max:50',
-        'instructions' => 'nullable|string|max:500',
-        'quantity' => 'required|integer|min:1',
-        'unitPrice' => 'required|numeric|min:0',
-        'itemDiscountType' => 'nullable|in:percentage,fixed',
-        'itemDiscountValue' => [
-            'nullable',
-            'numeric',
-            'min:0',
-            function ($attribute, $value, $fail) use ($discountType) {
-                if ($discountType === 'percentage' && $value > 100) {
-                    $fail('Percentage discount cannot exceed 100%');
-                }
-                if ($discountType === 'fixed') {
-                    $itemTotal = $this->quantity * $this->unitPrice;
-                    if ($value > $itemTotal) {
-                        $fail('Fixed discount (₦' . number_format($value, 2) . ') cannot exceed item total (₦' . number_format($itemTotal, 2) . ')');
+    {
+        // Convert empty discount values to null for validation
+        $discountType = $this->itemDiscountType === '' ? null : $this->itemDiscountType;
+        $discountValue = $this->itemDiscountValue === '' ? null : $this->itemDiscountValue;
+
+        // Validate with proper rules
+        $this->validate([
+            'itemType' => 'required|in:standard,custom',
+            'drugId' => 'required_if:itemType,standard',
+            'customMedicationId' => 'required_if:itemType,custom',
+            'dosage' => 'required|string|max:100',
+            'frequencyId' => 'nullable|exists:pharmacy_frequencies,id',
+            'duration' => 'required|string|max:50',
+            'instructions' => 'nullable|string|max:500',
+            'quantity' => 'required|integer|min:1',
+            'unitPrice' => 'required|numeric|min:0',
+            'itemDiscountType' => 'nullable|in:percentage,fixed',
+            'itemDiscountValue' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($discountType) {
+                    if ($discountType === 'percentage' && $value > 100) {
+                        $fail('Percentage discount cannot exceed 100%');
                     }
-                }
-            },
-        ],
-    ], [
-        'drugId.required_if' => 'Please select a medication',
-        'customMedicationId.required_if' => 'Please select a custom medication',
-        'quantity.min' => 'Quantity must be at least 1',
-        'unitPrice.min' => 'Price cannot be negative',
-    ]);
+                    if ($discountType === 'fixed') {
+                        $itemTotal = $this->quantity * $this->unitPrice;
+                        if ($value > $itemTotal) {
+                            $fail('Fixed discount (₦' . number_format($value, 2) . ') cannot exceed item total (₦' . number_format($itemTotal, 2) . ')');
+                        }
+                    }
+                },
+            ],
+        ], [
+            'drugId.required_if' => 'Please select a medication',
+            'customMedicationId.required_if' => 'Please select a custom medication',
+            'quantity.min' => 'Quantity must be at least 1',
+            'unitPrice.min' => 'Price cannot be negative',
+        ]);
 
-    // Calculate prices
-    $totalPrice = $this->quantity * $this->unitPrice;
-    
-    // Convert empty discount values to null for storage
-    $storedDiscountType = empty($discountType) ? null : $discountType;
-    $storedDiscountValue = empty($discountValue) || $discountValue == 0 ? null : $discountValue;
-    
-    // Calculate discounted price
-    $discountedPrice = $this->calculateDiscountedPrice($totalPrice, $storedDiscountType, $storedDiscountValue);
-    
-    // Ensure discounted price is not negative
-    if ($discountedPrice < 0) {
-        $discountedPrice = 0;
-    }
+        // Calculate prices
+        $totalPrice = $this->quantity * $this->unitPrice;
 
-    // Prepare data for storage
-    $data = [
-        'drug_id' => $this->itemType === 'standard' ? $this->drugId : null,
-        'custom_medication_id' => $this->itemType === 'custom' ? $this->customMedicationId : null,
-        'dosage' => $this->dosage,
-        'frequency_id' => $this->frequencyId,
-        'duration' => $this->duration,
-        'instructions' => $this->instructions,
-        'quantity' => $this->quantity,
-        'unit_price' => $this->unitPrice,
-        'discount_type' => $storedDiscountType,  // Store null if empty
-        'discount_value' => $storedDiscountValue, // Store null if empty
-        'total_price' => $discountedPrice,
-    ];
+        // Convert empty discount values to null for storage
+        $storedDiscountType = empty($discountType) ? null : $discountType;
+        $storedDiscountValue = empty($discountValue) || $discountValue == 0 ? null : $discountValue;
 
-    // Log for debugging (remove in production)
-    \Log::info('Saving medication order item:', [
-        'data' => $data,
-        'original_discount_type' => $this->itemDiscountType,
-        'original_discount_value' => $this->itemDiscountValue,
-        'stored_discount_type' => $storedDiscountType,
-        'stored_discount_value' => $storedDiscountValue,
-        'total_price' => $totalPrice,
-        'discounted_price' => $discountedPrice,
-    ]);
+        // Calculate discounted price
+        $discountedPrice = $this->calculateDiscountedPrice($totalPrice, $storedDiscountType, $storedDiscountValue);
 
-    try {
-        if ($this->editingItemId) {
-            // Update existing item
-            $item = MedicationOrderItem::findOrFail($this->editingItemId);
-            $item->update($data);
-            
-            \Log::info('Updated item ID ' . $item->id . ' with discount_type: ' . ($item->discount_type ?? 'NULL'));
-        } else {
-            // Create new item
-            $data['medication_order_id'] = $this->order->id;
-            $item = MedicationOrderItem::create($data);
-            
-            \Log::info('Created new item ID ' . $item->id . ' with discount_type: ' . ($item->discount_type ?? 'NULL'));
+        // Ensure discounted price is not negative
+        if ($discountedPrice < 0) {
+            $discountedPrice = 0;
         }
 
-        // Reset form and update totals
-        $this->resetItemForm();
-        $this->calculateTotals();
-        $this->showAddItemModal = false;
+        // Prepare data for storage
+        $data = [
+            'drug_id' => $this->itemType === 'standard' ? $this->drugId : null,
+            'custom_medication_id' => $this->itemType === 'custom' ? $this->customMedicationId : null,
+            'dosage' => $this->dosage,
+            'frequency_id' => $this->frequencyId,
+            'duration' => $this->duration,
+            'instructions' => $this->instructions,
+            'quantity' => $this->quantity,
+            'unit_price' => $this->unitPrice,
+            'discount_type' => $storedDiscountType,  // Store null if empty
+            'discount_value' => $storedDiscountValue, // Store null if empty
+            'total_price' => $discountedPrice,
+        ];
 
-        // Show success message
-        session()->flash('success', 'Medication ' . ($this->editingItemId ? 'updated' : 'added') . ' successfully!');
-        
-        // Dispatch event
-        $this->dispatch('item-saved');
-
-    } catch (\Exception $e) {
-        \Log::error('Error saving medication order item: ' . $e->getMessage(), [
-            'exception' => $e,
+        // Log for debugging (remove in production)
+        \Log::info('Saving medication order item:', [
             'data' => $data,
+            'original_discount_type' => $this->itemDiscountType,
+            'original_discount_value' => $this->itemDiscountValue,
+            'stored_discount_type' => $storedDiscountType,
+            'stored_discount_value' => $storedDiscountValue,
+            'total_price' => $totalPrice,
+            'discounted_price' => $discountedPrice,
         ]);
-        
-        session()->flash('error', 'Failed to save medication. Please try again.');
+
+        try {
+            if ($this->editingItemId) {
+                // Update existing item
+                $item = MedicationOrderItem::findOrFail($this->editingItemId);
+                $item->update($data);
+
+                \Log::info('Updated item ID ' . $item->id . ' with discount_type: ' . ($item->discount_type ?? 'NULL'));
+            } else {
+                // Create new item
+                $data['medication_order_id'] = $this->order->id;
+                $item = MedicationOrderItem::create($data);
+
+                \Log::info('Created new item ID ' . $item->id . ' with discount_type: ' . ($item->discount_type ?? 'NULL'));
+            }
+
+            // Reset form and update totals
+            $this->resetItemForm();
+            $this->calculateTotals();
+            $this->showAddItemModal = false;
+
+            // Show success message
+            session()->flash('success', 'Medication ' . ($this->editingItemId ? 'updated' : 'added') . ' successfully!');
+
+            // Dispatch event
+            $this->dispatch('item-saved');
+        } catch (\Exception $e) {
+            \Log::error('Error saving medication order item: ' . $e->getMessage(), [
+                'exception' => $e,
+                'data' => $data,
+            ]);
+
+            session()->flash('error', 'Failed to save medication. Please try again.');
+        }
     }
-}
 
     public function editItem($itemId)
     {
@@ -428,7 +374,122 @@ class DoctorMedicationOrderComponent extends Component
 
         session()->flash('success', 'Medication order submitted successfully!');
     }
+    public function generatePrescriptionForOrder()
+    {
+        if ($this->order->items()->count() === 0) {
+            $this->dispatch('error', message: 'Please add at least one medication to the order.');
+            return;
+        }
 
+        // Create prescription record
+        $prescription = Prescription::create([
+            'medication_order_id' => $this->order->id,
+            'notes' => $this->prescriptionNotes,
+            'status' => 'printed',
+            'printed_at' => now()
+        ]);
+
+        // Update order status (order will go to payment queue)
+        $this->order->update([
+            'status' => 'ordered',
+            'ordered_at' => now()
+        ]);
+
+        $this->showPrescriptionChoice = false;
+        $this->showPrescriptionModal = true;
+
+        session()->flash('success', 'Prescription generated and order submitted for payment!');
+        $this->dispatch('order-submitted', orderId: $this->order->id);
+        $this->dispatch('prescription-generated', prescriptionId: $prescription->id);
+    }
+   public function generatePrescriptionOnly()
+{
+    \Log::info('generatePrescriptionOnly called', ['order_id' => $this->order->id]);
+    
+    if ($this->order->items()->count() === 0) {
+        \Log::warning('No items in order for prescription');
+        $this->dispatch('error', message: 'Please add at least one medication to generate prescription.');
+        return;
+    }
+
+    try {
+        // Create prescription record
+        \Log::info('Creating prescription record');
+        $prescription = Prescription::create([
+            'medication_order_id' => $this->order->id,
+            'notes' => $this->prescriptionNotes,
+            'status' => 'printed',
+            'printed_at' => now()
+        ]);
+
+        \Log::info('Prescription created', ['prescription_id' => $prescription->id]);
+
+        // Update order status to indicate prescription generated
+        $this->order->update([
+            'status' => 'prescribed',
+            'ordered_at' => now()
+        ]);
+
+        \Log::info('Order status updated to prescribed');
+
+        $this->showPrescriptionChoice = false;
+        $this->showPrescriptionModal = true;
+
+        session()->flash('success', 'Prescription generated successfully!');
+        \Log::info('Dispatching prescription-generated event');
+        $this->dispatch('prescription-generated', prescriptionId: $prescription->id);
+        
+    } catch (\Exception $e) {
+        \Log::error('Error generating prescription: ' . $e->getMessage());
+        \Log::error('Error trace: ' . $e->getTraceAsString());
+        session()->flash('error', 'Failed to generate prescription: ' . $e->getMessage());
+    }
+}
+   public function showPrescriptionChoice()
+{
+    \Log::info('showPrescriptionChoice called', ['order_id' => $this->order->id]);
+    
+    if ($this->order->items()->count() === 0) {
+        \Log::warning('No items in order for prescription');
+        $this->dispatch('error', message: 'Please add at least one medication to generate prescription.');
+        return;
+    }
+    
+    \Log::info('Showing prescription choice modal');
+    $this->showPrescriptionChoice = true;
+}
+
+    public function printPrescription()
+    {
+        $prescription = Prescription::where('medication_order_id', $this->order->id)
+            ->latest()
+            ->first();
+
+        if ($prescription) {
+            $this->dispatch('print-prescription', prescriptionId: $prescription->id);
+        }
+    }
+
+    public function downloadPrescription()
+    {
+        $prescription = Prescription::where('medication_order_id', $this->order->id)
+            ->latest()
+            ->first();
+
+        if ($prescription) {
+            $this->dispatch('download-prescription', prescriptionId: $prescription->id);
+        }
+    }
+    public function viewPrescription()
+    {
+        $prescription = Prescription::where('medication_order_id', $this->order->id)
+            ->latest()
+            ->first();
+
+        if ($prescription) {
+            $this->showPrescriptionModal = true;
+        }
+    }
     public function handleCustomMedicationCreated($medicationId)
     {
         // Close modal and optionally add to order
@@ -456,7 +517,6 @@ class DoctorMedicationOrderComponent extends Component
             'itemDiscountValue'
         ]);
     }
-
     public function render()
     {
         $frequencies = PharmacyFrequency::all();
@@ -464,9 +524,15 @@ class DoctorMedicationOrderComponent extends Component
             ->with(['drug', 'customMedication', 'frequency'])
             ->get();
 
+        // Check if prescription already exists
+        $existingPrescription = Prescription::where('medication_order_id', $this->order->id)
+            ->latest()
+            ->first();
+
         return view('livewire.doctor.doctor-medication-order-component', [
             'frequencies' => $frequencies,
-            'items' => $items
+            'items' => $items,
+            'existingPrescription' => $existingPrescription // NEW
         ]);
     }
 

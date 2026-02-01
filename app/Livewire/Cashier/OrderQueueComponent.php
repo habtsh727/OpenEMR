@@ -70,7 +70,7 @@ class OrderQueueComponent extends Component
         }
     }
     
- public function processPayment()
+public function processPayment()
 {
     $this->validate([
         'paymentAmount' => 'required|numeric|min:0',
@@ -108,7 +108,7 @@ class OrderQueueComponent extends Component
             'discount' => $this->paymentDiscount,
             'payment_method' => $this->paymentMethod,
             'notes' => $this->paymentNotes,
-            'paid_at' => now() // Make sure this field exists
+            'paid_at' => now()
         ]);
         
         // Update order status
@@ -116,6 +116,14 @@ class OrderQueueComponent extends Component
             'status' => 'paid',
             'payable_amount' => $finalAmount,
             'discount_amount' => $order->discount_amount + $this->paymentDiscount
+        ]);
+        
+        // ✅ ADD THIS: Create dispensation record for pharmacy
+        \App\Models\MedicationDispensation::create([
+            'medication_order_id' => $order->id,
+            'pharmacist_id' => null, // Will be set when pharmacist processes it
+            'status' => 'pending',
+            'notes' => 'Awaiting pharmacy processing'
         ]);
         
         // Set success message

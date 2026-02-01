@@ -129,7 +129,7 @@
                         </div>
                         <div class="ml-4">
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Amount</p>
-                            <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">₦{{ number_format($stats['total_pending_amount'], 2) }}</p>
+                            <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['total_pending_amount'], 2) }}Birr</p>
                         </div>
                     </div>
                 </div>
@@ -146,7 +146,7 @@
                         </div>
                         <div class="ml-4">
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Collected Amount</p>
-                            <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">₦{{ number_format($stats['total_collected_amount'], 2) }}</p>
+                            <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ number_format($stats['total_collected_amount'], 2) }}Birr</p>
                         </div>
                     </div>
                 </div>
@@ -186,9 +186,9 @@
                             {{ $order->created_at->format('M d, Y h:i A') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">₦{{ number_format($order->payable_amount, 2) }}</div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Birr{{ number_format($order->payable_amount, 2) }}</div>
                             @if($order->discount_amount > 0)
-                            <div class="text-xs text-red-600 dark:text-red-400">-₦{{ number_format($order->discount_amount, 2) }}</div>
+                            <div class="text-xs text-red-600 dark:text-red-400">-Birr{{ number_format($order->discount_amount, 2) }}</div>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -202,7 +202,10 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             @if($order->status === 'ordered')
                             <button wire:click="selectOrder({{ $order->id }})" 
-                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mr-3 transition-colors">
+                                 class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 dark:from-green-600 dark:to-emerald-700 dark:hover:from-green-500 dark:hover:to-emerald-600 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 flex items-center shadow-sm hover:shadow">
+                                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
                                 Process Payment
                             </button>
                             @endif
@@ -213,12 +216,7 @@
                                 View Receipt
                             </button>
                             @endif
-                            
-                            <a href="" 
-                               target="_blank"
-                               class="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 transition-colors">
-                                Prescription
-                            </a>
+                         
                         </td>
                     </tr>
                     @empty
@@ -256,9 +254,9 @@
                 <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100" id="modal-title">
-                                Process Payment
-                            </h3>
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100" id="modal-title">
+                                    Process Payment
+                                </h3>
                             
                             <form wire:submit.prevent="processPayment" class="mt-4 space-y-4">
                                 <!-- Order Details -->
@@ -274,7 +272,7 @@
                                         </div>
                                         <div>
                                             <span class="text-gray-600 dark:text-gray-400">Order Total:</span>
-                                            <span class="font-medium ml-2 text-gray-900 dark:text-gray-100">₦{{ number_format($order->payable_amount, 2) }}</span>
+                                            <span class="font-medium ml-2 text-gray-900 dark:text-gray-100">Birr{{ number_format($order->payable_amount, 2) }}</span>
                                         </div>
                                         <div>
                                             <span class="text-gray-600 dark:text-gray-400">Order ID:</span>
@@ -290,7 +288,7 @@
 
                                 <!-- Payment Amount -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Amount (₦) *</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Amount (ETB) *</label>
                                     <input type="number" wire:model="paymentAmount" step="0.01" min="0"
                                            class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm"
                                            placeholder="Enter amount">
@@ -300,7 +298,7 @@
                                 <!-- Additional Discount -->
                                 <div>
                                     <div class="flex justify-between items-center">
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Discount (₦)</label>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Discount (ETB)</label>
                                         <button type="button" wire:click="applyAdditionalDiscount" 
                                                 class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
                                             Apply Discount
@@ -313,7 +311,7 @@
                                     
                                     @if($paymentDiscount > 0)
                                     <div class="mt-1 text-sm text-green-600 dark:text-green-400">
-                                        Final Amount: ₦{{ number_format($paymentAmount - $paymentDiscount, 2) }}
+                                        Final Amount:ETB{{ number_format($paymentAmount - $paymentDiscount, 2) }}
                                     </div>
                                     @endif
                                 </div>
@@ -334,11 +332,11 @@
             </svg>
         </label>
         
-        <label class="relative flex cursor-pointer rounded-lg border {{ $paymentMethod === 'card' ? 'border-blue-500 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' }} p-4 shadow-sm focus:outline-none">
+        <label class="relative flex cursor-pointer rounded-lg border {{ $paymentMethod === 'bank' ? 'border-blue-500 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' }} p-4 shadow-sm focus:outline-none">
             <input type="radio" wire:model.live="paymentMethod" value="card" class="sr-only">
             <span class="flex flex-1">
                 <span class="flex flex-col">
-                    <span class="block text-sm font-medium {{ $paymentMethod === 'card' ? 'text-blue-900 dark:text-blue-100' : 'text-gray-900 dark:text-gray-100' }}">Card</span>
+                    <span class="block text-sm font-medium {{ $paymentMethod === 'bank' ? 'text-blue-900 dark:text-blue-100' : 'text-gray-900 dark:text-gray-100' }}">bank</span>
                 </span>
             </span>
             <svg class="h-5 w-5 text-blue-600 dark:text-blue-400 {{ $paymentMethod !== 'card' ? 'invisible' : '' }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -375,17 +373,17 @@
                                     <div class="space-y-1 text-sm">
                                         <div class="flex justify-between">
                                             <span class="text-blue-700 dark:text-blue-300">Original Amount:</span>
-                                            <span class="font-medium text-blue-900 dark:text-blue-100">₦{{ number_format($order->payable_amount ?? 0, 2) }}</span>
+                                            <span class="font-medium text-blue-900 dark:text-blue-100">ETB{{ number_format($order->payable_amount ?? 0, 2) }}</span>
                                         </div>
                                         @if($paymentDiscount > 0)
                                         <div class="flex justify-between">
                                             <span class="text-red-600 dark:text-red-400">Additional Discount:</span>
-                                            <span class="font-medium text-red-700 dark:text-red-300">-₦{{ number_format($paymentDiscount, 2) }}</span>
+                                            <span class="font-medium text-red-700 dark:text-red-300">-ETB{{ number_format($paymentDiscount, 2) }}</span>
                                         </div>
                                         @endif
                                         <div class="flex justify-between font-bold pt-1 border-t border-blue-300 dark:border-blue-700">
                                             <span class="text-blue-800 dark:text-blue-200">Final Amount:</span>
-                                            <span class="text-green-600 dark:text-green-400">₦{{ number_format(($paymentAmount - $paymentDiscount), 2) }}</span>
+                                            <span class="text-green-600 dark:text-green-400">ETB{{ number_format(($paymentAmount - $paymentDiscount), 2) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -474,8 +472,8 @@
                                             </div>
                                         </td>
                                         <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">{{ $item->quantity }}</td>
-                                        <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">₦{{ number_format($item->unit_price, 2) }}</td>
-                                        <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">₦{{ number_format($item->total_price, 2) }}</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">ETB{{ number_format($item->unit_price, 2) }}</td>
+                                        <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">ETB{{ number_format($item->total_price, 2) }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -489,22 +487,22 @@
                                 <div class="space-y-2">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                                        <span class="font-medium">₦{{ number_format($receiptData['order']->total_amount, 2) }}</span>
+                                        <span class="font-medium">ETB{{ number_format($receiptData['order']->total_amount, 2) }}</span>
                                     </div>
                                     @if($receiptData['order']->discount_amount > 0)
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Total Discount:</span>
-                                        <span class="font-medium text-red-600 dark:text-red-400">-₦{{ number_format($receiptData['order']->discount_amount, 2) }}</span>
+                                        <span class="font-medium text-red-600 dark:text-red-400">-ETB{{ number_format($receiptData['order']->discount_amount, 2) }}</span>
                                     </div>
                                     @endif
                                     <div class="flex justify-between text-lg font-bold pt-2 border-t border-gray-300 dark:border-gray-600">
                                         <span class="text-gray-800 dark:text-gray-200">Total Paid:</span>
-                                        <span class="text-green-600 dark:text-green-400">₦{{ number_format($receiptData['payment']->amount - $receiptData['payment']->discount, 2) }}</span>
+                                        <span class="text-green-600 dark:text-green-400">ETB{{ number_format($receiptData['payment']->amount - $receiptData['payment']->discount, 2) }}</span>
                                     </div>
                                     @if($receiptData['payment']->discount > 0)
                                     <div class="flex justify-between text-sm">
                                         <span class="text-gray-600 dark:text-gray-400">(Includes additional cashier discount)</span>
-                                        <span class="text-red-600 dark:text-red-400">-₦{{ number_format($receiptData['payment']->discount, 2) }}</span>
+                                        <span class="text-red-600 dark:text-red-400">-ETB{{ number_format($receiptData['payment']->discount, 2) }}</span>
                                     </div>
                                     @endif
                                 </div>
@@ -517,9 +515,9 @@
                                 <h3 class="font-bold text-blue-800 dark:text-blue-200 mb-2">Payment Details</h3>
                                 <div class="space-y-1 text-sm">
                                     <div><span class="font-medium">Method:</span> {{ ucfirst($receiptData['payment']->payment_method) }}</div>
-                                    <div><span class="font-medium">Amount Paid:</span> ₦{{ number_format($receiptData['payment']->amount, 2) }}</div>
-                                    <div><span class="font-medium">Additional Discount:</span> ₦{{ number_format($receiptData['payment']->discount, 2) }}</div>
-                                    <div><span class="font-medium">Net Amount:</span> ₦{{ number_format($receiptData['payment']->amount - $receiptData['payment']->discount, 2) }}</div>
+                                    <div><span class="font-medium">Amount Paid:</span> ETB{{ number_format($receiptData['payment']->amount, 2) }}</div>
+                                    <div><span class="font-medium">Additional Discount:</span> ETB{{ number_format($receiptData['payment']->discount, 2) }}</div>
+                                    <div><span class="font-medium">Net Amount:</span> ETB{{ number_format($receiptData['payment']->amount - $receiptData['payment']->discount, 2) }}</div>
                                 </div>
                             </div>
                             <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">

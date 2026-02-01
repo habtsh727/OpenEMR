@@ -27,4 +27,5 @@ class Prescription extends Model
     {
         return $this->order->items(); // Convenience
     }
+    
 }

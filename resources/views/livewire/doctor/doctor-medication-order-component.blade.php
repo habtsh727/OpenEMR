@@ -1,4 +1,303 @@
 <div>
+    <!-- Prescription Choice Modal -->
+    @if($showPrescriptionChoice)
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
+                aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div
+                class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl dark:shadow-gray-900 transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <!-- Modal Header -->
+                            <div class="flex items-center mb-6">
+                                <div
+                                    class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 mr-3">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100" id="modal-title">
+                                        Generate Prescription
+                                    </h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        Choose prescription option
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Prescription Notes -->
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Prescription Notes (Optional)
+                                </label>
+                                <textarea wire:model="prescriptionNotes" rows="3"
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-600 focus:border-green-500 dark:focus:border-green-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                                    placeholder="Additional instructions for the patient..."></textarea>
+                            </div>
+
+                            <!-- Choice Buttons -->
+                            <div class="space-y-3">
+                                <button wire:click="generatePrescriptionOnly"
+                                    class="w-full flex items-center justify-between p-4 border border-green-300 dark:border-green-700 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors group">
+                                    <div class="flex items-center">
+                                        <div class="p-2 rounded-lg bg-green-100 dark:bg-green-900 mr-3">
+                                            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <div class="text-left">
+                                            <h4 class="font-medium text-gray-900 dark:text-gray-100">Prescription Only
+                                            </h4>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Generate prescription
+                                                without payment</p>
+                                        </div>
+                                    </div>
+                                    <svg class="w-5 h-5 text-gray-400 group-hover:text-green-500" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+
+                                <button wire:click="generatePrescriptionForOrder"
+                                    class="w-full flex items-center justify-between p-4 border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors group">
+                                    <div class="flex items-center">
+                                        <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 mr-3">
+                                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                            </svg>
+                                        </div>
+                                        <div class="text-left">
+                                            <h4 class="font-medium text-gray-900 dark:text-gray-100">Prescription +
+                                                Order</h4>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">Generate prescription
+                                                and submit for payment</p>
+                                        </div>
+                                    </div>
+                                    <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-500" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Cancel Button -->
+                            <div class="mt-6">
+                                <button type="button" wire:click="$set('showPrescriptionChoice', false)"
+                                    class="w-full py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    <!-- Prescription Preview Modal -->
+    @if($showPrescriptionModal)
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
+                aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div
+                class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl dark:shadow-gray-900 transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <!-- Prescription Content (Printable Area) -->
+                <div id="printable-prescription" class="p-8 bg-white">
+                    <!-- Hospital Header -->
+                    <div class="text-center border-b-2 border-gray-800 pb-6 mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900">MEDICAL HOSPITAL</h1>
+                        <p class="text-sm text-gray-600 mt-1">123 Hospital Street, Medical City, State 12345</p>
+                        <p class="text-sm text-gray-600">Phone: (123) 456-7890 | Email: info@medicalhospital.com</p>
+                        <p class="text-sm text-gray-600">License: MH-12345-2024</p>
+                    </div>
+
+                    <!-- Prescription Title -->
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">PRESCRIPTION</h2>
+                            <p class="text-sm text-gray-600">Date: {{ now()->format('F d, Y') }}</p>
+                            <p class="text-sm text-gray-600">Prescription No: RX-{{ $order->id }}-{{
+                                now()->format('Ymd') }}</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-lg">
+                                <span class="text-gray-500 text-sm">Doctor's Stamp/Signature</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patient & Doctor Information -->
+                    <div class="grid grid-cols-2 gap-8 mb-8">
+                        <div class="border border-gray-300 p-4 rounded-lg">
+                            <h3 class="font-bold text-gray-700 mb-3 text-lg">PATIENT INFORMATION</h3>
+                            <div class="space-y-2">
+                                <div class="flex">
+                                    <span class="font-medium w-32">Name:</span>
+                                    <span>{{ $encounter->patient->name ?? 'N/A' }}</span>
+                                </div>
+                                <div class="flex">
+                                    <span class="font-medium w-32">Patient ID:</span>
+                                    <span>{{ $encounter->patient->id ?? 'N/A' }}</span>
+                                </div>
+                                <div class="flex">
+                                    <span class="font-medium w-32">Age/Gender:</span>
+                                    <span>{{ $encounter->patient->age ?? 'N/A' }} / {{ $encounter->patient->gender ??
+                                        'N/A' }}</span>
+                                </div>
+                                <div class="flex">
+                                    <span class="font-medium w-32">Date of Birth:</span>
+                                    <span>{{ $encounter->patient->date_of_birth ?
+                                        $encounter->patient->date_of_birth->format('M d, Y') : 'N/A' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-300 p-4 rounded-lg">
+                            <h3 class="font-bold text-gray-700 mb-3 text-lg">PRESCRIBING DOCTOR</h3>
+                            <div class="space-y-2">
+                                <div class="flex">
+                                    <span class="font-medium w-32">Name:</span>
+                                    <span>Dr. {{ $encounter->doctor->name ?? 'N/A' }}</span>
+                                </div>
+                                <div class="flex">
+                                    <span class="font-medium w-32">Qualification:</span>
+                                    <span>MBBS, MD</span>
+                                </div>
+                                <div class="flex">
+                                    <span class="font-medium w-32">Registration No:</span>
+                                    <span>MED-{{ $encounter->doctor->id ?? '0000' }}</span>
+                                </div>
+                                <div class="flex">
+                                    <span class="font-medium w-32">Department:</span>
+                                    <span>{{ $encounter->doctor->department ?? 'General Medicine' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medications Table -->
+                    <div class="mb-8">
+                        <h3 class="font-bold text-gray-700 mb-4 text-lg">PRESCRIBED MEDICATIONS</h3>
+                        <table class="min-w-full border border-gray-300">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="border border-gray-300 px-4 py-3 text-left font-medium">Medication</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left font-medium">Dosage</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left font-medium">Frequency</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left font-medium">Duration</th>
+                                    <th class="border border-gray-300 px-4 py-3 text-left font-medium">Instructions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($items as $item)
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-3">
+                                        <div class="font-medium">{{ $item->drug->name ?? $item->customMedication->name
+                                            ?? 'Unknown' }}</div>
+                                        @if($item->drug)
+                                        <div class="text-sm text-gray-600">{{ $item->drug->generic_name ?? '' }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="border border-gray-300 px-4 py-3">{{ $item->dosage }}</td>
+                                    <td class="border border-gray-300 px-4 py-3">{{ $item->frequency->name ?? 'As
+                                        directed' }}</td>
+                                    <td class="border border-gray-300 px-4 py-3">{{ $item->duration }}</td>
+                                    <td class="border border-gray-300 px-4 py-3">{{ $item->instructions ?? 'Take as
+                                        prescribed' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Notes & Warnings -->
+                    @if($prescriptionNotes)
+                    <div class="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h4 class="font-bold text-yellow-800 mb-2">DOCTOR'S NOTES:</h4>
+                        <p class="text-yellow-700">{{ $prescriptionNotes }}</p>
+                    </div>
+                    @endif
+
+                    <!-- General Warnings -->
+                    <div class="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <h4 class="font-bold text-red-800 mb-2">IMPORTANT WARNINGS:</h4>
+                        <ul class="list-disc pl-5 text-red-700 space-y-1">
+                            <li>Take medications exactly as prescribed</li>
+                            <li>Do not share medications with others</li>
+                            <li>Complete the full course of treatment</li>
+                            <li>Report any side effects immediately</li>
+                            <li>Store medications properly as instructed</li>
+                        </ul>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="border-t-2 border-gray-800 pt-6">
+                        <div class="grid grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="font-bold text-gray-700 mb-2">FOR THE PATIENT:</h4>
+                                <p class="text-sm text-gray-600">This prescription is valid for 30 days from the date of
+                                    issue.</p>
+                                <p class="text-sm text-gray-600 mt-2">Keep this prescription for your records.</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="mt-8 pt-4 border-t border-gray-300">
+                                    <p class="text-gray-700 font-medium">Authorized Signature</p>
+                                    <p class="text-gray-600 text-sm">Dr. {{ $encounter->doctor->name ?? 'N/A' }}</p>
+                                    <p class="text-gray-600 text-sm">Date: {{ now()->format('F d, Y') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4 border-t dark:border-gray-700">
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            Prescription generated for {{ $encounter->patient->name ?? 'Patient' }}
+                        </div>
+                        <div class="flex space-x-3">
+                            <button onclick="printPrescription()"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-lg transition-colors flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                </svg>
+                                Print
+                            </button>
+                            <button wire:click="downloadPrescription"
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white rounded-lg transition-colors flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Download PDF
+                            </button>
+                            <button wire:click="$set('showPrescriptionModal', false)"
+                                class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900">
         <!-- Header -->
         <div class="px-6 py-4 border-b dark:border-gray-700">
@@ -10,11 +309,12 @@
                         Encounter: #{{ $encounter->id }}
                     </p>
                 </div>
-                <div class="flex space-x-3">
+                {{-- <div class="flex space-x-3">
                     <button wire:click="$toggle('showCustomMedicationModal')"
                         class="px-4 py-2 bg-purple-600 dark:bg-purple-700 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-800 transition-colors">
                         + Custom Medication
                     </button>
+
                     @if($order->status === 'draft')
                     <button wire:click="$set('showSubmitConfirm', true)" wire:loading.attr="disabled"
                         class="px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
@@ -22,8 +322,38 @@
                         Submit Order
                     </button>
                     @else
-                    <span class="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg">
+                    <span
+                        class="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg">
                         Order Submitted
+                    </span>
+                    @endif
+                </div> --}}
+                <!-- In the header section where buttons are -->
+                <div class="flex space-x-3">
+                    <button wire:click="$toggle('showCustomMedicationModal')"
+                        class="px-4 py-2 bg-purple-600 dark:bg-purple-700 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-800 transition-colors">
+                        + Custom Medication
+                    </button>
+
+                    <!-- NEW: Prescription Button -->
+                  <button wire:click="showPrescriptionChoice"
+    class="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-800 transition-colors flex items-center">
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+    Generate Prescription
+</button>
+
+                    @if($order->status === 'draft')
+                    <button wire:click="$set('showSubmitConfirm', true)" wire:loading.attr="disabled"
+                        class="px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
+                        {{ $items->isEmpty() ? 'disabled' : '' }}>
+                        Submit Order
+                    </button>
+                    @else
+                    <span
+                        class="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg">
+                        {{ $order->status === 'prescribed' ? 'Prescription Generated' : 'Order Submitted' }}
                     </span>
                     @endif
                 </div>
@@ -85,7 +415,7 @@
                             </div>
                             <div class="text-right">
                                 <span class="font-semibold text-green-600 dark:text-green-400">
-                                    ₦{{ number_format($medication['selling_price'], 2) }}
+                                    {{ number_format($medication['selling_price'], 2) }}Birr
                                 </span>
                             </div>
                         </div>
@@ -113,7 +443,7 @@
                             </div>
                             <div class="text-right">
                                 <span class="font-semibold text-green-600 dark:text-green-400">
-                                    ₦{{ number_format($medication['base_price'], 2) }}
+                                    {{ number_format($medication['base_price'], 2) }}Birr
                                 </span>
                             </div>
                         </div>
@@ -130,31 +460,40 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Medication
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Dosage
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Frequency
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Duration
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Quantity
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Unit Price
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Discount
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Total
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Actions
                         </th>
                     </tr>
@@ -175,32 +514,37 @@
                                         @endif
                                     </div>
                                     @if($item->instructions)
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ Str::limit($item->instructions, 50) }}</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">{{
+                                        Str::limit($item->instructions, 50) }}</div>
                                     @endif
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $item->dosage }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $item->frequency->name ?? '-' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $item->duration }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $item->quantity }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{
+                            $item->dosage }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{
+                            $item->frequency->name ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{
+                            $item->duration }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{
+                            $item->quantity }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            ₦{{ number_format($item->unit_price, 2) }}
+                            {{ number_format($item->unit_price, 2) }}Birr
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             @if($item->discount_type)
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
+                            <span
+                                class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
                             {{ $item->discount_type === 'percentage' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' }}">
-                                    {{ $item->discount_type === 'percentage' ? $item->discount_value.'%' :
-                                    '₦'.number_format($item->discount_value, 2) }}
-                                </span>
+                                {{ $item->discount_type === 'percentage' ? $item->discount_value.'%' :
+                                'ETB'.number_format($item->discount_value, 2) }}
+                            </span>
                             @else
-                                <span class="text-gray-400 dark:text-gray-500">-</span>
+                            <span class="text-gray-400 dark:text-gray-500">-</span>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                            ₦{{ number_format($item->total_price, 2) }}
+                            {{ number_format($item->total_price, 2) }}Birr
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button wire:click="editItem({{ $item->id }})"
@@ -212,11 +556,15 @@
                     @empty
                     <tr>
                         <td colspan="9" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                            <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                             </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No medications added</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Search and add medications to create an order.</p>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No medications added
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Search and add medications to
+                                create an order.</p>
                         </td>
                     </tr>
                     @endforelse
@@ -238,21 +586,19 @@
                                 <option value="percentage">Percentage</option>
                                 <option value="fixed">Fixed Amount</option>
                             </select>
-                            <input type="number" wire:model.live.debounce.500ms="discountValue" 
-                                @if(!$discountType) disabled @endif 
-                                class="w-1/2 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400
+                            <input type="number" wire:model.live.debounce.500ms="discountValue" @if(!$discountType)
+                                disabled @endif class="w-1/2 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400
                                 @if(!$discountType) bg-gray-100 dark:bg-gray-900 cursor-not-allowed @endif"
                                 placeholder="@if($discountType === 'percentage') Percentage @elseif($discountType === 'fixed') Amount @endif"
-                                min="0" 
-                                @if($discountType === 'percentage') max="100" @endif>
+                                min="0" @if($discountType==='percentage' ) max="100" @endif>
                         </div>
                         @if($discountType && $discountValue > 0)
                         <div class="text-sm text-green-600 dark:text-green-400 font-medium">
                             Discount:
                             @if($discountType === 'percentage')
-                            {{ $discountValue }}% (₦{{ number_format(($subtotal * $discountValue) / 100, 2) }})
+                            {{ $discountValue }}% (ETB{{ number_format(($subtotal * $discountValue) / 100, 2) }})
                             @else
-                            ₦{{ number_format($discountValue, 2) }}
+                            ETB{{ number_format($discountValue, 2) }}
                             @endif
                         </div>
                         @endif
@@ -265,15 +611,18 @@
                     <div class="space-y-2">
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                            <span class="font-medium text-gray-900 dark:text-gray-100">₦{{ number_format($subtotal, 2) }}</span>
+                            <span class="font-medium text-gray-900 dark:text-gray-100">ETB{{ number_format($subtotal, 2)
+                                }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-400">Total Discount:</span>
-                            <span class="font-medium text-red-600 dark:text-red-400">-₦{{ number_format($totalDiscount, 2) }}</span>
+                            <span class="font-medium text-red-600 dark:text-red-400">-ETB{{ number_format($totalDiscount,
+                                2) }}</span>
                         </div>
                         <div class="flex justify-between text-lg font-semibold pt-2 border-t dark:border-gray-700">
                             <span class="text-gray-800 dark:text-gray-200">Payable Amount:</span>
-                            <span class="text-green-600 dark:text-green-400">₦{{ number_format($payableAmount, 2) }}</span>
+                            <span class="text-green-600 dark:text-green-400">ETB{{ number_format($payableAmount, 2)
+                                }}</span>
                         </div>
                     </div>
                 </div>
@@ -296,7 +645,8 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600 dark:text-gray-400">Medications:</span>
-                            <span class="font-medium text-gray-900 dark:text-gray-100">{{ $items->count() }} items</span>
+                            <span class="font-medium text-gray-900 dark:text-gray-100">{{ $items->count() }}
+                                items</span>
                         </div>
                     </div>
                 </div>
@@ -308,7 +658,8 @@
     @if($showAddItemModal)
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
+                aria-hidden="true"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div
                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl dark:shadow-gray-900 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
@@ -322,33 +673,40 @@
                             <form wire:submit="addItem" class="mt-4 space-y-4">
                                 <!-- Medication Type -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Medication Type</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Medication
+                                        Type</label>
                                     <div class="mt-1 flex space-x-4">
                                         <label class="inline-flex items-center">
                                             <input type="radio" wire:model="itemType" value="standard"
                                                 class="form-radio h-4 w-4 text-blue-600 dark:text-blue-500">
-                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Standard Drug</span>
+                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Standard
+                                                Drug</span>
                                         </label>
                                         <label class="inline-flex items-center">
                                             <input type="radio" wire:model="itemType" value="custom"
                                                 class="form-radio h-4 w-4 text-purple-600 dark:text-purple-500">
-                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Custom Medication</span>
+                                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Custom
+                                                Medication</span>
                                         </label>
                                     </div>
-                                    @error('itemType') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                    @error('itemType') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message
+                                        }}</span> @enderror
                                 </div>
 
                                 <!-- Dosage -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dosage *</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dosage
+                                        *</label>
                                     <input type="text" wire:model="dosage"
                                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm">
-                                    @error('dosage') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                    @error('dosage') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message
+                                        }}</span> @enderror
                                 </div>
 
                                 <!-- Frequency -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Frequency</label>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Frequency</label>
                                     <select wire:model="frequencyId"
                                         class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm rounded-md">
                                         <option value="">Select Frequency</option>
@@ -357,37 +715,46 @@
                                             $frequency->short_code }})</option>
                                         @endforeach
                                     </select>
-                                    @error('frequencyId') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                    @error('frequencyId') <span class="text-red-500 dark:text-red-400 text-xs">{{
+                                        $message }}</span> @enderror
                                 </div>
 
                                 <!-- Duration -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration *</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duration
+                                        *</label>
                                     <input type="text" wire:model="duration"
                                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm"
                                         placeholder="e.g., 5 days, 1 week, 2 months">
-                                    @error('duration') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                    @error('duration') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message
+                                        }}</span> @enderror
                                 </div>
 
                                 <!-- Quantity & Price -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantity *</label>
+                                        <label
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantity
+                                            *</label>
                                         <input type="number" wire:model="quantity" min="1"
                                             class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm">
-                                        @error('quantity') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                        @error('quantity') <span class="text-red-500 dark:text-red-400 text-xs">{{
+                                            $message }}</span> @enderror
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Unit Price (₦) *</label>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Unit
+                                            Price (ETB) *</label>
                                         <input type="number" wire:model="unitPrice" min="0" step="0.01"
                                             class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm">
-                                        @error('unitPrice') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                        @error('unitPrice') <span class="text-red-500 dark:text-red-400 text-xs">{{
+                                            $message }}</span> @enderror
                                     </div>
                                 </div>
 
                                 <!-- Item Discount -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Discount</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Item
+                                        Discount</label>
                                     <div class="mt-1 grid grid-cols-2 gap-3">
                                         <select wire:model.live="itemDiscountType"
                                             class="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm">
@@ -395,20 +762,20 @@
                                             <option value="percentage">Percentage</option>
                                             <option value="fixed">Fixed Amount</option>
                                         </select>
-                                        <input type="number" wire:model="itemDiscountValue" 
-                                            @if(!$itemDiscountType) disabled @endif 
-                                            class="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm
+                                        <input type="number" wire:model="itemDiscountValue" @if(!$itemDiscountType)
+                                            disabled @endif class="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm
                       @if(!$itemDiscountType) bg-gray-100 dark:bg-gray-900 cursor-not-allowed @endif"
-                                            placeholder="{{ $itemDiscountType === 'percentage' ? '%' : '₦' }}" 
-                                            min="0"
+                                            placeholder="{{ $itemDiscountType === 'percentage' ? '%' : 'Birr' }}" min="0"
                                             {{ $itemDiscountType==='percentage' ? 'max="100"' : '' }}>
                                     </div>
-                                    @error('itemDiscountValue') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                    @error('itemDiscountValue') <span class="text-red-500 dark:text-red-400 text-xs">{{
+                                        $message }}</span> @enderror
                                 </div>
 
                                 <!-- Instructions -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Instructions
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Instructions
                                         (Optional)</label>
                                     <textarea wire:model="instructions" rows="2"
                                         class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm"
@@ -439,7 +806,8 @@
     @if($showCustomMedicationModal)
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
+                aria-hidden="true"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div
                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl dark:shadow-gray-900 transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
@@ -461,7 +829,8 @@
     @if($showSubmitConfirm)
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
+                aria-hidden="true"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div
                 class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl dark:shadow-gray-900 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
@@ -469,7 +838,8 @@
                     <div class="sm:flex sm:items-start">
                         <div
                             class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
@@ -486,11 +856,13 @@
                                 <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-md">
                                     <div class="flex justify-between text-sm">
                                         <span class="font-medium text-gray-900 dark:text-gray-100">Total Amount:</span>
-                                        <span class="font-semibold text-gray-900 dark:text-gray-100">₦{{ number_format($payableAmount, 2) }}</span>
+                                        <span class="font-semibold text-gray-900 dark:text-gray-100">ETB{{
+                                            number_format($payableAmount, 2) }}</span>
                                     </div>
                                     <div class="flex justify-between text-sm mt-1">
                                         <span class="font-medium text-gray-900 dark:text-gray-100">Medications:</span>
-                                        <span class="text-gray-900 dark:text-gray-100">{{ $items->count() }} items</span>
+                                        <span class="text-gray-900 dark:text-gray-100">{{ $items->count() }}
+                                            items</span>
                                     </div>
                                 </div>
                             </div>
@@ -527,6 +899,84 @@
             });
         });
     </script>
+    <script>
+    console.log('Doctor medication order component script loaded');
+
+    // Listen for Livewire events
+    document.addEventListener('livewire:init', () => {
+        console.log('Livewire initialized');
+        
+        Livewire.on('error', (data) => {
+            console.error('Livewire error:', data);
+            alert('Error: ' + (data.message || 'Something went wrong'));
+        });
+        
+        Livewire.on('prescription-generated', (data) => {
+            console.log('Prescription generated event received:', data);
+        });
+        
+        Livewire.on('order-submitted', (data) => {
+            console.log('Order submitted event received:', data);
+        });
+    });
+
+    // Handle discount field enabling/disabling
+    Livewire.on('discount-type-changed', (discountType) => {
+        console.log('Discount type changed:', discountType);
+        const discountValueField = document.querySelector('input[wire\\:model="discountValue"]');
+        if (discountValueField) {
+            if (!discountType) {
+                discountValueField.disabled = true;
+                discountValueField.classList.add('bg-gray-100', 'dark:bg-gray-900', 'cursor-not-allowed');
+            } else {
+                discountValueField.disabled = false;
+                discountValueField.classList.remove('bg-gray-100', 'dark:bg-gray-900', 'cursor-not-allowed');
+            }
+        }
+    });
+    
+    // Handle item discount field enabling/disabling
+    Livewire.on('item-discount-type-changed', (itemDiscountType) => {
+        console.log('Item discount type changed:', itemDiscountType);
+        const itemDiscountValueField = document.querySelector('input[wire\\:model="itemDiscountValue"]');
+        if (itemDiscountValueField) {
+            if (!itemDiscountType) {
+                itemDiscountValueField.disabled = true;
+                itemDiscountValueField.classList.add('bg-gray-100', 'dark:bg-gray-900', 'cursor-not-allowed');
+            } else {
+                itemDiscountValueField.disabled = false;
+                itemDiscountValueField.classList.remove('bg-gray-100', 'dark:bg-gray-900', 'cursor-not-allowed');
+            }
+        }
+    });
+
+    // Print prescription function
+    function printPrescription() {
+        console.log('Print prescription called');
+        const printContent = document.getElementById('printable-prescription');
+        
+        if (!printContent) {
+            console.error('Printable prescription element not found');
+            alert('Cannot print: Prescription content not found');
+            return;
+        }
+        
+        const originalContent = document.body.innerHTML;
+        
+        document.body.innerHTML = `
+            <div style="padding: 20px;">
+                ${printContent.innerHTML}
+            </div>
+        `;
+        
+        window.print();
+        
+        // Restore content and reinitialize Livewire
+        document.body.innerHTML = originalContent;
+        Livewire.rescan();
+        console.log('Printing completed, Livewire rescanned');
+    }
+</script>
     <script>
         // Handle discount field enabling/disabling
         Livewire.on('discount-type-changed', (discountType) => {

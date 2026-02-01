@@ -25,7 +25,13 @@ class MedicationOrder extends Model
     {
         return $this->hasOne(MedicationPayment::class, 'medication_order_id');
     }
-    
+    public function dispensation()
+{
+    return $this->hasOne(MedicationDispensation::class, 'medication_order_id');
+}
+
+// Also make sure you have the payment relationship
+
 
     public function items()
     {
