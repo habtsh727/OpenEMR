@@ -167,25 +167,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
 });
 // Doctor Routes
-Route::middleware(['auth', 'role:doctor'])->group(function () {
-    Route::get('/doctor/encounter/{encounter}/medication-order', function (Encounter $encounter) {
-        return view('doctor.medication-order', ['encounter' => $encounter]);
-    })->name('doctor.medication-order');
-});
+// Route::middleware(['auth', 'role:doctor'])->group(function () {
+//     Route::get('/doctor/encounter/{encounter}/medication-order', function (Encounter $encounter) {
+//         return view('doctor.medication-order', ['encounter' => $encounter]);
+//     })->name('doctor.medication-order');
+// });
 
-// Cashier Routes
-Route::middleware(['auth', 'role:cashier'])->group(function () {
-    Route::get('/cashier/medication-orders', function () {
-        return view('cashier.orders');
-    })->name('cashier.orders');
-});
+// // Cashier Routes
+// Route::middleware(['auth', 'role:cashier'])->group(function () {
+//     Route::get('/cashier/medication-orders', function () {
+//         return view('cashier.orders');
+//     })->name('cashier.orders');
+// });
 
-// Pharmacy Routes
-Route::middleware(['auth', 'role:pharmacist'])->group(function () {
-    Route::get('/pharmacy/orders', function () {
-        return view('pharmacy.orders');
-    })->name('pharmacy.orders');
-});
+// // Pharmacy Routes
+// Route::middleware(['auth', 'role:pharmacist'])->group(function () {
+//     Route::get('/pharmacy/orders', function () {
+//         return view('pharmacy.orders');
+//     })->name('pharmacy.orders');
+// });
 
 Route::middleware(['auth'])->group(function () {
     // Doctor
