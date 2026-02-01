@@ -13,6 +13,23 @@ return new class extends Migration
     {
         Schema::create('beds', function (Blueprint $table) {
             $table->id();
+            $table->string('bed_number');
+
+            $table->foreignId('room_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('bed_type_id')
+                ->constrained('bed_types');
+
+            $table->enum('status', [
+                'available',
+                'occupied',
+                'reserved',
+                'cleaning',
+                'maintenance',
+            ])->default('available');
+
             $table->timestamps();
         });
     }

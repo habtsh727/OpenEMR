@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('wards', function (Blueprint $table) {
             $table->id();
+            $table->string('name'); // ICU Ward, Medical Ward
+            $table->string('code')->unique();
             $table->timestamps();
         });
     }

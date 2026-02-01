@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bed_types', function (Blueprint $table) {
-            $table->id();
+             $table->id();
+            $table->string('name'); // ICU, Pediatric, Isolation
+            $table->string('code')->unique(); // ICU, PED, ISO
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

@@ -12,7 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rooms', function (Blueprint $table) {
-            $table->id();
+             $table->id();
+            $table->string('room_number');
+
+            $table->foreignId('ward_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('bed_class_id')
+                ->constrained('bed_classes');
+
+            $table->integer('floor')->nullable();
             $table->timestamps();
         });
     }

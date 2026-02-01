@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('bed_classes', function (Blueprint $table) {
             $table->id();
+            $table->string('name'); // General, VIP, VVIP
+            $table->string('code')->unique(); // GEN, VIP, VVIP
+            $table->text('description')->nullable();
+            $table->decimal('price_per_day', 10, 2);
+            $table->string('currency', 10)->default('ETB');
             $table->timestamps();
         });
     }
