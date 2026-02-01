@@ -26,7 +26,7 @@ return new class extends Migration
                   ->nullOnDelete();
 
             // Attachment info
-            $table->enum(column: 'attachment_type', ['lab', 'imaging', 'report', 'other']); // Type of file
+            $table->enum( 'attachment_type', ['lab', 'imaging', 'report', 'other']); // Type of file
             $table->string('file_path');       // Stored file path in storage
             $table->string('file_name')->nullable(); // Original file name
 

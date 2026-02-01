@@ -85,11 +85,6 @@ class Encounter extends Model
     {
         return $this->hasOne(MedicationOrder::class);
     }
-
-    public function prescriptions()
-    {
-        return $this->hasMany(Prescription::class);
-    }
     public function imagingOrders()
     {
         return $this->hasMany(ImagingOrder::class);
@@ -110,5 +105,14 @@ class Encounter extends Model
     public function referrals()
     {
         return $this->hasMany(Referral::class);
+    }
+    public function medicationOrders()
+    {
+        return $this->hasMany(MedicationOrder::class);
+    }
+
+    public function prescriptions()
+    {
+        return $this->hasManyThrough(Prescription::class, MedicationOrder::class);
     }
 }

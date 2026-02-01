@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
@@ -43,6 +44,11 @@ use App\Livewire\Cashier\ImagingPayments;
 use App\Livewire\Radiology\RadiologyDashboard;
 use App\Livewire\Admin\ManageImagingTypes;
 use App\Livewire\Admin\ManageBodyParts;
+use App\Livewire\Cashier\CashierOrderQueueComponent;
+use App\Livewire\Cashier\OrderQueueComponent;
+use App\Livewire\Doctor\CustomMedicationFormComponent;
+use App\Livewire\Doctor\DoctorMedicationOrderComponent;
+use App\Livewire\Pharmacy\PharmacyQueueComponent;
 use App\Livewire\Referral\CreateReferral;
 use App\Livewire\Referral\PrintReferral;
 use App\Livewire\Referral\SubmitResultModal;
@@ -159,15 +165,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/doctor/patients/{patient}/lab-results', DoctorLabResults::class)->name('doctor.patient.lab-results');
     // Modal routes (will be called via Livewire)
     Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
-    Route::get('/doctor/encounter/{encounter}/order-medication', OrderMedicationPage::class)
-        ->name('doctor.order-medication');
 });
-Route::middleware(['auth'])->group(function () {
+// Doctor Routes
+// Route::middleware(['auth', 'role:doctor'])->group(function () {
+//     Route::get('/doctor/encounter/{encounter}/medication-order', function (Encounter $encounter) {
+//         return view('doctor.medication-order', ['encounter' => $encounter]);
+//     })->name('doctor.medication-order');
+// });
 
+// // Cashier Routes
+// Route::middleware(['auth', 'role:cashier'])->group(function () {
+//     Route::get('/cashier/medication-orders', function () {
+//         return view('cashier.orders');
+//     })->name('cashier.orders');
+// });
 
-    Route::get('/cashier/medication-orders', MedicationOrders::class)
-        ->name('cashier.medication-orders');
-});
+// // Pharmacy Routes
+// Route::middleware(['auth', 'role:pharmacist'])->group(function () {
+//     Route::get('/pharmacy/orders', function () {
+//         return view('pharmacy.orders');
+//     })->name('pharmacy.orders');
+// });
 
 Route::middleware(['auth'])->group(function () {
     // Doctor
@@ -191,6 +209,38 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/admin/body-parts', ManageBodyParts::class)
         ->name('admin.body-parts');
+});
+
+
+Route::middleware(['auth'])->group(function () {
+    // Doctor Side
+    Route::get('/doctor/encounter/{encounter}/medication/order', DoctorMedicationOrderComponent::class)
+        ->name('doctor.medication.order');
+
+    Route::get('/doctor/custom-medications/manage', CustomMedicationFormComponent::class)
+        ->name('doctor.custom-medications.manage');
+    Route::get('/cashier/medication-orders/queue', OrderQueueComponent::class)
+        ->name('cashier.medication.orders');
+    Route::get('/pharmacy/dashboard', \App\Livewire\Pharmacy\PharmacyDashboardComponent::class)
+        ->name('pharmacy.dashboard');
+
+    // Shared Components
+    // Route::get('/prescription/{order}/view', PrescriptionViewComponent::class)
+    //     ->name('prescription.view');
+    Route::get('/prescriptions/{prescription}/download', [PrescriptionController::class, 'download'])
+        ->name('prescriptions.download')
+        ->middleware('auth');
+
+    Route::get('/prescriptions/{prescription}/print', [PrescriptionController::class, 'print'])
+        ->name('prescriptions.print')
+        ->middleware('auth');
+    // Reports
+    Route::get('/reports/medications', DoctorMedicationOrderComponent::class)
+        ->middleware('role:admin|pharmacist')
+        ->name('reports.medications');
+
+    Route::get('/pharmacy/custom-medications', \App\Livewire\Pharmacy\CustomMedicationComponent::class)
+        ->name('pharmacy.custom-medications');
 });
 
 // routes/web.php (add these routes)

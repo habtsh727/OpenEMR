@@ -4,140 +4,77 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MedicationOrder extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'encounter_id',
-        'lab_order_id',
-        'doctor_id',
-        'patient_id',
-        'status',
-        'total_amount',
-        'paid_amount',
-        'cashier_id',
-        'paid_at',
-        'pharmacist_id',
-        'dispensed_at',
-        'clinical_notes',
-        'pharmacy_notes',
-    ];
-
-    protected $casts = [
-        'total_amount' => 'decimal:2',
-        'paid_amount' => 'decimal:2',
-        'paid_at' => 'datetime',
-        'dispensed_at' => 'datetime',
-        'payment_method',
-        'payment_notes',
+        'encounter_id', 'order_type', 'status',
+        'total_amount', 'discount_amount', 'payable_amount', 'ordered_at',
+        'discount_type',      // Make sure this is here
+        'discount_value', 
     ];
 
     // Relationships
-    public function encounter(): BelongsTo
+    public function encounter()
     {
         return $this->belongsTo(Encounter::class);
     }
-
-    public function labOrder(): BelongsTo
+    public function payment()
     {
-        return $this->belongsTo(LabOrder::class);
+        return $this->hasOne(MedicationPayment::class, 'medication_order_id');
     }
+    public function dispensation()
+{
+    return $this->hasOne(MedicationDispensation::class, 'medication_order_id');
+}
 
-    public function doctor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'doctor_id');
-    }
+// Also make sure you have the payment relationship
 
-    public function patient(): BelongsTo
-    {
-        return $this->belongsTo(Patient::class);
-    }
 
-    public function cashier(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'cashier_id');
-    }
-
-    public function pharmacist(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'pharmacist_id');
-    }
-
-    public function items(): HasMany
+    public function items()
     {
         return $this->hasMany(MedicationOrderItem::class);
     }
-
-    public function prescription(): BelongsTo
+    public function patient()
     {
-        return $this->belongsTo(Prescription::class);
+        return $this->hasOneThrough(
+            Patient::class,
+            Encounter::class,
+            'id', // Foreign key on Encounter table
+            'id', // Foreign key on Patient table
+            'encounter_id', // Local key on MedicationOrder table
+            'patient_id' // Local key on Encounter table
+        );
+    }
+    
+    /**
+     * Get the doctor through encounter.
+     */
+    public function doctor()
+    {
+        return $this->hasOneThrough(
+            User::class,
+            Encounter::class,
+            'id', // Foreign key on Encounter table
+            'id', // Foreign key on User table
+            'encounter_id', // Local key on MedicationOrder table
+            'doctor_id' // Local key on Encounter table
+        )->where('role', 'doctor'); // Optional: filter by role
+    }
+    public function payments()
+    {
+        return $this->hasMany(MedicationPayment::class);
     }
 
-    // Helper Methods
-    public function isPending(): bool
+    public function dispensations()
     {
-        return $this->status === 'pending';
+        return $this->hasMany(MedicationDispensation::class);
     }
 
-    public function isPaid(): bool
+    public function prescription()
     {
-        return $this->status === 'paid';
-    }
-
-    public function isDispensed(): bool
-    {
-        return $this->status === 'dispensed';
-    }
-
-    public function markAsSentToCashier()
-    {
-        $this->update(['status' => 'sent_to_cashier']);
-    }
-
-    public function markAsPaid($cashierId)
-    {
-        $this->update([
-            'status' => 'paid',
-            'cashier_id' => $cashierId,
-            'paid_at' => now(),
-        ]);
-    }
-
-    public function markAsSentToPharmacy()
-    {
-        $this->update(['status' => 'sent_to_pharmacy']);
-    }
-
-    public function markAsDispensed($pharmacistId)
-    {
-        $this->update([
-            'status' => 'dispensed',
-            'pharmacist_id' => $pharmacistId,
-            'dispensed_at' => now(),
-        ]);
-    }
-    public function getBalanceDueAttribute()
-    {
-        return $this->total_amount - $this->paid_amount;
-    }
-
-    public function getIsFullyPaidAttribute()
-    {
-        return $this->paid_amount >= $this->total_amount;
-    }
-
-    public function getPaymentStatusAttribute()
-    {
-        if ($this->paid_amount == 0) {
-            return 'unpaid';
-        } elseif ($this->paid_amount < $this->total_amount) {
-            return 'partial';
-        } else {
-            return 'paid';
-        }
+        return $this->hasOne(Prescription::class);
     }
 }
