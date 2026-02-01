@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
             BedClassesTableSeeder::class,
             BedTypesTableSeeder::class,
             WardsTableSeeder::class,
+            RoomsSeeder::class,
+            BedsSeeder::class,
         ]);
     }
 }

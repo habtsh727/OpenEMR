@@ -44,6 +44,7 @@ use App\Livewire\Cashier\ImagingPayments;
 use App\Livewire\Radiology\RadiologyDashboard;
 use App\Livewire\Admin\ManageImagingTypes;
 use App\Livewire\Admin\ManageBodyParts;
+use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
@@ -259,5 +260,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('referrals.submit-result');
     Route::get('/referrals/{referral}/print', PrintReferral::class)
         ->name('referrals.print');
+
+        Route::get('/beds', BedIndex::class)->name('beds.index');
 });
 require __DIR__ . '/auth.php';
