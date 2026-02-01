@@ -276,7 +276,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($encounter->labOrders->where('status', 'verified')->count() > 0)
-                                <a href="{{ route('doctor.order-medication', ['encounter' => $encounter->id]) }}"
+                                <a href="{{ route('doctor.medication.order', ['encounter' => $encounter->id]) }}"
                                     class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-lg transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow text-sm">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

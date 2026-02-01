@@ -374,7 +374,7 @@ class AssessmentForm extends Component
     }
     public function skipImaging()
     {
-        return $this->redirect(route('doctor.order-medication', $this->encounter), navigate: true);
+        return $this->redirect(route('doctor.medication.order', $this->encounter), navigate: true);
     }
     public function orderReferral()
     {
