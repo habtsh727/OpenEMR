@@ -106,18 +106,18 @@
             </flux:sidebar.group>
             @endcanany
             {{-- ========================= Radiology ========================= --}}
+            @canany([ 'view_imaging_order','upload_imaging_result',])
             <flux:sidebar.group expandable heading="Radiology" class="grid">
-                @canany([ 'view_imaging_order','upload_imaging_result',])
+
                 <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
                 </flux:sidebar.item>
-                @endcan
+
             </flux:sidebar.group>
-
-
+            @endcan
             {{-- ========================= Bed Management: ========================= --}}
             @canany([
             'view_beds',
@@ -134,7 +134,7 @@
                 </flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
-            
+
             {{-- ========================= PHARMACY ========================= --}}
             @canany(['view_prescription','dispense_drug','manage_drugs'])
             <flux:sidebar.group expandable heading="Pharmacy" class="grid">
@@ -146,12 +146,11 @@
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.dashboard')" wire:navigate>
                     pharmacy Queue
                 </flux:sidebar.item>
-                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.custom-medications')"
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.custom-medications')"
                     wire:navigate>
                     Custom Medications
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('inventory.consumables')"
-                    wire:navigate>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('inventory.consumables')" wire:navigate>
                     Consumables
                 </flux:sidebar.item>
             </flux:sidebar.group>

@@ -248,7 +248,7 @@
                     @endphp
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150">
                         <td class="px-2 py-4 whitespace-nowrap">
-                            <span class="font-semibold text-gray-900 dark:text-white">{{ $consumable->code }}</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $consumable->code }}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-white">{{ $consumable->name }}</div>
