@@ -146,9 +146,13 @@
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.dashboard')" wire:navigate>
                     pharmacy Queue
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.custom-medications')"
+                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.custom-medications')"
                     wire:navigate>
                     Custom Medications
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('inventory.consumables')"
+                    wire:navigate>
+                    Consumables
                 </flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany

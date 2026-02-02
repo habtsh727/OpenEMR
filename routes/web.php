@@ -47,6 +47,7 @@ use App\Livewire\Admin\ManageBodyParts;
 use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
+use App\Livewire\Consumables\ConsumableManager;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
 use App\Livewire\Pharmacy\PharmacyQueueComponent;
@@ -239,5 +240,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('referrals.print');
 
         Route::get('/beds', BedIndex::class)->name('beds.index');
+});
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Consumables Management
+    Route::prefix('inventory')->group(function () {
+        Route::get('/consumables', action: ConsumableManager::class)
+            ->name('inventory.consumables');
+    });
 });
 require __DIR__ . '/auth.php';

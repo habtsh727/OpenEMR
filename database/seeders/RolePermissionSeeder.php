@@ -15,6 +15,26 @@ class RolePermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
+            // 'view consumables',
+            // 'create consumables',
+            // 'edit consumables',
+            // 'delete consumables',
+            // 'reorder consumables',
+            // 'export consumables',
+            // 'import consumables',
+            // 'audit consumables',
+            // 'manage stock levels',
+            // 'add stock',
+            // 'issue stock',
+            // 'transfer stock',
+            // 'adjust stock',
+            // 'view stock history',
+            // 'export stock reports',
+            // 'manage categories',
+            // 'manage units',
+            // 'configure reorder points',
+            // 'update pricing',
+            // 'toggle billable status',
             // ===== BED MANAGEMENT =====
             'view_beds',
             'create_bed',
