@@ -44,6 +44,7 @@ use App\Livewire\Cashier\ImagingPayments;
 use App\Livewire\Radiology\RadiologyDashboard;
 use App\Livewire\Admin\ManageImagingTypes;
 use App\Livewire\Admin\ManageBodyParts;
+use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
@@ -166,27 +167,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Modal routes (will be called via Livewire)
     Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
 });
-// Doctor Routes
-// Route::middleware(['auth', 'role:doctor'])->group(function () {
-//     Route::get('/doctor/encounter/{encounter}/medication-order', function (Encounter $encounter) {
-//         return view('doctor.medication-order', ['encounter' => $encounter]);
-//     })->name('doctor.medication-order');
-// });
-
-// // Cashier Routes
-// Route::middleware(['auth', 'role:cashier'])->group(function () {
-//     Route::get('/cashier/medication-orders', function () {
-//         return view('cashier.orders');
-//     })->name('cashier.orders');
-// });
-
-// // Pharmacy Routes
-// Route::middleware(['auth', 'role:pharmacist'])->group(function () {
-//     Route::get('/pharmacy/orders', function () {
-//         return view('pharmacy.orders');
-//     })->name('pharmacy.orders');
-// });
-
 Route::middleware(['auth'])->group(function () {
     // Doctor
     Route::get('/doctor/encounter/{encounter}/imaging/order', CreateImagingOrder::class)
@@ -224,9 +204,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pharmacy/dashboard', \App\Livewire\Pharmacy\PharmacyDashboardComponent::class)
         ->name('pharmacy.dashboard');
 
-    // Shared Components
-    // Route::get('/prescription/{order}/view', PrescriptionViewComponent::class)
-    //     ->name('prescription.view');
+   
     Route::get('/prescriptions/{prescription}/download', [PrescriptionController::class, 'download'])
         ->name('prescriptions.download')
         ->middleware('auth');
@@ -259,5 +237,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('referrals.submit-result');
     Route::get('/referrals/{referral}/print', PrintReferral::class)
         ->name('referrals.print');
+
+        Route::get('/beds', BedIndex::class)->name('beds.index');
 });
 require __DIR__ . '/auth.php';

@@ -105,7 +105,7 @@ class CreateImagingOrder extends Component
     }
      public function backToLabOrder()
     {
-        return $this->redirect(route('lab-orders.create', $this->encounter), navigate: true);
+        return $this->redirect(route('consultation.assessment', $this->encounter), navigate: true);
     }
 
     public function render()

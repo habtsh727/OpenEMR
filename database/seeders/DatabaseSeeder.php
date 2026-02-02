@@ -30,6 +30,11 @@ class DatabaseSeeder extends Seeder
             BodyPartsSeeder::class,
             ImagingSetupSeeder::class,
             PharmacySystemSeeder::class,
+            BedClassesTableSeeder::class,
+            BedTypesTableSeeder::class,
+            WardsTableSeeder::class,
+            RoomsSeeder::class,
+            BedsSeeder::class,
         ]);
     }
 }

@@ -28,7 +28,7 @@ class ViewImagingResults extends Component
     public function loadOrders()
     {
         $query = $this->encounter->imagingOrders()
-            ->where('status', 'completed')
+            ->where('status', 'completed')->whereHas('imagingResult')
             ->with(['imagingType', 'bodyPart', 'imagingResult.radiologist']);
 
         // Apply search filter

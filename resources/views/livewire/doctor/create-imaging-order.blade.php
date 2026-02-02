@@ -101,7 +101,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
                         </path>
                     </svg>
-                    <span>Back To Lab Order</span>
+                    <span>Back To Assessment </span>
                 </button>
 
                 <button type="button" wire:click="skipImaging"
@@ -452,7 +452,7 @@
                                                 Cancel
                                             </button>
                                             @endif
-                                            @if($order->imagingResult)
+                                            @if($order->status=='completed')
                                             <a href="{{ route('doctor.imaging.results', ['encounter' => $order->encounter_id]) }}"
                                                 wire:navigate
                                                 class="inline-flex items-center px-3 py-1.5 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors duration-200">
