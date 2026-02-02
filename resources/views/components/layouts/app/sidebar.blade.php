@@ -263,39 +263,40 @@
             </flux:sidebar.group>
             @endif
 
-
+            {{--
             @canany( 'view_lab_result')
-            <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>
-                Lab Results
-            </flux:sidebar.item>
-            @endcanany
 
-            {{-- ========================= LABORATORY ========================= --}}
-            @canany(['view_lab_order','enter_lab_result','verify_lab_result'])
-            <flux:sidebar.group expandable heading="Orders" class="grid">
-                <flux:sidebar.item icon="tag" :href="route('lab.dashboard')" wire:navigate>Lab</flux:sidebar.item>
+            @endcanany --}}
+
+            @canany(['view_lab_result','view_lab_order','enter_lab_result','verify_lab_result'])
+            <flux:sidebar.group expandable heading="Labratory" class="grid">
+                @can('enter_lab_result')
+                <flux:sidebar.item icon="tag" :href="route('lab.dashboard')" wire:navigate>Laboratory Dashboard
+                </flux:sidebar.item>
+                @endcan
+                <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>
+                    Laboratory Results
+                </flux:sidebar.item>
+                @can('view_lab_tests')
+                <flux:sidebar.item icon="beaker" :href="route('lab-tests.index')" wire:navigate>
+                    Laboratory Tests
+                </flux:sidebar.item>
+                @endcan
             </flux:sidebar.group>
             @endcanany
-            @canany([ 'view_imaging_order','upload_imaging_result',])
-            <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
-            </flux:sidebar.item>
-            @endcan
-            @can('view_lab_tests')
-            <li>
-                <a href="{{ route('lab-tests.index') }}"
-                    class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('lab-tests.*') ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
-                    <svg class="flex-shrink-0 h-5 w-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                    Lab Tests
-                </a>
-            </li>
-            @endcan
+            {{-- ========================= LABORATORY ========================= --}}
+            <flux:sidebar.group expandable heading="Radiology" class="grid">
+                @canany([ 'view_imaging_order','upload_imaging_result',])
+                <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
+                </flux:sidebar.item>
+                @endcan
+            </flux:sidebar.group>
+
+
 
             {{-- ========================= PHARMACY ========================= --}}
             @canany(['view_prescription','dispense_drug','manage_drugs'])
@@ -308,7 +309,8 @@
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.dashboard')" wire:navigate>
                     pharmacy Queue
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.custom-medications')" wire:navigate>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.custom-medications')"
+                    wire:navigate>
                     Custom Medications
                 </flux:sidebar.item>
             </flux:sidebar.group>
