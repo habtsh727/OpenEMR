@@ -367,6 +367,10 @@ class AssessmentForm extends Component
             }
         }
     }
+     public function imagingOrder()
+    {
+        return $this->redirect(route('doctor.imaging.order', $this->encounter), navigate: true);
+    }
 
     public function skipAssessment()
     {

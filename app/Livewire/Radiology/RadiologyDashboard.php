@@ -43,10 +43,10 @@ class RadiologyDashboard extends Component
     public function loadOrders()
     {
         $this->loading = true;
-        
+
         $query = ImagingOrder::paid()
             ->with(['encounter.patient', 'imagingType', 'bodyPart'])
-            ->whereDoesntHave('imagingResult', function($q) {
+            ->whereDoesntHave('imagingResult', function ($q) {
                 $q->where('status', 'completed');
             });
 
@@ -54,7 +54,7 @@ class RadiologyDashboard extends Component
         if ($this->search) {
             $query->whereHas('encounter.patient', function ($q) {
                 $q->where('first_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('last_name', 'like', '%' . $this->search . '%');
+                    ->orWhere('last_name', 'like', '%' . $this->search . '%');
             })->orWhereHas('imagingType', function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%');
             });
@@ -100,58 +100,125 @@ class RadiologyDashboard extends Component
         $this->findings = array_values($this->findings);
     }
 
-    public function submitResult()
-    {
-        $this->validate();
+    // public function submitResult()
+    // {
+    //     $this->validate();
 
-        if (!$this->selectedOrder) {
-            $this->dispatch('notify', 
-                type: 'error', 
-                message: 'Please select an imaging order first.'
-            );
-            return;
-        }
+    //     if (!$this->selectedOrder) {
+    //         $this->dispatch(
+    //             'notify',
+    //             type: 'error',
+    //             message: 'Please select an imaging order first.'
+    //         );
+    //         return;
+    //     }
 
-        // Upload images
-        $uploadedImages = [];
-        foreach ($this->images as $image) {
-            $path = $image->store('imaging-results/' . $this->selectedOrder->id, 'public');
-            $uploadedImages[] = $path;
-        }
+    //     // Upload images
+    //     $uploadedImages = [];
+    //     foreach ($this->images as $image) {
+    //         $path = $image->store('imaging-results/' . $this->selectedOrder->id, 'public');
+    //         $uploadedImages[] = $path;
+    //     }
+    //     ImagingResult::create([
+    //         'imaging_order_id' => $this->selectedOrder->id,
+    //         'radiologist_id' => auth()->id(), // Assuming radiologist is logged in
+    //         'report' => $this->report,
+    //         'images' => $uploadedImages,
+    //         'findings' => $this->findings,
+    //         'measurements' => $this->measurements,
+    //         'status' => $this->status,
+    //         'reported_at' => now(),
+    //     ]);
 
-        
-        // Update order status if completed
-        if ($this->status === 'completed') {
-            $this->selectedOrder->update([
-                'status' => 'completed',
-                'completed_date' => now(),
-            ]);
-        }
 
-        // Send notification to doctor
-        $this->dispatch('notify-doctor', 
-            orderId: $this->selectedOrder->id,
-            patientName: $this->selectedOrder->encounter->patient->full_name,
-            imagingType: $this->selectedOrder->imagingType->name
-        );
+    //     // Update order status if completed
+    //     if ($this->status === 'completed') {
+    //         $this->selectedOrder->update([
+    //             'status' => 'completed',
+    //             'completed_date' => now(),
+    //         ]);
+    //     }
 
+    //     // Send notification to doctor
+    //     $this->dispatch(
+    //         'notify-doctor',
+    //         orderId: $this->selectedOrder->id,
+    //         patientName: $this->selectedOrder->encounter->patient->full_name,
+    //         imagingType: $this->selectedOrder->imagingType->name
+    //     );
+
+    //     $this->dispatch(
+    //         'notify',
+    //         type: 'success',
+    //         message: 'Radiology report submitted successfully!'
+    //     );
+
+    //     $this->reset(['selectedOrder', 'images', 'report', 'findings', 'currentFinding', 'measurements']);
+    //     $this->loadOrders();
+    // }
+
+   
+   public function submitResult()
+{
+    $this->validate();
+
+    if (!$this->selectedOrder) {
         $this->dispatch('notify', 
-            type: 'success', 
-            message: 'Radiology report submitted successfully!'
+            type: 'error', 
+            message: 'Please select an imaging order first.'
         );
-
-        $this->reset(['selectedOrder', 'images', 'report', 'findings', 'currentFinding', 'measurements']);
-        $this->loadOrders();
+        return;
     }
 
+    // Upload images
+    $uploadedImages = [];
+    foreach ($this->images as $image) {
+        $path = $image->store('imaging-results/' . $this->selectedOrder->id, 'public');
+        $uploadedImages[] = $path;
+    }
+
+    // ====== MISSING CODE: Create ImagingResult record ======
+    ImagingResult::create([
+        'imaging_order_id' => $this->selectedOrder->id,
+        'radiologist_id' => auth()->id(), // Make sure radiologist is logged in
+        'report' => $this->report,
+        'images' => $uploadedImages,
+        'status' => $this->status,
+        'reported_at' => now(),
+    ]);
+    // ====== END OF MISSING CODE ======
+
+    // Update order status if completed
+    if ($this->status === 'completed') {
+        $this->selectedOrder->update([
+            'status' => 'completed',
+            'completed_date' => now(),
+        ]);
+    }
+
+    // Send notification to doctor
+    $this->dispatch('notify-doctor', 
+        orderId: $this->selectedOrder->id,
+        patientName: $this->selectedOrder->encounter->patient->full_name,
+        imagingType: $this->selectedOrder->imagingType->name
+    );
+
+    $this->dispatch('notify', 
+        type: 'success', 
+        message: 'Radiology report submitted successfully!'
+    );
+
+    $this->reset(['selectedOrder', 'images', 'report', 'findings', 'currentFinding', 'measurements']);
+    $this->loadOrders();
+}
     public function getStatsProperty()
     {
-        $total = ImagingOrder::paid()->whereDoesntHave('imagingResult', function($q) {
+        $total = ImagingOrder::paid()->whereDoesntHave('imagingResult', function ($q) {
             $q->where('status', 'completed');
         })->count();
 
         $urgent = ImagingOrder::paid()->where('priority', 'urgent')
-            ->whereDoesntHave('imagingResult', function($q) {
+            ->whereDoesntHave('imagingResult', function ($q) {
                 $q->where('status', 'completed');
             })->count();
 
