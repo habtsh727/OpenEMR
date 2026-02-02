@@ -15,11 +15,23 @@ class RolePermissionSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
+            // ===== BED MANAGEMENT =====
+            'view_beds',
+            'create_bed',
+            'update_bed',
+            'delete_bed',
+            'assign_bed',
+            'transfer_bed',
+            'discharge_bed',
+
+            // ===== LABORATORY =====
+
             'view_lab_tests',
             'create_lab_test',
             'edit_lab_test',
             'delete_lab_test',
 
+            // ===== Medication  Doctor =====
             'manage_medical_history_templates',
             'manage_chief_complaint_templates',
             // Users & Roles
