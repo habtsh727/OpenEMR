@@ -134,6 +134,7 @@
                 </flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
+            
             {{-- ========================= PHARMACY ========================= --}}
             @canany(['view_prescription','dispense_drug','manage_drugs'])
             <flux:sidebar.group expandable heading="Pharmacy" class="grid">
