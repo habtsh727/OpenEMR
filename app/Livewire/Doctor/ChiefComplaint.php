@@ -17,7 +17,7 @@ class ChiefComplaint extends Component
 
     public function mount(Encounter $encounter)
     {
-        if ($encounter->doctor_id !== Auth::id()) {
+        if ($encounter->doctor_id != Auth::id()) {
             abort(403);
         }
 

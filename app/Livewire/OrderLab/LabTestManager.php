@@ -184,7 +184,7 @@ class LabTestManager extends Component
                       ->orWhere('department', 'like', '%' . $this->search . '%');
                 });
             })
-            ->when($this->filterStatus !== '', function ($query) {
+            ->when($this->filterStatus != '', function ($query) {
                 $query->where('active', $this->filterStatus === 'active');
             })
             ->when($this->filterDepartment, function ($query) {

@@ -46,7 +46,7 @@ class ViewImagingResults extends Component
         }
 
         // Apply date filter
-        if ($this->dateRange !== 'all') {
+        if ($this->dateRange != 'all') {
             $days = match ($this->dateRange) {
                 'today' => 1,
                 'week' => 7,

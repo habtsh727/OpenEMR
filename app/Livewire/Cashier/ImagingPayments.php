@@ -39,7 +39,7 @@ class ImagingPayments extends Component
             $query->where('priority', $this->selectedPriority);
         }
 
-        if ($this->dateRange !== 'all') {
+        if ($this->dateRange != 'all') {
             $days = match($this->dateRange) {
                 'today' => 1,
                 'week' => 7,

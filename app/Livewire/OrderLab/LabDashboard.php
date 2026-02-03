@@ -53,7 +53,7 @@ class LabDashboard extends Component
     {
         $labOrder = LabOrder::findOrFail($labOrderId);
 
-        if ($labOrder->status !== 'reported') {
+        if ($labOrder->status != 'reported') {
             $labOrder->update([
                 'status' => 'reported',
             ]);

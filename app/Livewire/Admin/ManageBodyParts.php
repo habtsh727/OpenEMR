@@ -147,7 +147,7 @@ class ManageBodyParts extends Component
                       ->orWhere('code', 'like', '%' . $this->search . '%')
                       ->orWhere('description', 'like', '%' . $this->search . '%');
             })
-            ->when($this->activeFilter !== null, function ($query) {
+            ->when($this->activeFilter != null, function ($query) {
                 $query->where('is_active', $this->activeFilter);
             })
             ->orderBy($this->sortField, $this->sortDirection)

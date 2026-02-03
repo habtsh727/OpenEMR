@@ -18,7 +18,7 @@ class ConsultationWorkflow extends Component
 
     public function mount(Encounter $encounter)
     {
-        if ($encounter->doctor_id !== Auth::id()) {
+        if ($encounter->doctor_id != Auth::id()) {
             abort(403, 'Not authorized to access this consultation.');
         }
 

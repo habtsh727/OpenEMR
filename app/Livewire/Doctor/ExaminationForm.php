@@ -31,11 +31,11 @@ class ExaminationForm extends Component
         $this->patient = $this->encounter->patient;
 
         // Security check
-        if ($this->encounter->doctor_id !== auth()->id()) {
+        if ($this->encounter->doctor_id != auth()->id()) {
             abort(403, 'This patient is not assigned to you.');
         }
 
-        // if ($this->encounter->status !== 'in_progress') {
+        // if ($this->encounter->status != 'in_progress') {
         //     abort(400, 'Patient is not in consultation.');
         // }
 
@@ -133,7 +133,7 @@ class ExaminationForm extends Component
 
         foreach ($templates as $template) {
             $value = $this->getValueForTemplate($template);
-            if ($value !== null && $value !== '') {
+            if ($value != null && $value != '') {
                 $completed++;
             }
         }
