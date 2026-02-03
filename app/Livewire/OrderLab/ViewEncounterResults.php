@@ -42,7 +42,7 @@ class ViewEncounterResults extends Component
     {
         $labOrder = LabOrder::findOrFail($labOrderId);
 
-        if ($labOrder->status !== 'reported') {
+        if ($labOrder->status != 'reported') {
             $this->dispatch('notify', [
                 'type' => 'error',
                 'message' => 'Only reported tests can be verified.'

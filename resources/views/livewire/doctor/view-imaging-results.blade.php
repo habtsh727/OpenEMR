@@ -265,10 +265,10 @@
                     </div>
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No imaging reports available</h3>
                     <p class="text-gray-500 dark:text-gray-400 mb-4">
-                        {{ $search || $selectedType || $dateRange !== 'all' ? 'No reports match your filters' :
+                        {{ $search || $selectedType || $dateRange != 'all' ? 'No reports match your filters' :
                         'Completed imaging reports will appear here' }}
                     </p>
-                    @if($search || $selectedType || $dateRange !== 'all')
+                    @if($search || $selectedType || $dateRange != 'all')
                     <button wire:click="$set(['search' => '', 'selectedType' => null, 'dateRange' => 'all'])"
                         class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 font-medium">
                         Clear filters

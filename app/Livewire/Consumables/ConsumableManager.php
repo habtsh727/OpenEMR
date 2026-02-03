@@ -218,7 +218,7 @@ class ConsumableManager extends Component
             ->when($this->category, function ($q) {
                 $q->where('category', $this->category);
             })
-            ->when($this->isActive !== '', function ($q) {
+            ->when($this->isActive != '', function ($q) {
                 $q->where('is_active', $this->isActive);
             })
             ->latest();

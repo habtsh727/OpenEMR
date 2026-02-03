@@ -26,7 +26,7 @@ class DoctorQueue extends Component
     //     }
         
     //     // Check if assigned to current doctor
-    //     if ($encounter->doctor_id !== Auth::id()) {
+    //     if ($encounter->doctor_id != Auth::id()) {
     //         return redirect()->route('doctor.queue')
     //             ->with('error', 'This patient is not assigned to you.');
     //     }
@@ -52,7 +52,7 @@ class DoctorQueue extends Component
     }
     
     // Check if assigned to current doctor
-    if ($encounter->doctor_id !== Auth::id()) {
+    if ($encounter->doctor_id != Auth::id()) {
         return redirect()->route('doctor.queue')
             ->with('error', 'This patient is not assigned to you.');
     }

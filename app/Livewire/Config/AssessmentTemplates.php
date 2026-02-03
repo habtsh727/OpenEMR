@@ -34,7 +34,7 @@ class AssessmentTemplates extends Component
     public function render()
     {
         $templates = AssessmentTemplate::query()
-            ->when($this->activeFilter !== null, function ($query) {
+            ->when($this->activeFilter != null, function ($query) {
                 $query->where('active', $this->activeFilter);
             })
             ->when($this->contextFilter, function ($query) {

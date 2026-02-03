@@ -115,7 +115,7 @@
                         </div>
                         <flux:badge size="lg" variant="info">
                             {{ $patient->servicePayments->count() }}
-                            Service{{ $patient->servicePayments->count() !== 1 ? 's' : '' }}
+                            Service{{ $patient->servicePayments->count() != 1 ? 's' : '' }}
                         </flux:badge>
                     </div>
 

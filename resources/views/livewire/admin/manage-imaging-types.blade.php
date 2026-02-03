@@ -341,9 +341,9 @@
                                         </div>
                                         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No imaging types found</h3>
                                         <p class="text-gray-500 dark:text-gray-400 mb-4">
-                                            {{ $search || $activeFilter !== null ? 'Try adjusting your search or filter' : 'Get started by creating your first imaging type' }}
+                                            {{ $search || $activeFilter != null ? 'Try adjusting your search or filter' : 'Get started by creating your first imaging type' }}
                                         </p>
-                                        @if($search || $activeFilter !== null)
+                                        @if($search || $activeFilter != null)
                                             <button wire:click="$set(['search' => '', 'activeFilter' => null])" 
                                                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
                                                 Clear filters

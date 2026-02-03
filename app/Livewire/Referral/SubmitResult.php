@@ -45,7 +45,7 @@ class SubmitResult extends Component
         $this->referralId = $this->referral->id;
         
         // Check if referral can accept results
-        // if ($this->referral->status !== ReferralStatus::SENT) {
+        // if ($this->referral->status != ReferralStatus::SENT) {
         //     abort(403, 'Only referrals with status "sent" can accept results');
         // }
     }

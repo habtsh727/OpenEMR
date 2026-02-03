@@ -47,7 +47,7 @@ class LabSampleCollect extends Component
         \Log::info('Status updated to: ' . $value);
         
         // Clear rejection reason if not rejected
-        if ($value !== 'rejected') {
+        if ($value != 'rejected') {
             $this->rejectionReason = '';
         }
     }

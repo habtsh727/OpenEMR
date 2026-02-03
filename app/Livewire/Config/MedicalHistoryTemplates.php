@@ -29,7 +29,7 @@ class MedicalHistoryTemplates extends Component
     public function render()
 {
     $templates = MedicalHistoryTemplate::query()
-        ->when($this->filterActive !== null, function ($query) {
+        ->when($this->filterActive != null, function ($query) {
             $query->where('is_active', $this->filterActive);
         })
         ->when($this->fieldTypeFilter, function ($query) {

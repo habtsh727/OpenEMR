@@ -26,7 +26,7 @@ class ChiefComplaintTemplates extends Component
     public function render()
     {
         $templates = ChiefComplaintTemplate::query()
-            ->when($this->filterActive !== null, function ($query) {
+            ->when($this->filterActive != null, function ($query) {
                 $query->where('is_active', $this->filterActive);
             })
             ->when($this->search, function ($query) {

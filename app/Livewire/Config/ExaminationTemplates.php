@@ -36,7 +36,7 @@ class ExaminationTemplates extends Component
     public function render()
     {
         $templates = ExaminationTemplate::query()
-            ->when($this->activeFilter !== null, function ($query) {
+            ->when($this->activeFilter != null, function ($query) {
                 $query->where('active', $this->activeFilter);
             })
             ->when($this->fieldTypeFilter, function ($query) {
@@ -172,7 +172,7 @@ class ExaminationTemplates extends Component
     // Dynamic update when field_type changes
     public function updatedFieldType($value)
     {
-        if ($value !== 'select') {
+        if ($value != 'select') {
             $this->options = '';
         }
     }

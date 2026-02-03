@@ -81,7 +81,7 @@ class DoctorMedicationOrderComponent extends Component
         $this->encounter = $encounter;
 
         // Verify doctor has access to this encounter
-        if ($encounter->doctor_id !== Auth::id()) {
+        if ($encounter->doctor_id != Auth::id()) {
             abort(403, 'You do not have access to this encounter.');
         }
 

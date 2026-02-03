@@ -240,9 +240,9 @@
                         </div>
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">All payments processed!</h3>
                         <p class="text-gray-500 dark:text-gray-400 mb-4">
-                            {{ $search || $selectedPriority || $dateRange !== 'all' ? 'No pending payments match your filters' : 'No pending imaging payments at the moment' }}
+                            {{ $search || $selectedPriority || $dateRange != 'all' ? 'No pending payments match your filters' : 'No pending imaging payments at the moment' }}
                         </p>
-                        @if($search || $selectedPriority || $dateRange !== 'all')
+                        @if($search || $selectedPriority || $dateRange != 'all')
                             <button wire:click="$set(['search' => '', 'selectedPriority' => '', 'dateRange' => 'all'])" 
                                     class="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
