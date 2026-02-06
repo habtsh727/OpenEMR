@@ -115,4 +115,29 @@ class Encounter extends Model
     {
         return $this->hasManyThrough(Prescription::class, MedicationOrder::class);
     }
+
+
+
+       public function vitals()
+    {
+        return $this->hasMany(EncounterVital::class);
+    }
+
+    public function addVital($vitalTypeId, $value, $userId = null)
+    {
+        return $this->vitals()->updateOrCreate(
+            ['vital_type_id' => $vitalTypeId],
+            [
+                'value' => $value,
+                'user_id' => $userId ?? auth()->id()
+            ]
+        );
+    }
+
+    public function getVitalByType($typeSlug)
+    {
+        return $this->vitals()
+            ->whereHas('vitalType', fn($q) => $q->where('slug', $typeSlug))
+            ->first();
+    }
 }

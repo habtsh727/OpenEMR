@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             WardsTableSeeder::class,
             RoomsSeeder::class,
             BedsSeeder::class,
+            VitalTypesSeeder::class,
         ]);
     }
 }
