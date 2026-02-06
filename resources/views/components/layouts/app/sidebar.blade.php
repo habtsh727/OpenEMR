@@ -76,6 +76,8 @@
                 </flux:sidebar.item> --}}
                 <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('vital-types.index')" wire:navigate>Vital Types
+                </flux:sidebar.item>    
                 @endif
 
                 @if(auth()->user()->hasRole(['doctor', 'clinician']))

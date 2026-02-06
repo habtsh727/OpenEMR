@@ -25,6 +25,7 @@
                     <th class="px-6 py-3 font-semibold">Gender</th>
                     <th class="px-6 py-3 font-semibold">Status</th>
                     <th class="px-6 py-3 font-semibold">Arrival Time</th>
+                    <th class="px-6 py-3 font-semibold">Vitals</th>
                     <th class="px-6 py-3 font-semibold text-right">Actions</th>
                 </tr>
             </thead>
@@ -86,20 +87,19 @@
                     </td>
                     <td class="px-6 py-4">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-        @if($encounter->status === 'pending') 
-            bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300
-        @elseif($encounter->status === 'triaged') 
-            bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
-        @elseif($encounter->status === 'doctor_assigned') 
-            bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
-        @elseif($encounter->status === 'completed') 
-            bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
-        @elseif($encounter->status === 'cancelled') 
-            bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300
-        @else 
-            bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 
-        @endif">
-
+                        @if($encounter->status === 'pending') 
+                            bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300
+                        @elseif($encounter->status === 'triaged') 
+                            bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
+                        @elseif($encounter->status === 'doctor_assigned') 
+                            bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
+                        @elseif($encounter->status === 'completed') 
+                            bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
+                        @elseif($encounter->status === 'cancelled') 
+                            bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300
+                        @else 
+                            bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 
+                        @endif">
                             <!-- Status icon based on status -->
                             @if($encounter->status === 'pending')
                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -144,8 +144,36 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
+                        @if($encounter->vitals && $encounter->vitals->count() > 0)
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($encounter->vitals->take(3) as $vital)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+                                    @if($vital->vitalType->slug == 'bp_systolic' || $vital->vitalType->slug == 'bp_diastolic')
+                                        bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300
+                                    @elseif($vital->vitalType->slug == 'temperature')
+                                        bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300
+                                    @elseif($vital->vitalType->slug == 'pulse_rate')
+                                        bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
+                                    @elseif($vital->vitalType->slug == 'spo2')
+                                        bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
+                                    @else
+                                        bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300
+                                    @endif">
+                                        {{ $vital->vitalType->abbreviation ?? substr($vital->vitalType->name, 0, 3) }}: {{ $vital->value }}{{ $vital->vitalType->unit ? ' ' . $vital->vitalType->unit : '' }}
+                                    </span>
+                                @endforeach
+                                @if($encounter->vitals->count() > 3)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
+                                        +{{ $encounter->vitals->count() - 3 }} more
+                                    </span>
+                                @endif
+                            </div>
+                        @else
+                            <span class="text-xs text-gray-400 dark:text-gray-500 italic">No vitals</span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4">
                         <div class="flex justify-end space-x-2">
-                            <!-- View Button -->
                             <!-- View Button -->
                             <a href="{{ route('patients.profile', ['patient' => $encounter->patient_id]) }}"
                                 wire:navigate
@@ -243,99 +271,98 @@
                                 <p class="font-medium text-gray-900 dark:text-gray-100">{{
                                     $this->selectedEncounter->patient->id }}</p>
                             </div>
+                            <div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Age</p>
+                                <p class="font-medium text-gray-900 dark:text-gray-100">
+                                    {{ $this->selectedEncounter->patient->age ?? 'N/A' }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Gender</p>
+                                <p class="font-medium text-gray-900 dark:text-gray-100">
+                                    {{ $this->selectedEncounter->patient->gender ?? 'N/A' }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                     @endif
 
-                    <!-- Vital Signs Section -->
+                    <!-- Dynamic Vital Signs Section -->
                     <div>
-                        <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Vital Signs</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Blood Pressure -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    <span>Blood Pressure (mm Hg)</span>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white">Vital Signs</h4>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $availableVitalTypes->count() }} vital signs available
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            @foreach($availableVitalTypes as $vitalType)
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <span>{{ $vitalType->name }}</span>
+                                    @if($vitalType->unit)
+                                    <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                                        ({{ $vitalType->unit }})
+                                    </span>
+                                    @endif
+                                    @if($vitalType->data_type === 'select' && $vitalType->options)
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">
+                                        {{ implode(', ', $vitalType->options) }}
+                                    </span>
+                                    @endif
                                 </label>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <input type="number" wire:model="vitals.bp_systolic" placeholder="Systolic"
-                                            class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                            min="50" max="250">
-                                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Systolic</p>
-                                    </div>
-                                    <div>
-                                        <input type="number" wire:model="vitals.bp_diastolic" placeholder="Diastolic"
-                                            class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                            min="30" max="150">
-                                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Diastolic</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Temperature -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    <span>Temperature (°C)</span>
-                                </label>
+                                
+                                @if($vitalType->data_type === 'select')
+                                <select 
+                                    wire:model="vitalValues.{{ $vitalType->id }}"
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                >
+                                    <option value="">Select {{ $vitalType->name }}</option>
+                                    @foreach($vitalType->options as $option)
+                                    <option value="{{ $option }}">{{ $option }}</option>
+                                    @endforeach
+                                </select>
+                                
+                                @elseif($vitalType->data_type === 'boolean')
+                                <select 
+                                    wire:model="vitalValues.{{ $vitalType->id }}"
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                >
+                                    <option value="">Select</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                                
+                                @else
                                 <div class="relative">
-                                    <input type="number" wire:model="vitals.temperature" placeholder="36.5" step="0.1"
-                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                        min="30" max="45">
+                                    <input 
+                                        type="{{ $vitalType->data_type === 'number' ? 'number' : 'text' }}"
+                                        wire:model="vitalValues.{{ $vitalType->id }}"
+                                        placeholder="Enter {{ strtolower($vitalType->name) }}"
+                                        @if($vitalType->data_type === 'number') step="0.01" @endif
+                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 @if($vitalType->data_type === 'number') pl-10 @endif focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                    >
+                                    @if($vitalType->data_type === 'number')
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="currentColor"
-                                            viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M9 2a1 1 0 00-.917.522l-4.897 9.723a1 1 0 00.914 1.406h9.8a1 1 0 00.914-1.406L9.917 2.522A1 1 0 009 2z"
-                                                clip-rule="evenodd" />
+                                        <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-3 1a1 1 0 10-2 0v3a1 1 0 102 0V8zM8 9a1 1 0 00-2 0v2a1 1 0 102 0V9z" clip-rule="evenodd" />
                                         </svg>
                                     </div>
+                                    @endif
                                 </div>
+                                @endif
+                                
+                                @error("vitalValues.{$vitalType->id}")
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
                             </div>
-
-                            <!-- Pulse Rate -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    <span>Pulse Rate (bpm)</span>
-                                </label>
-                                <div class="relative">
-                                    <input type="number" wire:model="vitals.pulse" placeholder="72"
-                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                        min="30" max="200">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="currentColor"
-                                            viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535a1 1 0 10-1.415-1.414 3 3 0 01-4.242 0 1 1 0 00-1.415 1.414 5 5 0 007.072 0z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Oxygen Saturation -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    <span>SpO₂ (%)</span>
-                                </label>
-                                <div class="relative">
-                                    <input type="number" wire:model="vitals.spo2" placeholder="98"
-                                        class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                        min="70" max="100">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="currentColor"
-                                            viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
 
                     <!-- Triage Assessment Section -->
-                    <div>
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
                         <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Triage Assessment</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Priority Level -->
@@ -344,15 +371,35 @@
                                     <span>Priority Level</span>
                                     <span class="text-red-500 ml-1">*</span>
                                 </label>
-                                <select wire:model="vitals.priority"
+                                <select wire:model="priority"
                                     class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                     <option value="">Select Priority</option>
-                                    <option value="low">Low (Green)</option>
-                                    <option value="medium">Medium (Yellow)</option>
-                                    <option value="high">High (Red)</option>
-                                    <option value="critical">Critical</option>
+                                    <option value="low">
+                                        <span class="flex items-center">
+                                            <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+                                            Low (Green)
+                                        </span>
+                                    </option>
+                                    <option value="medium">
+                                        <span class="flex items-center">
+                                            <span class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
+                                            Medium (Yellow)
+                                        </span>
+                                    </option>
+                                    <option value="high">
+                                        <span class="flex items-center">
+                                            <span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span>
+                                            High (Red)
+                                        </span>
+                                    </option>
+                                    <option value="critical">
+                                        <span class="flex items-center">
+                                            <span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span>
+                                            Critical
+                                        </span>
+                                    </option>
                                 </select>
-                                @error('vitals.priority')
+                                @error('priority')
                                 <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -363,16 +410,19 @@
                                     <span>Assign to Doctor</span>
                                     <span class="text-red-500 ml-1">*</span>
                                 </label>
-                                <select wire:model="vitals.doctor_id"
+                                <select wire:model="doctor_id"
                                     class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
                                     <option value="">Select Doctor</option>
                                     @foreach($this->doctors as $doctor)
                                     <option value="{{ $doctor->id }}">
                                         Dr. {{ $doctor->name }}
+                                        @if($doctor->specialization)
+                                            <span class="text-xs text-gray-500">({{ $doctor->specialization }})</span>
+                                        @endif
                                     </option>
                                     @endforeach
                                 </select>
-                                @error('vitals.doctor_id')
+                                @error('doctor_id')
                                 <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -384,7 +434,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Additional Notes (Optional)
                         </label>
-                        <textarea wire:model="vitals.notes" rows="3"
+                        <textarea wire:model="notes" rows="3"
                             placeholder="Any additional observations or notes..."
                             class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"></textarea>
                     </div>
@@ -438,6 +488,24 @@
                         clip-rule="evenodd" />
                 </svg>
                 <span>{{ session('message') }}</span>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Error Message -->
+    @if(session()->has('error'))
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+        class="fixed top-4 right-4 z-50">
+        <div
+            class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg shadow-lg">
+            <div class="flex items-center">
+                <svg class="h-5 w-5 text-red-500 dark:text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span>{{ session('error') }}</span>
             </div>
         </div>
     </div>
