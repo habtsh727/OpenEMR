@@ -54,6 +54,7 @@ use App\Livewire\Pharmacy\PharmacyQueueComponent;
 use App\Livewire\Referral\CreateReferral;
 use App\Livewire\Referral\PrintReferral;
 use App\Livewire\Referral\SubmitResultModal;
+use App\Livewire\VitalTypes\Index;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -247,5 +248,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/consumables', action: ConsumableManager::class)
             ->name('inventory.consumables');
     });
+    
+});
+Route::middleware('auth')->group(function () {
+    Route::get('/vital-types', Index::class)->name('vital-types.index');
 });
 require __DIR__ . '/auth.php';
+    
