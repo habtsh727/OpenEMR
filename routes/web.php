@@ -86,8 +86,7 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('payments-detail', PaymentDetail::class)->name('payments-detail'); 
     Route::get('patients/{patient}/payments', PaymentDetail::class)->name('payments-detail');
     Route::get('/triage/encounters', TriageIndex::class)->name('triage.encounters');
-    Route::get('patients/nursing', Nursing::class)->name('patient.nursing');
-    Route::get('patients/{patient}/create-triage', NurseTriage::class)->name('create-triage');
+    
     Route::get('patients/{patient}/view-detail', PatientHistory::class)->name('view-detail');
 
     // Route::get('/doctor/queue', DoctorQueue::class)->name('doctor.queue');
