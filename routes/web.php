@@ -13,7 +13,6 @@ use App\Livewire\Patients\Patients;
 use App\Livewire\CardFee\CardFee;
 use App\Livewire\Payments\Payments;
 use App\Livewire\Payments\PaymentDetail;
-use App\Livewire\Nursing\Nursing;
 use App\Livewire\NurseTriage\NurseTriage;
 use App\Livewire\PatientHistory\PatientHistory;
 
@@ -86,13 +85,7 @@ Route::middleware(['auth'])->group(function () {
     // Route::get('payments-detail', PaymentDetail::class)->name('payments-detail'); 
     Route::get('patients/{patient}/payments', PaymentDetail::class)->name('payments-detail');
     Route::get('/triage/encounters', TriageIndex::class)->name('triage.encounters');
-    
-    Route::get('patients/{patient}/view-detail', PatientHistory::class)->name('view-detail');
 
-    // Route::get('/doctor/queue', DoctorQueue::class)->name('doctor.queue');
-    // Route::get('patients/{patient}/take', [DoctorQueue::class, 'take'])->name('doctor.take');
-
-    // Route::get('doctor/consult/{queue}', DoctorConsultation::class)->name('doctor.consult');
 
     Route::prefix('pharmacy')->group(function () {
         Route::get('/items', \App\Livewire\Pharmacy\Item\Index::class)->name('pharmacy.items');
