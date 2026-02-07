@@ -82,7 +82,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('card-fee', CardFee::class)->name('card-fee');
     Route::get('payments', Payments::class)->name('payments');
 
-    // Route::get('payments-detail', PaymentDetail::class)->name('payments-detail'); 
     Route::get('patients/{patient}/payments', PaymentDetail::class)->name('payments-detail');
     Route::get('/triage/encounters', TriageIndex::class)->name('triage.encounters');
 
@@ -158,7 +157,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('lab.dashboard');
     Route::get('/doctor/lab-results', action: DoctorLabResults::class)->name('doctor.lab-results');
     Route::get('/doctor/patients/{patient}/lab-results', DoctorLabResults::class)->name('doctor.patient.lab-results');
-    // Modal routes (will be called via Livewire)
+   
     Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
 });
 Route::middleware(['auth'])->group(function () {
