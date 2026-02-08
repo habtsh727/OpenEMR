@@ -12,6 +12,9 @@ class Encounter extends Model
     use HasFactory;
     protected $guarded = [];
 
+    protected $casts = [
+        'priority' => 'string',
+    ];
     /**
      * Get the patient that owns the Encounter
      *
@@ -118,7 +121,7 @@ class Encounter extends Model
 
 
 
-       public function vitals()
+    public function vitals()
     {
         return $this->hasMany(EncounterVital::class);
     }
