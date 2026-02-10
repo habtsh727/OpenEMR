@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\RehabEncounter;
+use App\Models\RehabTemplateQuestion;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +15,15 @@ return new class extends Migration
     {
         Schema::create('rehab_questionnaire_answers', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(RehabEncounter::class)
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->foreignIdFor(RehabTemplateQuestion::class)
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->json('answer')->nullable();
+
+            $table->text('note')->nullable();
             $table->timestamps();
         });
     }

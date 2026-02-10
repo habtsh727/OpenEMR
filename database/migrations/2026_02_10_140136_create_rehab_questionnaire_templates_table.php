@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('rehab_questionnaire_templates', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
             $table->timestamps();
         });
     }
