@@ -143,4 +143,8 @@ class Encounter extends Model
             ->whereHas('vitalType', fn($q) => $q->where('slug', $typeSlug))
             ->first();
     }
+    public function rehabEncounters()
+    {
+        return $this->hasMany(RehabEncounter::class);
+    }
 }
