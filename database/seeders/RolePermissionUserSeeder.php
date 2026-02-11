@@ -94,15 +94,15 @@ class RolePermissionUserSeeder extends Seeder
         }
 
         // Create roles
-        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $registrationRole = Role::firstOrCreate(['name' => 'registration']);
-        $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
-        $nurseRole = Role::firstOrCreate(['name' => 'nurse']);
-        $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
-        $laboratoryRole = Role::firstOrCreate(['name' => 'laboratory']);
-        $pharmacyRole = Role::firstOrCreate(['name' => 'pharmacy']);
-        $radiologyRole = Role::firstOrCreate(['name' => 'radiology']);  // Added Radiology role
+            $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
+            $adminRole = Role::firstOrCreate(['name' => 'admin']);
+            $registrationRole = Role::firstOrCreate(['name' => 'registration']);
+            $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
+            $nurseRole = Role::firstOrCreate(['name' => 'nurse']);
+            $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
+            $laboratoryRole = Role::firstOrCreate(['name' => 'laboratory']);
+            $pharmacyRole = Role::firstOrCreate(['name' => 'pharmacy']);
+            $radiologyRole = Role::firstOrCreate(['name' => 'radiology']);  // Added Radiology role
 
         // Give permissions to roles
         $superAdminRole->givePermissionTo(Permission::all());
