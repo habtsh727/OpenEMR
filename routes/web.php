@@ -244,5 +244,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/vital-types', Index::class)->name('vital-types.index');
 });
+
+
 require __DIR__ . '/auth.php';
     
