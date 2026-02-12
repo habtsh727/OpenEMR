@@ -117,6 +117,9 @@
                 <flux:sidebar.item icon="clipboard-document-check" :href="route('rehab.queue')" wire:navigate>
                     Rehab Queue
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="rectangle-group" :href="route('rehab.templates.index')" wire:navigate>
+                    Question Templates
+                </flux:sidebar.item>
                 @endif
 
             </flux:sidebar.group>
