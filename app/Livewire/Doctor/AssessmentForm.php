@@ -8,6 +8,11 @@ use App\Models\EncounterAssessment;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 
+
+use App\Models\RehabEncounter;
+use App\Models\RehabQuestionnaireTemplate;
+use Illuminate\Support\Facades\DB;
+
 class AssessmentForm extends Component
 {
     public $encounter;
@@ -474,6 +479,101 @@ class AssessmentForm extends Component
         // Ensure it's always an array after update
         $this->selectedTemplateIds = $this->ensureArray($value);
     }
+
+
+
+
+
+    public function orderRehabilitation()
+{
+    // Check if rehab encounter already exists for this encounter
+    $existingRehab = RehabEncounter::where('encounter_id', $this->encounter->id)->first();
+    
+    if ($existingRehab) {
+        $this->showAlert(
+            'Rehabilitation already ordered for this patient. Status: ' . $existingRehab->status_label, 
+            'info'
+        );
+        
+        // Optional: Redirect to view the existing rehab encounter
+        // return $this->redirect(route('rehab.doctor.view', $existingRehab), navigate: true);
+        return;
+    }
+
+    try {
+        DB::beginTransaction();
+        
+        // Get the default template (Basic Rehabilitation Assessment)
+        $template = RehabQuestionnaireTemplate::first();
+        
+        if (!$template) {
+            throw new \Exception('No rehabilitation questionnaire template found. Please run the seeder first.');
+        }
+
+        // Create the rehab encounter
+        $rehabEncounter = RehabEncounter::create([
+            'encounter_id' => $this->encounter->id,
+            'questionnaire_filled_by' => null,
+            'status' => 'pending_questionnaire',
+            'doctor_notes' => null,
+            'rehab_notes' => null,
+        ]);
+
+        DB::commit();
+
+        // Show success toast
+        $this->showAlert(
+            '✅ Rehabilitation ordered successfully! Patient added to Rehab queue.',
+            'success'
+        );
+
+        // Optional: Dispatch browser event for any additional UI feedback
+        $this->dispatch('rehab-ordered', encounterId: $this->encounter->id);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        \Log::error('Failed to order rehabilitation: ' . $e->getMessage(), [
+            'encounter_id' => $this->encounter->id,
+            'doctor_id' => auth()->id(),
+            'error' => $e->getMessage()
+        ]);
+
+        $this->showAlert(
+            '❌ Failed to order rehabilitation: ' . $e->getMessage(),
+            'error'
+        );
+    }
+}
+
+/**
+ * Alternative: Order rehab with custom notes
+ * You can also create a method that accepts doctor notes
+ */
+public function orderRehabilitationWithNotes($doctorNotes = null)
+{
+    $existingRehab = RehabEncounter::where('encounter_id', $this->encounter->id)->first();
+    
+    if ($existingRehab) {
+        $this->showAlert('Rehabilitation already ordered for this patient.', 'info');
+        return;
+    }
+
+    try {
+        DB::transaction(function () use ($doctorNotes) {
+            RehabEncounter::create([
+                'encounter_id' => $this->encounter->id,
+                'status' => 'pending_questionnaire',
+                'doctor_notes' => $doctorNotes,
+            ]);
+        });
+
+        $this->showAlert('✅ Rehabilitation ordered successfully!', 'success');
+        
+    } catch (\Exception $e) {
+        $this->showAlert('❌ Failed to order rehabilitation.', 'error');
+    }
+}
 
     public function render()
     {
