@@ -438,49 +438,67 @@
         <div class="sticky bottom-6 z-10">
             <div
                 class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm bg-white/90 dark:bg-gray-800/90">
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6">
+                <div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-6">
                     {{-- Left: Navigation & Primary Actions --}}
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 flex-wrap">
                         {{-- Back Navigation --}}
                         <button type="button" wire:click="backToExamination"
-                            class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 flex items-center space-x-2 hover:shadow-md">
+                            class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 flex items-center justify-center space-x-2 hover:shadow-md whitespace-nowrap">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 19l-7-7 7-7"></path>
                             </svg>
-                            <span>Back to Examination</span>
+                            <span>Back</span>
                         </button>
 
                         {{-- Primary Action Group --}}
                         <div class="flex flex-wrap items-center gap-3">
                             <button type="button" wire:click="skipImaging"
-                                class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center space-x-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
                                 <span>Order Medication</span>
                             </button>
 
+                            {{-- NEW: Order Rehab Button --}}
+                            <button type="button" wire:click="orderRehabilitation"
+                                class="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 dark:from-teal-500 dark:to-cyan-600 dark:hover:from-teal-600 dark:hover:to-cyan-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                                    </path>
+                                </svg>
+                                <span>Order Rehabilitation</span>
+                            </button>
+
                             <button type="button" wire:click="orderReferral"
-                                class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center space-x-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
                                     </path>
                                 </svg>
                                 <span>Order Referral</span>
                             </button>
-                        </div>
-                    </div>
-
-                    {{-- Right: Secondary Actions & Next Step --}}
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        {{-- Secondary Actions --}}
-                        <div class="flex flex-wrap items-center gap-3">
+                            <button type="button" wire:click="nextToOrders"
+                                class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 transform hover:-translate-y-0.5 active:translate-y-0 min-w-[160px] whitespace-nowrap">
+                                <span>Lab Orders</span>
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7">
+                                    </path>
+                                </svg>
+                            </button>
                             <button type="button" wire:click="imagingOrder"
-                                class="px-6 py-3 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl text-sm font-semibold text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-all duration-200 flex items-center space-x-2 hover:shadow-md">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="px-6 py-3 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl text-sm font-semibold text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-all duration-200 flex items-center justify-center space-x-2 hover:shadow-md whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                                     </path>
@@ -488,35 +506,25 @@
                                 <span>Imaging Order</span>
                             </button>
                         </div>
-
-                        {{-- Primary Next Action --}}
-                        <button type="button" wire:click="nextToOrders"
-                            class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2 transform hover:-translate-y-0.5 active:translate-y-0 min-w-[140px] justify-center">
-                            <span>Lab Orders</span>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
-                                </path>
-                            </svg>
-                        </button>
                     </div>
                 </div>
-
                 {{-- Step Info --}}
-                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <div
+                        class="flex flex-wrap items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <span class="inline-flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-yellow-500 dark:text-yellow-400" fill="currentColor"
-                                viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 mr-2 text-yellow-500 dark:text-yellow-400 flex-shrink-0"
+                                fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
                                     d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                                     clip-rule="evenodd"></path>
                             </svg>
                             Assessment is <span
-                                class="font-semibold text-yellow-600 dark:text-yellow-400">optional</span>
+                                class="font-semibold text-yellow-600 dark:text-yellow-400 ml-1">optional</span>
                         </span>
-                        <span class="mx-2">•</span>
-                        You can skip if no diagnosis needed or proceed to orders.
-                    </p>
+                        <span class="mx-2 text-gray-400 dark:text-gray-600">•</span>
+                        <span>You can skip if no diagnosis needed or proceed to orders.</span>
+                    </div>
                 </div>
             </div>
         </div>
