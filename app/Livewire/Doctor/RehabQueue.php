@@ -12,14 +12,14 @@ class RehabQueue extends Component
     use WithPagination;
 
     public $search = '';
-    public $statusFilter = 'submitted_to_doctor'; // Default to show submitted only
+    public $statusFilter = ''; // Changed from 'submitted_to_doctor' to empty string
     public $perPage = 10;
     public $sortField = 'updated_at';
     public $sortDirection = 'desc';
 
     protected $queryString = [
         'search' => ['except' => ''],
-        'statusFilter' => ['except' => 'submitted_to_doctor'],
+        'statusFilter' => ['except' => ''],
         'sortField' => ['except' => 'updated_at'],
         'sortDirection' => ['except' => 'desc'],
     ];
@@ -60,13 +60,13 @@ class RehabQueue extends Component
 
     public function reviewQuestionnaire($id)
     {
-        return $this->redirect(route('doctor.rehab.review', $id), navigate: true);
+        return $this->redirect(route('rehab.review', $id), navigate: true);
     }
 
     public function resetFilters()
     {
         $this->reset(['search', 'statusFilter', 'sortField', 'sortDirection']);
-        $this->statusFilter = 'submitted_to_doctor';
+        // Don't set statusFilter here, let it be empty
     }
 
     protected function getStatusCounts()

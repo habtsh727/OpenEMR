@@ -323,60 +323,60 @@ class QuestionnaireForm extends Component
     }
 
     public function confirmSubmit()
-    {
-        try {
-            DB::transaction(function () {
-                // Save all answers first
-                foreach ($this->answers as $questionId => $answerData) {
-                    $question = RehabTemplateQuestion::find($questionId);
-                    $formattedAnswer = $this->formatAnswerForStorage(
-                        $answerData['value'], 
-                        $question->type
-                    );
+{
+    try {
+        DB::transaction(function () {
+            // Save all answers first
+            foreach ($this->answers as $questionId => $answerData) {
+                $question = RehabTemplateQuestion::find($questionId);
+                $formattedAnswer = $this->formatAnswerForStorage(
+                    $answerData['value'], 
+                    $question->type
+                );
 
-                    RehabQuestionnaireAnswer::updateOrCreate(
-                        [
-                            'rehab_encounter_id' => $this->rehabEncounter->id,
-                            'rehab_template_question_id' => $questionId,
-                        ],
-                        [
-                            'answer' => $formattedAnswer,
-                            'note' => $answerData['note'] ?? null,
-                        ]
-                    );
-                }
+                RehabQuestionnaireAnswer::updateOrCreate(
+                    [
+                        'rehab_encounter_id' => $this->rehabEncounter->id,
+                        'rehab_template_question_id' => $questionId,
+                    ],
+                    [
+                        'answer' => $formattedAnswer,
+                        'note' => $answerData['note'] ?? null,
+                    ]
+                );
+            }
 
-                // Update status to submitted_to_doctor
-                $this->rehabEncounter->update([
-                    'rehab_notes' => $this->rehabNotes,
-                    'status' => 'submitted_to_doctor',
-                ]);
-            });
-
-            $this->showConfirmModal = false;
-
-            $this->dispatch('notify', [
-                'message' => '✅ Questionnaire submitted successfully! The doctor will review it shortly.',
-                'type' => 'success'
+            // CRITICAL: Update status to submitted_to_doctor
+            $this->rehabEncounter->update([
+                'rehab_notes' => $this->rehabNotes,
+                'status' => 'submitted_to_doctor', // Make sure this is set!
             ]);
+        });
 
-            // Redirect to queue after 2 seconds
-            $this->dispatch('redirect-to-queue');
+        $this->showConfirmModal = false;
 
-        } catch (\Exception $e) {
-            \Log::error('Failed to submit rehab questionnaire: ' . $e->getMessage(), [
-                'rehab_encounter_id' => $this->rehabEncounter->id,
-                'error' => $e->getMessage()
-            ]);
+        $this->dispatch('notify', [
+            'message' => '✅ Questionnaire submitted successfully! The doctor will review it shortly.',
+            'type' => 'success'
+        ]);
 
-            $this->dispatch('notify', [
-                'message' => '❌ Failed to submit questionnaire. Please try again.',
-                'type' => 'error'
-            ]);
-            
-            $this->showConfirmModal = false;
-        }
+        // Redirect to queue after 2 seconds
+        $this->dispatch('redirect-to-queue');
+
+    } catch (\Exception $e) {
+        \Log::error('Failed to submit rehab questionnaire: ' . $e->getMessage(), [
+            'rehab_encounter_id' => $this->rehabEncounter->id,
+            'error' => $e->getMessage()
+        ]);
+
+        $this->dispatch('notify', [
+            'message' => '❌ Failed to submit questionnaire. Please try again.',
+            'type' => 'error'
+        ]);
+        
+        $this->showConfirmModal = false;
     }
+}
 
     public function toggleAutoSave()
     {

@@ -16,7 +16,7 @@ class RehabEncounter extends Model
     {
         return $this->belongsTo(Encounter::class);
     }
-
+    
     public function questionnaireAnswers()
     {
         return $this->hasMany(RehabQuestionnaireAnswer::class);
@@ -45,26 +45,26 @@ class RehabEncounter extends Model
     {
         return $this->encounter->doctor;
     }
+public function getStatusColorAttribute(): string
+{
+    return match($this->status) {
+        'pending_questionnaire' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        'questionnaire_in_progress' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+        'submitted_to_doctor' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+        'doctor_review' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        default => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    };
+}
 
-    public function getStatusColorAttribute(): string
-    {
-        return match($this->status) {
-            'pending_questionnaire' => 'bg-yellow-100 text-yellow-800',
-            'questionnaire_in_progress' => 'bg-blue-100 text-blue-800',
-            'submitted_to_doctor' => 'bg-purple-100 text-purple-800',
-            'doctor_review' => 'bg-green-100 text-green-800',
-            default => 'bg-gray-100 text-gray-800',
-        };
-    }
-
-    public function getStatusLabelAttribute(): string
-    {
-        return match($this->status) {
-            'pending_questionnaire' => 'Pending Questionnaire',
-            'questionnaire_in_progress' => 'In Progress',
-            'submitted_to_doctor' => 'Submitted to Doctor',
-            'doctor_review' => 'Doctor Review',
-            default => 'Unknown',
-        };
-    }
+public function getStatusLabelAttribute(): string
+{
+    return match($this->status) {
+        'pending_questionnaire' => 'Pending Questionnaire',
+        'questionnaire_in_progress' => 'In Progress',
+        'submitted_to_doctor' => 'Submitted to Doctor',
+        'doctor_review' => 'Doctor Review',
+        default => 'Unknown',
+    };
+}
+   
 }

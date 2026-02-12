@@ -19,23 +19,23 @@ class RehabReview extends Component
     ];
 
     public function mount($id)
-    {
-        $this->rehabEncounter = RehabEncounter::with([
-            'encounter.patient',
-            'encounter.doctor',
-            'answers.question.template',
-            'filledBy',
-            'encounter.encounter' // For additional encounter data if needed
-        ])->findOrFail($id);
+{
+    $this->rehabEncounter = RehabEncounter::with([
+        'encounter.patient',      // RehabEncounter belongs to Encounter
+        'encounter.doctor',      // Encounter belongs to Doctor (User)
+        'encounter.patient',     // Encounter belongs to Patient
+        'answers.question.template', // Answers -> Question -> Template
+        'filledBy'               // User who filled the questionnaire
+    ])->findOrFail($id);
 
-        // Security check - only assigned doctor can review
-        if ($this->rehabEncounter->encounter->doctor_id !== auth()->id()) {
-            abort(403, 'This rehabilitation case is not assigned to you.');
-        }
-
-        // Load existing doctor notes
-        $this->doctorNotes = $this->rehabEncounter->doctor_notes ?? '';
+    // Security check - only assigned doctor can review
+    if ($this->rehabEncounter->encounter->doctor_id !== auth()->id()) {
+        abort(403, 'This rehabilitation case is not assigned to you.');
     }
+
+    // Load existing doctor notes
+    $this->doctorNotes = $this->rehabEncounter->doctor_notes ?? '';
+}
 
     public function saveDoctorNotes()
     {
