@@ -64,6 +64,8 @@ use App\Livewire\Rehab\Queue;
 Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
 Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
 Route::get('/queue', Queue::class)->name('queue');
+Route::get('/questionnaire/{id}', QuestionnaireForm::class)->name('rehab.questionnaire');
+
 Route::get('/', function () {
     return redirect()->route('dashboard');
 })

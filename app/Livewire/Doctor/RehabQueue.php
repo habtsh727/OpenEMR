@@ -12,19 +12,18 @@ class RehabQueue extends Component
     use WithPagination;
 
     public $search = '';
-    public $statusFilter = '';
+    public $statusFilter = 'submitted_to_doctor'; // Default to show submitted only
     public $perPage = 10;
-    public $sortField = 'created_at';
+    public $sortField = 'updated_at';
     public $sortDirection = 'desc';
 
     protected $queryString = [
         'search' => ['except' => ''],
-        'statusFilter' => ['except' => ''],
-        'sortField' => ['except' => 'created_at'],
+        'statusFilter' => ['except' => 'submitted_to_doctor'],
+        'sortField' => ['except' => 'updated_at'],
         'sortDirection' => ['except' => 'desc'],
     ];
 
-    // Real-time updates with polling
     public function getRehabEncountersProperty()
     {
         return RehabEncounter::with([
@@ -32,8 +31,8 @@ class RehabQueue extends Component
                 'encounter.doctor',
                 'filledBy'
             ])
-            ->whereHas('encounter.doctor', function ($query) {
-                $query->where('id', auth()->id());
+            ->whereHas('encounter', function ($query) {
+                $query->where('doctor_id', auth()->id());
             })
             ->when($this->search, function ($query) {
                 $query->whereHas('encounter.patient', function ($q) {
@@ -59,9 +58,26 @@ class RehabQueue extends Component
         }
     }
 
-    public function viewRehabEncounter($id)
+    public function reviewQuestionnaire($id)
     {
         return $this->redirect(route('doctor.rehab.review', $id), navigate: true);
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'statusFilter', 'sortField', 'sortDirection']);
+        $this->statusFilter = 'submitted_to_doctor';
+    }
+
+    protected function getStatusCounts()
+    {
+        return RehabEncounter::whereHas('encounter', function ($query) {
+                $query->where('doctor_id', auth()->id());
+            })
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
     }
 
     public function render()
@@ -70,21 +86,5 @@ class RehabQueue extends Component
             'rehabEncounters' => $this->rehabEncounters,
             'statusCounts' => $this->getStatusCounts(),
         ]);
-    }
-
-    protected function getStatusCounts()
-    {
-        return RehabEncounter::whereHas('encounter.doctor', function ($query) {
-                $query->where('id', auth()->id());
-            })
-            ->select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
-            ->pluck('total', 'status')
-            ->toArray();
-    }
-
-    public function resetFilters()
-    {
-        $this->reset(['search', 'statusFilter', 'sortField', 'sortDirection']);
     }
 }

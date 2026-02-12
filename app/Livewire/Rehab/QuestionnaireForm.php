@@ -6,7 +6,6 @@ use App\Models\RehabEncounter;
 use App\Models\RehabQuestionnaireAnswer;
 use App\Models\RehabQuestionnaireTemplate;
 use App\Models\RehabTemplateQuestion;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -18,12 +17,11 @@ class QuestionnaireForm extends Component
     // Form data
     public $answers = [];
     public $rehabNotes = '';
-    public $currentStep = 1;
-    public $totalSteps = 1;
     
-    // Validation state
-    public $errors = [];
+    // UI state
     public $showConfirmModal = false;
+    public $autoSaveEnabled = true;
+    public $lastSaved = null;
 
     protected function rules()
     {
@@ -38,17 +36,19 @@ class QuestionnaireForm extends Component
                 $rule[] = 'nullable';
             }
 
-            // Add type-specific validation
+            // Type-specific validation
             switch ($question->type) {
                 case 'boolean':
-                    $rule[] = 'boolean';
                     $rule[] = 'in:0,1,true,false,yes,no';
                     break;
                 case 'checkbox':
                     $rule[] = 'array';
+                    $rule[] = 'min:1';
                     break;
                 case 'number':
                     $rule[] = 'numeric';
+                    $rule[] = 'min:0';
+                    $rule[] = 'max:999999';
                     break;
                 case 'datetime':
                     $rule[] = 'date';
@@ -74,16 +74,15 @@ class QuestionnaireForm extends Component
         
         foreach ($this->template->questions as $question) {
             if ($question->is_required) {
-                $messages["answers.{$question->id}.value.required"] = "The {$question->question} field is required.";
+                $messages["answers.{$question->id}.value.required"] = "Please answer: {$question->question}";
             }
             
             switch ($question->type) {
                 case 'boolean':
-                    $messages["answers.{$question->id}.value.boolean"] = "Please select Yes or No for: {$question->question}";
                     $messages["answers.{$question->id}.value.in"] = "Please select Yes or No for: {$question->question}";
                     break;
                 case 'checkbox':
-                    $messages["answers.{$question->id}.value.array"] = "Please select at least one option for: {$question->question}";
+                    $messages["answers.{$question->id}.value.min"] = "Please select at least one option for: {$question->question}";
                     break;
                 case 'number':
                     $messages["answers.{$question->id}.value.numeric"] = "Please enter a valid number for: {$question->question}";
@@ -102,53 +101,44 @@ class QuestionnaireForm extends Component
         $this->rehabEncounter = RehabEncounter::with([
             'encounter.patient',
             'encounter.doctor',
-            'answers'
+            'answers.question'
         ])->findOrFail($id);
+
+        // Security check - only assigned staff can edit
+        if ($this->rehabEncounter->questionnaire_filled_by && 
+            $this->rehabEncounter->questionnaire_filled_by !== auth()->id()) {
+            abort(403, 'This questionnaire is being filled by another staff member.');
+        }
 
         // Get the default template
         $this->template = RehabQuestionnaireTemplate::with('questions')
             ->firstOrFail();
 
-        $this->totalSteps = ceil($this->template->questions->count() / 5); // Group questions into steps
-
-        // Initialize answers from existing data or create empty
+        // Initialize answers
         $this->initializeAnswers();
-
-        // Set rehab notes if exists
+        
+        // Set rehab notes
         $this->rehabNotes = $this->rehabEncounter->rehab_notes ?? '';
     }
 
-    protected function initializeAnswers()
+    private function initializeAnswers()
     {
-        foreach ($this->template->questions as $question) {
+        foreach ($this->template->questions->sortBy('order') as $question) {
             $existingAnswer = $this->rehabEncounter->answers
                 ->where('rehab_template_question_id', $question->id)
                 ->first();
 
             if ($existingAnswer) {
-                // Handle different answer formats
-                $answerValue = $existingAnswer->answer;
+                // Format existing answer based on type
+                $value = $this->formatAnswerForDisplay($existingAnswer->answer, $question->type);
                 
-                // Convert boolean values to proper format
-                if ($question->type === 'boolean') {
-                    if (is_bool($answerValue)) {
-                        $answerValue = $answerValue ? '1' : '0';
-                    } elseif (is_string($answerValue)) {
-                        $answerValue = in_array(strtolower($answerValue), ['1', 'true', 'yes']) ? '1' : '0';
-                    }
-                }
-                
-                // Handle checkbox - ensure it's array
-                if ($question->type === 'checkbox' && is_string($answerValue)) {
-                    $answerValue = json_decode($answerValue, true) ?? [];
-                }
-
                 $this->answers[$question->id] = [
                     'id' => $existingAnswer->id,
-                    'value' => $answerValue,
+                    'value' => $value,
                     'note' => $existingAnswer->note,
                 ];
             } else {
+                // Initialize empty answer
                 $this->answers[$question->id] = [
                     'id' => null,
                     'value' => $question->type === 'checkbox' ? [] : '',
@@ -158,16 +148,60 @@ class QuestionnaireForm extends Component
         }
     }
 
-    public function updated($propertyName)
+    private function formatAnswerForDisplay($answer, $type)
     {
-        // Validate on update for required fields
-        if (str_starts_with($propertyName, 'answers.')) {
-            $this->validateOnly($propertyName);
+        if ($answer === null) {
+            return $type === 'checkbox' ? [] : '';
+        }
+
+        switch ($type) {
+            case 'boolean':
+                if (is_bool($answer)) {
+                    return $answer ? '1' : '0';
+                }
+                if (is_string($answer)) {
+                    return in_array(strtolower($answer), ['1', 'true', 'yes']) ? '1' : '0';
+                }
+                return (string) $answer;
+            
+            case 'checkbox':
+                if (is_array($answer)) {
+                    return $answer;
+                }
+                if (is_string($answer)) {
+                    return json_decode($answer, true) ?? [];
+                }
+                return [];
+            
+            case 'datetime':
+                if ($answer instanceof \Carbon\Carbon) {
+                    return $answer->format('Y-m-d\TH:i');
+                }
+                if (is_string($answer)) {
+                    try {
+                        return \Carbon\Carbon::parse($answer)->format('Y-m-d\TH:i');
+                    } catch (\Exception $e) {
+                        return '';
+                    }
+                }
+                return '';
+            
+            default:
+                return (string) $answer;
         }
     }
 
-    public function saveProgress()
+    public function updated($propertyName)
     {
+        // Auto-save when answers change
+        if (str_starts_with($propertyName, 'answers.') && $this->autoSaveEnabled) {
+            $this->saveProgress(showNotification: false);
+        }
+    }
+
+    public function saveProgress($showNotification = true)
+    {
+        // Partial validation - only validate filled fields
         $this->validate();
 
         try {
@@ -175,8 +209,11 @@ class QuestionnaireForm extends Component
                 foreach ($this->answers as $questionId => $answerData) {
                     $question = RehabTemplateQuestion::find($questionId);
                     
-                    // Format answer based on question type
-                    $formattedAnswer = $this->formatAnswerForStorage($answerData['value'], $question->type);
+                    // Format answer for storage
+                    $formattedAnswer = $this->formatAnswerForStorage(
+                        $answerData['value'], 
+                        $question->type
+                    );
 
                     RehabQuestionnaireAnswer::updateOrCreate(
                         [
@@ -190,7 +227,7 @@ class QuestionnaireForm extends Component
                     );
                 }
 
-                // Update rehab notes
+                // Update rehab encounter
                 $this->rehabEncounter->update([
                     'rehab_notes' => $this->rehabNotes,
                     'status' => 'questionnaire_in_progress',
@@ -198,10 +235,14 @@ class QuestionnaireForm extends Component
                 ]);
             });
 
-            $this->dispatch('notify', [
-                'message' => 'Progress saved successfully!',
-                'type' => 'success'
-            ]);
+            $this->lastSaved = now();
+
+            if ($showNotification) {
+                $this->dispatch('notify', [
+                    'message' => 'Progress saved successfully!',
+                    'type' => 'success'
+                ]);
+            }
 
         } catch (\Exception $e) {
             \Log::error('Failed to save rehab questionnaire: ' . $e->getMessage(), [
@@ -209,18 +250,52 @@ class QuestionnaireForm extends Component
                 'error' => $e->getMessage()
             ]);
 
-            $this->dispatch('notify', [
-                'message' => 'Failed to save progress. Please try again.',
-                'type' => 'error'
-            ]);
+            if ($showNotification) {
+                $this->dispatch('notify', [
+                    'message' => 'Failed to save progress. Please try again.',
+                    'type' => 'error'
+                ]);
+            }
+        }
+    }
+
+    private function formatAnswerForStorage($value, $type)
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        switch ($type) {
+            case 'boolean':
+                if (is_bool($value)) {
+                    return $value;
+                }
+                if (is_string($value)) {
+                    return in_array(strtolower($value), ['1', 'true', 'yes', 'on']);
+                }
+                return (bool) $value;
+
+            case 'checkbox':
+                return is_array($value) ? json_encode(array_values($value)) : json_encode([]);
+
+            case 'datetime':
+                try {
+                    return \Carbon\Carbon::parse($value)->toDateTimeString();
+                } catch (\Exception $e) {
+                    return $value;
+                }
+
+            default:
+                return $value;
         }
     }
 
     public function submitQuestionnaire()
     {
+        // Full validation before submission
         $this->validate();
 
-        // Check if all required questions are answered
+        // Double-check all required questions are answered
         $missingRequired = $this->template->questions
             ->filter(function ($question) {
                 if (!$question->is_required) return false;
@@ -235,15 +310,12 @@ class QuestionnaireForm extends Component
             });
 
         if ($missingRequired->isNotEmpty()) {
+            $firstMissing = $missingRequired->first();
             $this->dispatch('notify', [
                 'message' => 'Please answer all required questions before submitting.',
                 'type' => 'error'
             ]);
-            
-            // Scroll to first missing question
-            $firstMissingId = $missingRequired->first()->id;
-            $this->dispatch('scroll-to-question', questionId: $firstMissingId);
-            
+            $this->dispatch('scroll-to-question', questionId: $firstMissing->id);
             return;
         }
 
@@ -257,7 +329,10 @@ class QuestionnaireForm extends Component
                 // Save all answers first
                 foreach ($this->answers as $questionId => $answerData) {
                     $question = RehabTemplateQuestion::find($questionId);
-                    $formattedAnswer = $this->formatAnswerForStorage($answerData['value'], $question->type);
+                    $formattedAnswer = $this->formatAnswerForStorage(
+                        $answerData['value'], 
+                        $question->type
+                    );
 
                     RehabQuestionnaireAnswer::updateOrCreate(
                         [
@@ -275,7 +350,6 @@ class QuestionnaireForm extends Component
                 $this->rehabEncounter->update([
                     'rehab_notes' => $this->rehabNotes,
                     'status' => 'submitted_to_doctor',
-                    'questionnaire_filled_by' => auth()->id(),
                 ]);
             });
 
@@ -304,71 +378,34 @@ class QuestionnaireForm extends Component
         }
     }
 
-    protected function formatAnswerForStorage($value, $type)
+    public function toggleAutoSave()
     {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        switch ($type) {
-            case 'boolean':
-                // Convert various boolean formats to standard boolean
-                if (is_bool($value)) {
-                    return $value;
-                }
-                if (is_string($value)) {
-                    return in_array(strtolower($value), ['1', 'true', 'yes', 'on']);
-                }
-                return (bool) $value;
-
-            case 'checkbox':
-                // Ensure checkbox values are stored as JSON array
-                return is_array($value) ? json_encode(array_values($value)) : json_encode([]);
-
-            case 'datetime':
-                // Ensure datetime is in proper format
-                try {
-                    return \Carbon\Carbon::parse($value)->toDateTimeString();
-                } catch (\Exception $e) {
-                    return $value;
-                }
-
-            default:
-                return $value;
-        }
-    }
-
-    public function nextStep()
-    {
-        if ($this->currentStep < $this->totalSteps) {
-            $this->currentStep++;
-            $this->dispatch('step-changed', step: $this->currentStep);
-        }
-    }
-
-    public function previousStep()
-    {
-        if ($this->currentStep > 1) {
-            $this->currentStep--;
-            $this->dispatch('step-changed', step: $this->currentStep);
-        }
-    }
-
-    public function getQuestionsForCurrentStepProperty()
-    {
-        $perStep = 5;
-        $offset = ($this->currentStep - 1) * $perStep;
+        $this->autoSaveEnabled = !$this->autoSaveEnabled;
         
-        return $this->template->questions
-            ->slice($offset, $perStep)
-            ->values();
+        $this->dispatch('notify', [
+            'message' => $this->autoSaveEnabled ? 'Auto-save enabled' : 'Auto-save disabled',
+            'type' => 'info'
+        ]);
     }
 
     public function render()
     {
+        // Get patient and ensure date_of_birth is a Carbon instance
+        $patient = $this->rehabEncounter->encounter->patient;
+        
+        // Parse date_of_birth if it's a string
+        if ($patient && is_string($patient->date_of_birth)) {
+            try {
+                $patient->date_of_birth = \Carbon\Carbon::parse($patient->date_of_birth);
+            } catch (\Exception $e) {
+                $patient->date_of_birth = null;
+            }
+        }
+
         return view('livewire.rehab.questionnaire-form', [
-            'questions' => $this->questionsForCurrentStep,
-            'progress' => ($this->currentStep / $this->totalSteps) * 100,
+            'questions' => $this->template->questions->sortBy('order'),
+            'patient' => $patient,
+            'doctor' => $this->rehabEncounter->encounter->doctor,
         ]);
     }
 }
