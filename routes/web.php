@@ -59,6 +59,13 @@ use App\Livewire\Doctor\RehabQueue;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Rehab\QuestionnaireForm;
 use App\Livewire\Rehab\Queue;
+
+use App\Livewire\Rehab\Template\Index as TemplateIndex;
+use App\Livewire\Rehab\Template\Form as TemplateForm;
+use App\Livewire\Rehab\Template\Questions as TemplateQuestions;
+
+
+
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
     Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
@@ -67,6 +74,11 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
 Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () {
     Route::get('/queue', Queue::class)->name('queue');
     Route::get('/questionnaire/{id}', QuestionnaireForm::class)->name('questionnaire');
+
+    Route::get('/templates', TemplateIndex::class)->name('templates.index');
+    Route::get('/templates/create', TemplateForm::class)->name('templates.create');
+    Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
+    Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
 });
 
 // Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
