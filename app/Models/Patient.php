@@ -27,6 +27,10 @@ class Patient extends Model
         'created_by',
 
     ];
+        protected $casts = [
+        'date_of_birth' => 'datetime',
+        // ... other casts
+    ];
     public function getNameAttributes()
     {
         return trim($this->first_name . ' ' .
