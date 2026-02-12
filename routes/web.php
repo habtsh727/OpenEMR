@@ -55,6 +55,15 @@ use App\Livewire\Referral\PrintReferral;
 use App\Livewire\Referral\SubmitResultModal;
 use App\Livewire\VitalTypes\Index;
 
+use App\Livewire\Doctor\RehabQueue;
+use App\Livewire\Doctor\RehabReview;
+use App\Livewire\Rehab\QuestionnaireForm;
+use App\Livewire\Rehab\Queue;
+
+
+Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
+Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
+Route::get('/queue', Queue::class)->name('queue');
 Route::get('/', function () {
     return redirect()->route('dashboard');
 })
@@ -157,7 +166,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('lab.dashboard');
     Route::get('/doctor/lab-results', action: DoctorLabResults::class)->name('doctor.lab-results');
     Route::get('/doctor/patients/{patient}/lab-results', DoctorLabResults::class)->name('doctor.patient.lab-results');
-   
+
     Route::get('/lab-tests', LabTestManager::class)->name('lab-tests.index');
 });
 Route::middleware(['auth'])->group(function () {
@@ -197,7 +206,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pharmacy/dashboard', \App\Livewire\Pharmacy\PharmacyDashboardComponent::class)
         ->name('pharmacy.dashboard');
 
-   
+
     Route::get('/prescriptions/{prescription}/download', [PrescriptionController::class, 'download'])
         ->name('prescriptions.download')
         ->middleware('auth');
@@ -231,7 +240,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/referrals/{referral}/print', PrintReferral::class)
         ->name('referrals.print');
 
-        Route::get('/beds', BedIndex::class)->name('beds.index');
+    Route::get('/beds', BedIndex::class)->name('beds.index');
 });
 Route::middleware(['auth', 'verified'])->group(function () {
     // Consumables Management
@@ -239,7 +248,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/consumables', action: ConsumableManager::class)
             ->name('inventory.consumables');
     });
-    
 });
 Route::middleware('auth')->group(function () {
     Route::get('/vital-types', Index::class)->name('vital-types.index');
@@ -247,4 +255,3 @@ Route::middleware('auth')->group(function () {
 
 
 require __DIR__ . '/auth.php';
-    
