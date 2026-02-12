@@ -60,7 +60,7 @@ class RehabQueue extends Component
 
     public function reviewQuestionnaire($id)
     {
-        return $this->redirect(route('rehab.review', $id), navigate: true);
+        return $this->redirect(route('doctor.rehab.review', $id), navigate: true);
     }
 
     public function resetFilters()

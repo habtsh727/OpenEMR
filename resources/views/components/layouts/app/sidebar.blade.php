@@ -77,7 +77,7 @@
                 <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="home-modern" :href="route('vital-types.index')" wire:navigate>Vital Types
-                </flux:sidebar.item>    
+                </flux:sidebar.item>
                 @endif
 
                 @if(auth()->user()->hasRole(['doctor', 'clinician']))
@@ -89,7 +89,38 @@
                 @endif
             </flux:sidebar.group>
             @endif
+            @if(auth()->user()->hasRole(['doctor', 'nurse', 'clinician', 'rehab', 'super-admin']))
+            <flux:sidebar.group expandable heading="Clinical" class="grid">
 
+                @if(auth()->user()->hasRole(['nurse','super-admin']))
+                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('vital-types.index')" wire:navigate>Vital Types
+                </flux:sidebar.item>
+                @endif
+
+                @if(auth()->user()->hasRole(['doctor', 'clinician']))
+                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="paper-airplane" :href="route('referrals.queue')" wire:navigate>
+                    Referral
+                </flux:sidebar.item>
+
+                <!-- Doctor Rehab Queue -->
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.rehab.queue')" wire:navigate>
+                    Rehab Reviews
+                </flux:sidebar.item>
+                @endif
+
+                <!-- Rehab Staff Routes -->
+                @if(auth()->user()->hasRole(['rehab', 'super-admin']))
+                <flux:sidebar.item icon="clipboard-document-check" :href="route('rehab.queue')" wire:navigate>
+                    Rehab Queue
+                </flux:sidebar.item>
+                @endif
+
+            </flux:sidebar.group>
+            @endif
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_result','view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Labratory" class="grid">

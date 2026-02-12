@@ -59,12 +59,21 @@ use App\Livewire\Doctor\RehabQueue;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Rehab\QuestionnaireForm;
 use App\Livewire\Rehab\Queue;
+Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
+    Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
+    Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
+});
 
-Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
-Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
+Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () {
+    Route::get('/queue', Queue::class)->name('queue');
+    Route::get('/questionnaire/{id}', QuestionnaireForm::class)->name('questionnaire');
+});
 
-Route::get('/queue', Queue::class)->name('queue');
-Route::get('/questionnaire/{id}', QuestionnaireForm::class)->name('rehab.questionnaire');
+// Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
+// Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
+
+// Route::get('/queue', Queue::class)->name('queue');
+// Route::get('/questionnaire/{id}', QuestionnaireForm::class)->name('rehab.questionnaire');
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
