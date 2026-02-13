@@ -229,203 +229,189 @@
         </div>
 
         <!-- Medications Table -->
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-900">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Medication</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ingredients</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dosage & Frequency</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Current Stock</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stock Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stock Actions</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($medications as $medication)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $medication->name }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">
+        <!-- Medications Table -->
+<div class="relative overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-4 py-3 w-1/4">Medication</th>
+                    <th scope="col" class="px-4 py-3 w-20">Price</th>
+                    <th scope="col" class="px-4 py-3 w-20">Status</th>
+                    <th scope="col" class="px-4 py-3 w-24 text-center">Current Stock</th>
+                    <th scope="col" class="px-4 py-3 w-24 text-center">Stock Status</th>
+                    <th scope="col" class="px-4 py-3 w-32 text-center">Stock Actions</th>
+                    <th scope="col" class="px-4 py-3 w-32">Created By</th>
+                    <th scope="col" class="px-4 py-3 w-64">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($medications as $medication)
+                <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <!-- Medication -->
+                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-semibold">{{ $medication->name }}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">
                                 Created: {{ $medication->created_at->format('M d, Y') }}
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate">{{ Str::limit($medication->ingredients, 50) }}</div>
-                            @if($medication->preparation_instructions)
-                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Prep: {{ Str::limit($medication->preparation_instructions, 30) }}
-                            </div>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-gray-100">{{ $medication->dosage }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ $medication->frequency->name ?? 'N/A' }} • {{ $medication->duration }}
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">ETB {{ number_format($medication->base_price, 2) }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ $medication->total_orders ?? 0 }} orders
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full 
-                                {{ $medication->is_active ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' }}">
-                                {{ $medication->is_active ? 'Active' : 'Inactive' }}
                             </span>
-                        </td>
-                        
-                        <!-- CURRENT STOCK COLUMN -->
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            @if($medication->stock)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {{ $medication->stock->quantity <= 0 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 
-                                       ($this->isLowStock($medication->stock) ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 
-                                       'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200') }}">
-                                    {{ number_format($medication->stock->quantity, 2) }}
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                    0.00
-                                </span>
-                            @endif
-                        </td>
+                        </div>
+                    </td>
+                    
+                    <!-- Price -->
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium">ETB {{ number_format($medication->base_price, 2) }}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $medication->total_orders ?? 0 }} orders
+                            </span>
+                        </div>
+                    </td>
+                    
+                    <!-- Status -->
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full 
+                            {{ $medication->is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                            {{ $medication->is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                    </td>
+                    
+                    <!-- Current Stock -->
+                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                        @if($medication->stock)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {{ $medication->stock->quantity <= 0 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 
+                                   ($this->isLowStock($medication->stock) ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 
+                                   'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200') }}">
+                                {{ number_format($medication->stock->quantity, 2) }}
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                0.00
+                            </span>
+                        @endif
+                    </td>
 
-                        <!-- STOCK STATUS BADGE -->
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            @if(!$medication->stock)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                    No Stock
-                                </span>
-                            @elseif($medication->stock->quantity <= 0)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                    Out of Stock
-                                </span>
-                            @elseif($this->isLowStock($medication->stock))
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                    Low Stock
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    In Stock
-                                </span>
-                            @endif
-                        </td>
+                    <!-- Stock Status -->
+                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                        @if(!$medication->stock)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                No Stock
+                            </span>
+                        @elseif($medication->stock->quantity <= 0)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                Out of Stock
+                            </span>
+                        @elseif($this->isLowStock($medication->stock))
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                Low Stock
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                In Stock
+                            </span>
+                        @endif
+                    </td>
 
-                        <!-- STOCK ACTION BUTTONS -->
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <div class="flex items-center justify-center space-x-1">
-                                <button wire:click="openStockModal({{ $medication->id }}, 'stock_in')"
-                                    class="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900 transition-colors"
-                                    title="Add Stock"
-                                    wire:loading.attr="disabled">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                    </svg>
-                                </button>
-                                
-                                <button wire:click="openStockModal({{ $medication->id }}, 'stock_out')"
-                                    class="p-1.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900 transition-colors"
-                                    title="Reduce Stock"
-                                    wire:loading.attr="disabled"
-                                    @if(!$medication->stock || $medication->stock->quantity <= 0) disabled @endif>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
-                                    </svg>
-                                </button>
-                                
-                                <button wire:click="openStockModal({{ $medication->id }}, 'adjustment')"
-                                    class="p-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors"
-                                    title="Adjust Stock"
-                                    wire:loading.attr="disabled">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                                    </svg>
-                                </button>
-                                
-                                <button wire:click="showMovementHistory({{ $medication->id }})"
-                                    class="p-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900 transition-colors"
-                                    title="View Movement History"
-                                    wire:loading.attr="disabled">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ $medication->creator->name ?? 'System' }}
-                        </td>
-                        
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex items-center space-x-2">
-                                <button wire:click="showEditForm({{ $medication->id }})"
-                                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white text-xs font-medium rounded-lg transition-colors flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                    Edit
-                                </button>
-
-                                <button wire:click="duplicateMedication({{ $medication->id }})"
-                                    class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white text-xs font-medium rounded-lg transition-colors flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                    Duplicate
-                                </button>
-
-                                <button wire:click="toggleStatus({{ $medication->id }})"
-                                    class="px-3 py-1.5 {{ $medication->is_active ? 'bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-700 dark:hover:bg-yellow-800' : 'bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800' }} text-white text-xs font-medium rounded-lg transition-colors flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        @if($medication->is_active)
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        @else
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        @endif
-                                    </svg>
-                                    {{ $medication->is_active ? 'Deactivate' : 'Activate' }}
-                                </button>
-
-                                <button wire:click="confirmDelete({{ $medication->id }})"
-                                    class="px-3 py-1.5 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white text-xs font-medium rounded-lg transition-colors flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="10" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                            <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No custom medications found</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                {{ $search ? 'No medications match your search' : 'Get started by creating your first custom medication' }}
-                            </p>
-                            @if(!$search)
-                            <button wire:click="showAddForm"
-                                class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white rounded-lg transition-colors">
-                                Create Custom Medication
+                    <!-- Stock Actions -->
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1">
+                            <button wire:click="openStockModal({{ $medication->id }}, 'stock_in')"
+                                class="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900 transition-colors"
+                                title="Add Stock"
+                                wire:loading.attr="disabled">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
                             </button>
-                            @endif
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                            
+                            <button wire:click="openStockModal({{ $medication->id }}, 'stock_out')"
+                                class="p-1.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900 transition-colors"
+                                title="Reduce Stock"
+                                wire:loading.attr="disabled"
+                                @if(!$medication->stock || $medication->stock->quantity <= 0) disabled @endif>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+                                </svg>
+                            </button>
+                            
+                            <button wire:click="openStockModal({{ $medication->id }}, 'adjustment')"
+                                class="p-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors"
+                                title="Adjust Stock"
+                                wire:loading.attr="disabled">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                </svg>
+                            </button>
+                            
+                            <button wire:click="showMovementHistory({{ $medication->id }})"
+                                class="p-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900 transition-colors"
+                                title="View Movement History"
+                                wire:loading.attr="disabled">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+
+                    <!-- Created By -->
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        {{ $medication->creator->name ?? 'System' }}
+                    </td>
+                    
+                    <!-- Actions -->
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                        <div class="flex items-center gap-2">
+                            <button wire:click="showEditForm({{ $medication->id }})"
+                                class="inline-flex items-center px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white text-xs font-medium rounded-lg transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Edit
+                            </button>
+
+                            <button wire:click="duplicateMedication({{ $medication->id }})"
+                                class="inline-flex items-center px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white text-xs font-medium rounded-lg transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Duplicate
+                            </button>
+
+                            <button wire:click="confirmDelete({{ $medication->id }})"
+                                class="inline-flex items-center px-2.5 py-1.5 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white text-xs font-medium rounded-lg transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr class="border-b dark:border-gray-700">
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No custom medications found</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            {{ $search ? 'No medications match your search' : 'Get started by creating your first custom medication' }}
+                        </p>
+                        @if(!$search)
+                        <button wire:click="showAddForm"
+                            class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white text-sm rounded-lg transition-colors">
+                            Create Custom Medication
+                        </button>
+                        @endif
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 
         <!-- Pagination -->
         @if($medications->hasPages())
