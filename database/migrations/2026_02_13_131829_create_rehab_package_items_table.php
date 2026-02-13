@@ -18,10 +18,6 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            // polymorphic relation
-            $table->morphs('itemable');
-
-            // type for UI control
             $table->enum('item_type', [
                 'standard_medication',
                 'custom_medication',
@@ -29,18 +25,15 @@ return new class extends Migration
                 'bed'
             ]);
 
-            // doctor fields
+            $table->unsignedBigInteger('item_id')->nullable();
+
+            $table->string('item_name');
+
             $table->string('dosage')->nullable();
-            $table->foreignId('frequency_id')
-                ->nullable()
-                ->constrained('pharmacy_frequencies')
-                ->nullOnDelete();
-
+            $table->unsignedBigInteger('frequency_id')->nullable();
             $table->string('duration')->nullable();
-            $table->integer('bed_duration_days')->nullable();
 
-            // billing
-            $table->decimal('price', 10, 2)->default(0);
+            $table->integer('bed_duration_days')->nullable();
 
             $table->text('notes')->nullable();
 
