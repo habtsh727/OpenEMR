@@ -10,11 +10,18 @@ class CustomMedication extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'ingredients', 'preparation_instructions',
-        'dosage', 'frequency_id', 'duration', 'instructions',
-        'base_price', 'created_by', 'is_active'
+        'name',
+        'ingredients',
+        'preparation_instructions',
+        'dosage',
+        'frequency_id',
+        'duration',
+        'instructions',
+        'base_price',
+        'created_by',
+        'is_active'
     ];
-     protected $casts = [
+    protected $casts = [
         'base_price' => 'decimal:2',
         'is_active' => 'boolean',
         'created_at' => 'datetime',
@@ -37,7 +44,7 @@ class CustomMedication extends Model
     {
         return $this->hasMany(MedicationOrderItem::class);
     }
-     public function scopeActive($query)
+    public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
@@ -56,8 +63,8 @@ class CustomMedication extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('ingredients', 'like', "%{$search}%")
-                    ->orWhere('dosage', 'like', "%{$search}%");
+            ->orWhere('ingredients', 'like', "%{$search}%")
+            ->orWhere('dosage', 'like', "%{$search}%");
     }
 
     /**
@@ -92,5 +99,14 @@ class CustomMedication extends Model
     {
         $this->update(['is_active' => false]);
         return $this;
+    }
+    public function stock()
+    {
+        return $this->hasOne(CustomMedicationStock::class);
+    }
+
+    public function movements()
+    {
+        return $this->hasMany(CustomMedicationMovement::class);
     }
 }

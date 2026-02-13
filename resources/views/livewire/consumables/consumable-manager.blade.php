@@ -467,172 +467,328 @@
                             <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
                                 {{ $editingId ? 'Edit Consumable' : 'Add New Consumable' }}
                             </h3>
-                            <div class="mt-6">
-                                <form wire:submit.prevent="save" class="space-y-6">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <!-- Name -->
-                                        <div>
-                                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Consumable Name <span class="text-red-500">*</span>
-                                            </label>
-                                            <input 
-                                                type="text" 
-                                                id="name"
-                                                wire:model="name"
-                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 @error('name') border-red-500 @enderror"
-                                                placeholder="e.g., Oxygen Cylinder"
-                                            >
-                                            @error('name')
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                            @enderror
-                                        </div>
+                           <div class="mt-6">
+    <form wire:submit.prevent="save" class="space-y-6">
+        <!-- Form Header with Progress Indicator -->
+        <div class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    Consumable Item Details
+                </h3>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Enter the inventory information below. Fields marked with <span class="text-rose-500">*</span> are required.
+                </p>
+            </div>
+            
+            <!-- Status Indicator -->
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                    <span class="w-1.5 h-1.5 bg-gray-500 rounded-full mr-1.5"></span>
+                    Draft
+                </span>
+            </div>
+        </div>
 
-                                        <!-- Code -->
-                                        <div>
-                                            <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Unique Code <span class="text-red-500">*</span>
-                                            </label>
-                                            <input 
-                                                type="text" 
-                                                id="code"
-                                                wire:model="code"
-                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 @error('code') border-red-500 @enderror"
-                                                placeholder="e.g., CON-OXY-001"
-                                            >
-                                            @error('code')
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                            @enderror
-                                        </div>
+        <!-- Main Form Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column -->
+            <div class="space-y-5">
+                <!-- Consumable Name -->
+                <div class="space-y-1.5">
+                    <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Consumable Name
+                        <span class="text-rose-500 ml-1" aria-label="required">*</span>
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="name"
+                            wire:model="name"
+                            class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors @error('name') border-rose-500 focus:ring-rose-500 focus:border-rose-500 @enderror"
+                            placeholder="e.g., Oxygen Cylinder (E-size)"
+                            aria-invalid="@error('name') true @else false @enderror"
+                        >
+                        @error('name')
+                            <p class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
 
-                                        <!-- Category -->
-                                        <div>
-                                            <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Category
-                                            </label>
-                                            <select 
-                                                id="category"
-                                                wire:model="category"
-                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500"
-                                            >
-                                                <option value="">Select Category</option>
-                                                @foreach($categories as $cat)
-                                                    <option value="{{ $cat }}">{{ ucfirst(str_replace('-', ' ', $cat)) }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                <!-- Unique Code -->
+                <div class="space-y-1.5">
+                    <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Unique Code
+                        <span class="text-rose-500 ml-1" aria-label="required">*</span>
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="code"
+                            wire:model="code"
+                            class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white placeholder:text-gray-400 text-sm font-mono transition-colors @error('code') border-rose-500 focus:ring-rose-500 focus:border-rose-500 @enderror"
+                            placeholder="e.g., CONS-OXY-001"
+                            aria-invalid="@error('code') true @else false @enderror"
+                        >
+                        @error('code')
+                            <p class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Must be unique across all consumables
+                        </p>
+                    </div>
+                </div>
 
-                                        <!-- Unit -->
-                                        <div>
-                                            <label for="unit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Unit of Measurement <span class="text-red-500">*</span>
-                                            </label>
-                                            <select 
-                                                id="unit"
-                                                wire:model="unit"
-                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 @error('unit') border-red-500 @enderror"
-                                            >
-                                                <option value="">Select Unit</option>
-                                                @foreach($units as $unitOption)
-                                                    <option value="{{ $unitOption }}">{{ strtoupper($unitOption) }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('unit')
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                            @enderror
-                                        </div>
+                <!-- Category -->
+                <div class="space-y-1.5">
+                    <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Category
+                    </label>
+                    <div class="relative">
+                        <select 
+                            id="category"
+                            wire:model="category"
+                            class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white text-sm transition-colors appearance-none"
+                        >
+                            <option value="">— Select a category —</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat }}" class="py-1.5">
+                                    {{ ucfirst(str_replace(['-', '_'], ' ', $cat)) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
 
-                                        <!-- Current Stock -->
-                                        <div>
-                                            <label for="current_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Current Stock <span class="text-red-500">*</span>
-                                            </label>
-                                            <input 
-                                                type="number" 
-                                                id="current_stock"
-                                                wire:model="current_stock"
-                                                min="0"
-                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 @error('current_stock') border-red-500 @enderror"
-                                            >
-                                            @error('current_stock')
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                            @enderror
-                                        </div>
+                <!-- Unit of Measurement -->
+                <div class="space-y-1.5">
+                    <label for="unit" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Unit of Measurement
+                        <span class="text-rose-500 ml-1" aria-label="required">*</span>
+                    </label>
+                    <div class="relative">
+                        <select 
+                            id="unit"
+                            wire:model="unit"
+                            class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white text-sm transition-colors appearance-none @error('unit') border-rose-500 focus:ring-rose-500 focus:border-rose-500 @enderror"
+                            aria-invalid="@error('unit') true @else false @enderror"
+                        >
+                            <option value="">— Select unit —</option>
+                            @foreach($units as $unitOption)
+                                <option value="{{ $unitOption }}" class="py-1.5">
+                                    {{ strtoupper($unitOption) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                        @error('unit')
+                            <p class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
+            </div>
 
-                                        <!-- Minimum Stock -->
-                                        <div>
-                                            <label for="minimum_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Minimum Stock Level <span class="text-red-500">*</span>
-                                            </label>
-                                            <input 
-                                                type="number" 
-                                                id="minimum_stock"
-                                                wire:model="minimum_stock"
-                                                min="0"
-                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 @error('minimum_stock') border-red-500 @enderror"
-                                            >
-                                            @error('minimum_stock')
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                            @enderror
-                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Alert triggers when stock falls below this level</p>
-                                        </div>
+            <!-- Right Column -->
+            <div class="space-y-5">
+                <!-- Current Stock -->
+                <div class="space-y-1.5">
+                    <label for="current_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Current Stock
+                        <span class="text-rose-500 ml-1" aria-label="required">*</span>
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="number" 
+                            id="current_stock"
+                            wire:model="current_stock"
+                            min="0"
+                            step="0.01"
+                            class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white text-sm transition-colors @error('current_stock') border-rose-500 focus:ring-rose-500 focus:border-rose-500 @enderror"
+                            placeholder="0.00"
+                            aria-invalid="@error('current_stock') true @else false @enderror"
+                        >
+                        @error('current_stock')
+                            <p class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
 
-                                        <!-- Unit Cost -->
-                                        <div>
-                                            <label for="unit_cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Unit Cost (USD)
-                                            </label>
-                                            <div class="relative">
-                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                    <span class="text-gray-500 dark:text-gray-400">$</span>
-                                                </div>
-                                                <input 
-                                                    type="number" 
-                                                    id="unit_cost"
-                                                    wire:model="unit_cost"
-                                                    step="0.01"
-                                                    min="0"
-                                                    class="pl-8 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500 @error('unit_cost') border-red-500 @enderror"
-                                                    placeholder="0.00"
-                                                >
-                                            </div>
-                                            @error('unit_cost')
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                            @enderror
-                                        </div>
+                <!-- Minimum Stock Level -->
+                <div class="space-y-1.5">
+                    <label for="minimum_stock" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Minimum Stock Level
+                        <span class="text-rose-500 ml-1" aria-label="required">*</span>
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="number" 
+                            id="minimum_stock"
+                            wire:model="minimum_stock"
+                            min="0"
+                            step="0.01"
+                            class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white text-sm transition-colors @error('minimum_stock') border-rose-500 focus:ring-rose-500 focus:border-rose-500 @enderror"
+                            placeholder="0.00"
+                            aria-invalid="@error('minimum_stock') true @else false @enderror"
+                        >
+                        @error('minimum_stock')
+                            <p class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Low stock alert triggers when quantity falls below this level
+                    </p>
+                </div>
 
-                                        <!-- Checkboxes -->
-                                        <div class="md:col-span-2 space-y-4">
-                                            <div class="flex items-center space-x-6">
-                                                <!-- Billable -->
-                                                <div class="flex items-center">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        id="billable"
-                                                        wire:model="billable"
-                                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded"
-                                                    >
-                                                    <label for="billable" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                                                        Billable Item
-                                                    </label>
-                                                </div>
+                <!-- Unit Cost -->
+                <div class="space-y-1.5">
+                    <label for="unit_cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Unit Cost (ETB)
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">ETB</span>
+                        </div>
+                        <input 
+                            type="number" 
+                            id="unit_cost"
+                            wire:model="unit_cost"
+                            step="0.01"
+                            min="0"
+                            class="w-full pl-14 pr-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors @error('unit_cost') border-rose-500 focus:ring-rose-500 focus:border-rose-500 @enderror"
+                            placeholder="0.00"
+                            aria-invalid="@error('unit_cost') true @else false @enderror"
+                        >
+                        @error('unit_cost')
+                            <p class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Cost per unit for billing and inventory valuation
+                    </p>
+                </div>
 
-                                                <!-- Active Status -->
-                                                <div class="flex items-center">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        id="is_active"
-                                                        wire:model="is_active"
-                                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded"
-                                                    >
-                                                    <label for="is_active" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                                                        Active
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
+                <!-- Status & Configuration -->
+                <div class="space-y-4 pt-2">
+                    <div class="flex items-center gap-6">
+                        <label class="flex items-center gap-2.5 cursor-pointer group">
+                            <input 
+                                type="checkbox" 
+                                id="billable"
+                                wire:model="billable"
+                                class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-600 dark:checked:bg-blue-500 transition-colors"
+                            >
+                            <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                                Billable Item
+                            </span>
+                        </label>
+                        <label class="flex items-center gap-2.5 cursor-pointer group">
+                            <input 
+                                type="checkbox" 
+                                id="is_active"
+                                wire:model="is_active"
+                                class="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-600 dark:checked:bg-blue-500 transition-colors"
+                                checked
+                            >
+                            <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                                Active in Inventory
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <!-- Additional Info -->
+                    <div class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                        <div class="flex items-start gap-2.5">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <span class="text-xs font-medium text-blue-800 dark:text-blue-400">Inventory Settings</span>
+                                <p class="mt-0.5 text-xs text-blue-700 dark:text-blue-300">
+                                    Inactive items will not appear in stock requisition forms or inventory counts.
+                                </p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button 
+                type="button"
+                wire:click="$set('editing', false)"
+                class="inline-flex items-center px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800 transition-colors gap-2"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Cancel
+            </button>
+            
+            <button 
+                type="submit"
+                class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-all duration-200 gap-2"
+            >
+                <svg wire:loading wire:target="save" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span wire:loading.remove wire:target="save">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                    </svg>
+                    Save Consumable
+                </span>
+                <span wire:loading wire:target="save">Saving...</span>
+            </button>
+        </div>
+    </form>
+</div>
                         </div>
                     </div>
                 </div>
