@@ -612,11 +612,11 @@
                     @endif
 
                     @if(in_array($orderDetails->status, ['paid', 'approved']))
-                    <button wire:click="cancelOrder" 
+                    {{-- <button wire:click="cancelOrder" 
                             wire:confirm="Are you sure you want to cancel this order?"
                             class="px-6 py-2.5 border-2 border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-lg font-medium hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
                         Cancel Order
-                    </button>
+                    </button> --}}
                     @endif
 
                     <button wire:click="$set('showOrderDetails', false)"
