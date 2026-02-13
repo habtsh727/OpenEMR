@@ -192,8 +192,8 @@ class CustomMedicationComponent extends Component
         $this->stockActionType = $action;
         $this->stockQuantity = null;
         $this->stockNote = '';
-        $this->currentStock = $stock ? floatval($stock->quantity) : 0;
-        $this->lowStockAlert = $stock ? floatval($stock->low_stock_alert) : 0;
+        $this->currentStock = $stock ? $stock->quantity : 0;
+        $this->lowStockAlert = $stock ? $stock->low_stock_alert : 0;
         
         $this->showStockModal = true;
     }
@@ -204,6 +204,7 @@ class CustomMedicationComponent extends Component
                       'stockActionType', 'stockQuantity', 'stockNote', 'currentStock', 'lowStockAlert']);
     }
     
+    // FIXED: ADD STOCK - Adds to current stock
     public function addStock()
     {
         $this->validate([
@@ -214,18 +215,27 @@ class CustomMedicationComponent extends Component
         DB::beginTransaction();
         
         try {
-            $stock = CustomMedicationStock::updateOrCreate(
-                ['custom_medication_id' => $this->stockMedicationId],
-                ['quantity' => 0, 'low_stock_alert' => 0]
-            );
+            // Get the stock record
+            $stock = CustomMedicationStock::where('custom_medication_id', $this->stockMedicationId)->first();
             
-            $oldQuantity = floatval($stock->quantity);
-            $addQuantity = floatval($this->stockQuantity);
-            $newQuantity = $oldQuantity + $addQuantity;
+            if (!$stock) {
+                // Create if doesn't exist
+                $stock = CustomMedicationStock::create([
+                    'custom_medication_id' => $this->stockMedicationId,
+                    'quantity' => 0,
+                    'low_stock_alert' => 0
+                ]);
+            }
             
+            $oldQuantity = $stock->quantity;
+            $addQuantity = $this->stockQuantity;
+            $newQuantity = $oldQuantity + $addQuantity; // THIS IS KEY - ADDING to current
+            
+            // Update stock
             $stock->quantity = $newQuantity;
             $stock->save();
             
+            // Create movement
             CustomMedicationMovement::create([
                 'custom_medication_id' => $this->stockMedicationId,
                 'type' => 'stock_in',
@@ -239,7 +249,7 @@ class CustomMedicationComponent extends Component
             $this->closeStockModal();
             $this->loadStats();
             
-            session()->flash('success', 'Stock added successfully! Current stock: ' . number_format($newQuantity, 2));
+            session()->flash('success', "Stock ADDED successfully! {$oldQuantity} + {$addQuantity} = {$newQuantity}");
             $this->dispatch('medication-updated');
             
         } catch (\Exception $e) {
@@ -248,6 +258,7 @@ class CustomMedicationComponent extends Component
         }
     }
     
+    // FIXED: REDUCE STOCK - Subtracts from current stock
     public function reduceStock()
     {
         $this->validate([
@@ -262,22 +273,24 @@ class CustomMedicationComponent extends Component
             return;
         }
         
-        $currentQty = floatval($stock->quantity);
-        $reduceQty = floatval($this->stockQuantity);
+        $currentQty = $stock->quantity;
+        $reduceQty = $this->stockQuantity;
         
         if ($currentQty < $reduceQty) {
-            $this->addError('stockQuantity', 'Insufficient stock available. Current stock: ' . number_format($currentQty, 2));
+            $this->addError('stockQuantity', 'Insufficient stock. Current: ' . $currentQty);
             return;
         }
         
         DB::beginTransaction();
         
         try {
-            $newQuantity = $currentQty - $reduceQty;
+            $newQuantity = $currentQty - $reduceQty; // THIS IS KEY - SUBTRACTING from current
             
+            // Update stock
             $stock->quantity = $newQuantity;
             $stock->save();
             
+            // Create movement
             CustomMedicationMovement::create([
                 'custom_medication_id' => $this->stockMedicationId,
                 'type' => 'stock_out',
@@ -291,7 +304,7 @@ class CustomMedicationComponent extends Component
             $this->closeStockModal();
             $this->loadStats();
             
-            session()->flash('success', 'Stock reduced successfully! Current stock: ' . number_format($newQuantity, 2));
+            session()->flash('success', "Stock REDUCED successfully! {$currentQty} - {$reduceQty} = {$newQuantity}");
             $this->dispatch('medication-updated');
             
         } catch (\Exception $e) {
@@ -300,7 +313,7 @@ class CustomMedicationComponent extends Component
         }
     }
     
-    // FIXED: ADJUST STOCK METHOD - Now properly handling the adjustment
+    // FIXED: ADJUST STOCK - Sets to exact value
     public function adjustStock()
     {
         $this->validate([
@@ -311,99 +324,45 @@ class CustomMedicationComponent extends Component
         DB::beginTransaction();
         
         try {
-            // Get or create stock record
-            $stock = CustomMedicationStock::updateOrCreate(
-                ['custom_medication_id' => $this->stockMedicationId],
-                ['quantity' => 0, 'low_stock_alert' => 0]
-            );
+            $stock = CustomMedicationStock::where('custom_medication_id', $this->stockMedicationId)->first();
             
-            $oldQuantity = floatval($stock->quantity);
-            $newQuantity = floatval($this->stockQuantity);
+            if (!$stock) {
+                $stock = CustomMedicationStock::create([
+                    'custom_medication_id' => $this->stockMedicationId,
+                    'quantity' => 0,
+                    'low_stock_alert' => 0
+                ]);
+            }
+            
+            $oldQuantity = $stock->quantity;
+            $newQuantity = $this->stockQuantity;
             $quantityDiff = $newQuantity - $oldQuantity;
             
-            // Update the quantity
+            // Set to exact new quantity
             $stock->quantity = $newQuantity;
             $stock->save();
             
-            // Create movement record
+            // Create movement
             CustomMedicationMovement::create([
                 'custom_medication_id' => $this->stockMedicationId,
                 'type' => 'adjustment',
                 'quantity' => $quantityDiff,
-                'note' => $this->stockNote ?: 'Adjusted from ' . number_format($oldQuantity, 2) . ' to ' . number_format($newQuantity, 2),
+                'note' => $this->stockNote ?: "Adjusted from {$oldQuantity} to {$newQuantity}",
                 'performed_by' => Auth::id(),
             ]);
             
             DB::commit();
             
-            // Force refresh the stock data
-            $updatedStock = CustomMedicationStock::where('custom_medication_id', $this->stockMedicationId)->first();
-            
             $this->closeStockModal();
             $this->loadStats();
             
-            session()->flash('success', 'Stock adjusted successfully! Old: ' . number_format($oldQuantity, 2) . ' → New: ' . number_format($updatedStock->quantity, 2));
+            session()->flash('success', "Stock ADJUSTED successfully! {$oldQuantity} → {$newQuantity}");
             $this->dispatch('medication-updated');
             
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Failed to adjust stock: ' . $e->getMessage());
         }
-    }
-    
-    // DEBUG: Test method to directly update stock
-    public function testAdjustStock($medicationId, $newQuantity)
-    {
-        try {
-            DB::beginTransaction();
-            
-            $stock = CustomMedicationStock::updateOrCreate(
-                ['custom_medication_id' => $medicationId],
-                ['quantity' => 0, 'low_stock_alert' => 0]
-            );
-            
-            $oldQuantity = $stock->quantity;
-            $stock->quantity = $newQuantity;
-            $stock->save();
-            
-            CustomMedicationMovement::create([
-                'custom_medication_id' => $medicationId,
-                'type' => 'adjustment',
-                'quantity' => $newQuantity - $oldQuantity,
-                'note' => 'Test adjustment',
-                'performed_by' => Auth::id(),
-            ]);
-            
-            DB::commit();
-            
-            session()->flash('success', 'Test adjustment successful! New stock: ' . $newQuantity);
-            $this->dispatch('medication-updated');
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            session()->flash('error', 'Test failed: ' . $e->getMessage());
-        }
-    }
-    
-    public function checkStock($medicationId)
-    {
-        $stock = CustomMedicationStock::where('custom_medication_id', $medicationId)->first();
-        $medication = CustomMedication::find($medicationId);
-        
-        if ($stock) {
-            session()->flash('info', 
-                'Medication: ' . ($medication->name ?? 'Unknown') . '<br>' .
-                'Stock ID: ' . $stock->id . '<br>' .
-                'Quantity: ' . number_format($stock->quantity, 2) . '<br>' .
-                'Alert: ' . number_format($stock->low_stock_alert, 2) . '<br>' .
-                'Created: ' . $stock->created_at . '<br>' .
-                'Updated: ' . $stock->updated_at
-            );
-        } else {
-            session()->flash('info', 'No stock record found for medication ID: ' . $medicationId);
-        }
-        
-        $this->dispatch('medication-updated');
     }
     
     public function showMovementHistory($medicationId)
@@ -415,13 +374,12 @@ class CustomMedicationComponent extends Component
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($movement) {
-                $quantity = floatval($movement->quantity);
                 return [
                     'id' => $movement->id,
                     'type' => $movement->type,
                     'type_label' => ucwords(str_replace('_', ' ', $movement->type)),
-                    'quantity' => $quantity,
-                    'quantity_formatted' => $quantity > 0 ? '+' . number_format($quantity, 2) : number_format($quantity, 2),
+                    'quantity' => $movement->quantity,
+                    'quantity_formatted' => $movement->quantity > 0 ? '+' . $movement->quantity : $movement->quantity,
                     'note' => $movement->note,
                     'performed_by' => $movement->performer?->name ?? 'System',
                     'created_at' => $movement->created_at->format('M d, Y H:i'),
@@ -500,7 +458,38 @@ class CustomMedicationComponent extends Component
         $this->formTitle = 'Duplicate Medication';
         $this->showForm = true;
     }
-    
+    public function testStockNow($medicationId)
+{
+    try {
+        // Get current stock
+        $stock = CustomMedicationStock::where('custom_medication_id', $medicationId)->first();
+        
+        if (!$stock) {
+            session()->flash('error', 'No stock record found');
+            return;
+        }
+        
+        $oldQuantity = $stock->quantity;
+        
+        // Force update to oldQuantity + 5
+        $stock->quantity = $oldQuantity + 5;
+        $stock->save();
+        
+        // Verify
+        $newStock = CustomMedicationStock::where('custom_medication_id', $medicationId)->first();
+        
+        session()->flash('info', 
+            'BEFORE: ' . $oldQuantity . '<br>' .
+            'AFTER: ' . $newStock->quantity . '<br>' .
+            'CHANGE: +5'
+        );
+        
+        $this->dispatch('medication-updated');
+        
+    } catch (\Exception $e) {
+        session()->flash('error', 'Test failed: ' . $e->getMessage());
+    }
+}
     public function resetForm()
     {
         $this->reset([
@@ -521,20 +510,7 @@ class CustomMedicationComponent extends Component
     public function isLowStock($stock)
     {
         if (!$stock) return false;
-        $quantity = floatval($stock->quantity);
-        $alert = floatval($stock->low_stock_alert);
-        return $quantity <= $alert && $alert > 0;
-    }
-    
-    public function getStockStatusClass($stock)
-    {
-        if (!$stock) return 'bg-secondary';
-        $quantity = floatval($stock->quantity);
-        $alert = floatval($stock->low_stock_alert);
-        
-        if ($quantity <= 0) return 'bg-danger text-white';
-        if ($quantity <= $alert && $alert > 0) return 'bg-warning';
-        return 'bg-success text-white';
+        return $stock->quantity <= $stock->low_stock_alert && $stock->low_stock_alert > 0;
     }
     
     public function render()
