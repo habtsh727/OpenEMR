@@ -59,7 +59,7 @@ use App\Livewire\Doctor\RehabQueue;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Rehab\QuestionnaireForm;
 use App\Livewire\Rehab\Queue;
-
+use App\Livewire\Rehab\RehabPackagesComponent;
 use App\Livewire\Rehab\Template\Index as TemplateIndex;
 use App\Livewire\Rehab\Template\Form as TemplateForm;
 use App\Livewire\Rehab\Template\Questions as TemplateQuestions;
@@ -69,6 +69,7 @@ use App\Livewire\Rehab\Template\Questions as TemplateQuestions;
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
     Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
+    
 });
 
 Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () {
@@ -79,6 +80,9 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
     Route::get('/templates/create', TemplateForm::class)->name('templates.create');
     Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
     Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
+
+     Route::get('/rehab-packages', action: RehabPackagesComponent::class)
+        ->name('rehab-packages.index');
 });
 
 // Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
