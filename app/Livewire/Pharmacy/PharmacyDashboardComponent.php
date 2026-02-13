@@ -9,7 +9,8 @@ use App\Models\MedicationDispensation;
 use App\Models\PharmacyItem;
 use App\Models\PharmacyBatch;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\CustomMedicationStock;
+use App\Models\CustomMedicationMovement;
 class PharmacyDashboardComponent extends Component
 {
     use WithPagination;
@@ -111,41 +112,79 @@ class PharmacyDashboardComponent extends Component
         $this->checkStockAvailability();
     }
     
-    public function checkStockAvailability()
-    {
-        $this->stockStatus = [];
+    // public function checkStockAvailability()
+    // {
+    //     $this->stockStatus = [];
         
-        if (!$this->orderDetails) return;
+    //     if (!$this->orderDetails) return;
         
-        foreach ($this->orderDetails->items as $item) {
-            if ($item->drug_id) {
-                // Standard medication - check stock
-                $drug = PharmacyItem::with('batches')->find($item->drug_id);
-                $availableStock = $drug ? $drug->batches()->sum('quantity') : 0;
-                $sufficient = $availableStock >= $item->quantity;
+    //     foreach ($this->orderDetails->items as $item) {
+    //         if ($item->drug_id) {
+    //             // Standard medication - check stock
+    //             $drug = PharmacyItem::with('batches')->find($item->drug_id);
+    //             $availableStock = $drug ? $drug->batches()->sum('quantity') : 0;
+    //             $sufficient = $availableStock >= $item->quantity;
                 
-                $this->stockStatus[$item->id] = [
-                    'type' => 'standard',
-                    'drug_name' => $drug->name ?? 'Unknown',
-                    'required' => $item->quantity,
-                    'available' => $availableStock,
-                    'sufficient' => $sufficient,
-                    'batches' => $drug ? $drug->batches : []
-                ];
-            } else {
-                // Custom medication - no stock check needed
-                $this->stockStatus[$item->id] = [
-                    'type' => 'custom',
-                    'drug_name' => $item->customMedication->name ?? 'Custom Medication',
-                    'required' => $item->quantity,
-                    'available' => null,
-                    'sufficient' => true,
-                    'batches' => []
-                ];
-            }
+    //             $this->stockStatus[$item->id] = [
+    //                 'type' => 'standard',
+    //                 'drug_name' => $drug->name ?? 'Unknown',
+    //                 'required' => $item->quantity,
+    //                 'available' => $availableStock,
+    //                 'sufficient' => $sufficient,
+    //                 'batches' => $drug ? $drug->batches : []
+    //             ];
+    //         } else {
+    //             // Custom medication - no stock check needed
+    //             $this->stockStatus[$item->id] = [
+    //                 'type' => 'custom',
+    //                 'drug_name' => $item->customMedication->name ?? 'Custom Medication',
+    //                 'required' => $item->quantity,
+    //                 'available' => null,
+    //                 'sufficient' => true,
+    //                 'batches' => []
+    //             ];
+    //         }
+    //     }
+    // }
+    
+    public function checkStockAvailability()
+{
+    $this->stockStatus = [];
+    
+    if (!$this->orderDetails) return;
+    
+    foreach ($this->orderDetails->items as $item) {
+        if ($item->drug_id) {
+            // Standard medication - check stock
+            $drug = PharmacyItem::with('batches')->find($item->drug_id);
+            $availableStock = $drug ? $drug->batches()->sum('quantity') : 0;
+            $sufficient = $availableStock >= $item->quantity;
+            
+            $this->stockStatus[$item->id] = [
+                'type' => 'standard',
+                'drug_name' => $drug->name ?? 'Unknown',
+                'required' => $item->quantity,
+                'available' => $availableStock,
+                'sufficient' => $sufficient,
+                'batches' => $drug ? $drug->batches : []
+            ];
+        } elseif ($item->custom_medication_id) {
+            // 🟢 FIXED: Custom medication - check stock from custom_medication_stocks
+            $customStock = \App\Models\CustomMedicationStock::where('custom_medication_id', $item->custom_medication_id)->first();
+            $availableStock = $customStock ? $customStock->quantity : 0;
+            $sufficient = $availableStock >= $item->quantity;
+            
+            $this->stockStatus[$item->id] = [
+                'type' => 'custom',
+                'drug_name' => $item->customMedication->name ?? 'Custom Medication',
+                'required' => $item->quantity,
+                'available' => $availableStock,
+                'sufficient' => $sufficient,
+                'batches' => [] // Custom medications don't use batches
+            ];
         }
     }
-    
+}
     public function approveOrder()
     {
         $this->validate([
@@ -190,54 +229,143 @@ class PharmacyDashboardComponent extends Component
         }
     }
     
+    // public function deductStock()
+    // {
+    //     foreach ($this->orderDetails->items as $item) {
+    //         if ($item->drug_id) {
+    //             $required = $item->quantity;
+    //             $batches = PharmacyBatch::where('medicine_id', $item->drug_id)
+    //                 ->where('quantity', '>', 0)
+    //                 ->orderBy('expiry_date')
+    //                 ->get();
+                
+    //             foreach ($batches as $batch) {
+    //                 if ($required <= 0) break;
+                    
+    //                 $deduct = min($required, $batch->quantity);
+    //                 $batch->decrement('quantity', $deduct);
+    //                 $required -= $deduct;
+                    
+    //                 try {
+    //                     // Record the deduction if table exists
+    //                     if ($this->tableExists('pharmacy_stock_transactions')) {
+    //                         DB::table('pharmacy_stock_transactions')->insert([
+    //                             'pharmacy_item_id' => $item->drug_id,
+    //                             'batch_id' => $batch->id,
+    //                             'transaction_type' => 'dispense',
+    //                             'quantity' => -$deduct,
+    //                             'reference_type' => 'MedicationOrder',
+    //                             'reference_id' => $this->selectedOrderId,
+    //                             'notes' => 'Dispensed for Order #' . $this->selectedOrderId,
+    //                             'created_by' => auth()->id(),
+    //                             'created_at' => now(),
+    //                             'updated_at' => now()
+    //                         ]);
+    //                     } else {
+    //                         // Log that table doesn't exist but continue
+    //                         \Log::warning('pharmacy_stock_transactions table does not exist. Stock updated without transaction record.');
+    //                     }
+    //                 } catch (\Exception $e) {
+    //                     // Log error but continue processing
+    //                     \Log::warning('Failed to record stock transaction: ' . $e->getMessage());
+    //                 }
+    //             }
+                
+    //             // Update dispensation stock_updated flag
+    //             $this->dispensation->update(['stock_updated' => true]);
+    //         }
+    //     }
+    // }
+    
     public function deductStock()
-    {
-        foreach ($this->orderDetails->items as $item) {
-            if ($item->drug_id) {
-                $required = $item->quantity;
-                $batches = PharmacyBatch::where('medicine_id', $item->drug_id)
-                    ->where('quantity', '>', 0)
-                    ->orderBy('expiry_date')
-                    ->get();
+{
+    foreach ($this->orderDetails->items as $item) {
+        if ($item->drug_id) {
+            // Standard medication - deduct from PharmacyBatch
+            $required = $item->quantity;
+            $batches = PharmacyBatch::where('medicine_id', $item->drug_id)
+                ->where('quantity', '>', 0)
+                ->orderBy('expiry_date')
+                ->get();
+            
+            foreach ($batches as $batch) {
+                if ($required <= 0) break;
                 
-                foreach ($batches as $batch) {
-                    if ($required <= 0) break;
-                    
-                    $deduct = min($required, $batch->quantity);
-                    $batch->decrement('quantity', $deduct);
-                    $required -= $deduct;
-                    
-                    try {
-                        // Record the deduction if table exists
-                        if ($this->tableExists('pharmacy_stock_transactions')) {
-                            DB::table('pharmacy_stock_transactions')->insert([
-                                'pharmacy_item_id' => $item->drug_id,
-                                'batch_id' => $batch->id,
-                                'transaction_type' => 'dispense',
-                                'quantity' => -$deduct,
-                                'reference_type' => 'MedicationOrder',
-                                'reference_id' => $this->selectedOrderId,
-                                'notes' => 'Dispensed for Order #' . $this->selectedOrderId,
-                                'created_by' => auth()->id(),
-                                'created_at' => now(),
-                                'updated_at' => now()
-                            ]);
-                        } else {
-                            // Log that table doesn't exist but continue
-                            \Log::warning('pharmacy_stock_transactions table does not exist. Stock updated without transaction record.');
-                        }
-                    } catch (\Exception $e) {
-                        // Log error but continue processing
-                        \Log::warning('Failed to record stock transaction: ' . $e->getMessage());
+                $deduct = min($required, $batch->quantity);
+                $batch->decrement('quantity', $deduct);
+                $required -= $deduct;
+                
+                try {
+                    if ($this->tableExists('pharmacy_stock_transactions')) {
+                        DB::table('pharmacy_stock_transactions')->insert([
+                            'pharmacy_item_id' => $item->drug_id,
+                            'batch_id' => $batch->id,
+                            'transaction_type' => 'dispense',
+                            'quantity' => -$deduct,
+                            'reference_type' => 'MedicationOrder',
+                            'reference_id' => $this->selectedOrderId,
+                            'notes' => 'Dispensed for Order #' . $this->selectedOrderId,
+                            'created_by' => auth()->id(),
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
                     }
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to record stock transaction: ' . $e->getMessage());
                 }
-                
-                // Update dispensation stock_updated flag
-                $this->dispensation->update(['stock_updated' => true]);
             }
+        } elseif ($item->custom_medication_id) {
+            // 🟢 FIXED: CUSTOM MEDICATION - Deduct from CustomMedicationStock
+            $customStock = \App\Models\CustomMedicationStock::where('custom_medication_id', $item->custom_medication_id)->first();
+            
+            if (!$customStock) {
+                \Log::warning('No stock record found for custom medication ID: ' . $item->custom_medication_id);
+                continue;
+            }
+            
+            $currentQty = floatval($customStock->quantity);
+            $requiredQty = floatval($item->quantity);
+            
+            if ($currentQty < $requiredQty) {
+                // Insufficient stock - you might want to handle this differently
+                \Log::error('Insufficient custom medication stock. Required: ' . $requiredQty . ', Available: ' . $currentQty);
+                throw new \Exception('Insufficient stock for custom medication: ' . ($item->customMedication->name ?? 'Unknown'));
+            }
+            
+            $newQuantity = $currentQty - $requiredQty;
+            
+            // Update custom medication stock
+            $customStock->quantity = $newQuantity;
+            $customStock->save();
+            
+            // Create movement record for custom medication
+            try {
+                \App\Models\CustomMedicationMovement::create([
+                    'custom_medication_id' => $item->custom_medication_id,
+                    'type' => 'dispensed',
+                    'quantity' => -$requiredQty,
+                    'reference_type' => 'MedicationOrder',
+                    'reference_id' => $this->selectedOrderId,
+                    'performed_by' => auth()->id(),
+                    'note' => 'Dispensed for Order #' . $this->selectedOrderId
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to create custom medication movement: ' . $e->getMessage());
+            }
+            
+            \Log::info('Custom medication stock updated', [
+                'medication_id' => $item->custom_medication_id,
+                'old' => $currentQty,
+                'deducted' => $requiredQty,
+                'new' => $newQuantity,
+                'order_id' => $this->selectedOrderId
+            ]);
         }
     }
     
+    // Update dispensation stock_updated flag
+    $this->dispensation->update(['stock_updated' => true]);
+}
     public function startDispensing()
     {
         $this->showDispenseModal = true;
@@ -314,43 +442,109 @@ class PharmacyDashboardComponent extends Component
         }
     }
     
-    public function restoreStock()
-    {
-        foreach ($this->orderDetails->items as $item) {
-            if ($item->drug_id) {
-                // Find the batch to restore (simplified - you might want to track which batch was used)
-                $batch = PharmacyBatch::where('medicine_id', $item->drug_id)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
+    // public function restoreStock()
+    // {
+    //     foreach ($this->orderDetails->items as $item) {
+    //         if ($item->drug_id) {
+    //             // Find the batch to restore (simplified - you might want to track which batch was used)
+    //             $batch = PharmacyBatch::where('medicine_id', $item->drug_id)
+    //                 ->orderBy('created_at', 'desc')
+    //                 ->first();
                 
-                if ($batch) {
-                    $batch->increment('quantity', $item->quantity);
+    //             if ($batch) {
+    //                 $batch->increment('quantity', $item->quantity);
                     
-                    try {
-                        // Record the restoration if table exists
-                        if ($this->tableExists('pharmacy_stock_transactions')) {
-                            DB::table('pharmacy_stock_transactions')->insert([
-                                'pharmacy_item_id' => $item->drug_id,
-                                'batch_id' => $batch->id,
-                                'transaction_type' => 'return',
-                                'quantity' => $item->quantity,
-                                'reference_type' => 'MedicationOrder',
-                                'reference_id' => $this->selectedOrderId,
-                                'notes' => 'Stock restored for cancelled Order #' . $this->selectedOrderId,
-                                'created_by' => auth()->id(),
-                                'created_at' => now(),
-                                'updated_at' => now()
-                            ]);
-                        }
-                    } catch (\Exception $e) {
-                        // Log error but continue processing
-                        \Log::warning('Failed to record stock restoration: ' . $e->getMessage());
+    //                 try {
+    //                     // Record the restoration if table exists
+    //                     if ($this->tableExists('pharmacy_stock_transactions')) {
+    //                         DB::table('pharmacy_stock_transactions')->insert([
+    //                             'pharmacy_item_id' => $item->drug_id,
+    //                             'batch_id' => $batch->id,
+    //                             'transaction_type' => 'return',
+    //                             'quantity' => $item->quantity,
+    //                             'reference_type' => 'MedicationOrder',
+    //                             'reference_id' => $this->selectedOrderId,
+    //                             'notes' => 'Stock restored for cancelled Order #' . $this->selectedOrderId,
+    //                             'created_by' => auth()->id(),
+    //                             'created_at' => now(),
+    //                             'updated_at' => now()
+    //                         ]);
+    //                     }
+    //                 } catch (\Exception $e) {
+    //                     // Log error but continue processing
+    //                     \Log::warning('Failed to record stock restoration: ' . $e->getMessage());
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    
+   public function restoreStock()
+{
+    foreach ($this->orderDetails->items as $item) {
+        if ($item->drug_id) {
+            // Standard medication restore (your existing code)
+            $batch = PharmacyBatch::where('medicine_id', $item->drug_id)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            
+            if ($batch) {
+                $batch->increment('quantity', $item->quantity);
+                
+                try {
+                    if ($this->tableExists('pharmacy_stock_transactions')) {
+                        DB::table('pharmacy_stock_transactions')->insert([
+                            'pharmacy_item_id' => $item->drug_id,
+                            'batch_id' => $batch->id,
+                            'transaction_type' => 'return',
+                            'quantity' => $item->quantity,
+                            'reference_type' => 'MedicationOrder',
+                            'reference_id' => $this->selectedOrderId,
+                            'notes' => 'Stock restored for cancelled Order #' . $this->selectedOrderId,
+                            'created_by' => auth()->id(),
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
                     }
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to record stock restoration: ' . $e->getMessage());
                 }
+            }
+        } elseif ($item->custom_medication_id) {
+            // 🟢 FIXED: Restore custom medication stock
+            $customStock = \App\Models\CustomMedicationStock::where('custom_medication_id', $item->custom_medication_id)->first();
+            
+            if ($customStock) {
+                $oldQty = $customStock->quantity;
+                $customStock->quantity = $oldQty + $item->quantity;
+                $customStock->save();
+                
+                // Create movement record for restoration
+                try {
+                    \App\Models\CustomMedicationMovement::create([
+                        'custom_medication_id' => $item->custom_medication_id,
+                        'type' => 'stock_in',
+                        'quantity' => $item->quantity,
+                        'reference_type' => 'MedicationOrder',
+                        'reference_id' => $this->selectedOrderId,
+                        'performed_by' => auth()->id(),
+                        'note' => 'Stock restored for cancelled Order #' . $this->selectedOrderId
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to create custom medication movement: ' . $e->getMessage());
+                }
+                
+                \Log::info('Custom medication stock restored', [
+                    'medication_id' => $item->custom_medication_id,
+                    'old' => $oldQty,
+                    'restored' => $item->quantity,
+                    'new' => $customStock->quantity,
+                    'order_id' => $this->selectedOrderId
+                ]);
             }
         }
     }
-    
+}
     public function printOrderLabel()
     {
         $this->dispatch('print-order-label', orderId: $this->selectedOrderId);
