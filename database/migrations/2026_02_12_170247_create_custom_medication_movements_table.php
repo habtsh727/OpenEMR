@@ -34,7 +34,7 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->text('note')->nullable();
-            $table->timestamps();
+        $table->timestamps();
         });
     }
 
