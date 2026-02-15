@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Livewire\Forms;
+
 use App\Models\RehabPackage;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
 
 class RehabPackageList extends Component
 {
@@ -13,8 +13,15 @@ class RehabPackageList extends Component
     public $search = '';
     public $showTrashed = false;
     public $selectedPackage = null;
-    public $confirmingRestore = false;
+    
+    // UI State
+    public $showAlert = false;
+    public $alertMessage = '';
+    public $alertType = 'success';
+    
+    // Confirmation modals
     public $confirmingDelete = false;
+    public $confirmingRestore = false;
     public $confirmingForceDelete = false;
     
     protected $queryString = [
@@ -27,20 +34,10 @@ class RehabPackageList extends Component
         $this->resetPage();
     }
     
-    public function confirmRestore($id)
+    public function toggleTrashed()
     {
-        $this->selectedPackage = $id;
-        $this->confirmingRestore = true;
-    }
-    
-    public function restore()
-    {
-        $package = RehabPackage::withTrashed()->find($this->selectedPackage);
-        $package->restore();
-        
-        $this->confirmingRestore = false;
-        $this->selectedPackage = null;
-        session()->flash('message', 'Package restored successfully.');
+        $this->showTrashed = !$this->showTrashed;
+        $this->resetPage();
     }
     
     public function confirmDelete($id)
@@ -56,7 +53,23 @@ class RehabPackageList extends Component
         
         $this->confirmingDelete = false;
         $this->selectedPackage = null;
-        session()->flash('message', 'Package moved to trash.');
+        $this->showAlert('Package moved to trash.', 'success');
+    }
+    
+    public function confirmRestore($id)
+    {
+        $this->selectedPackage = $id;
+        $this->confirmingRestore = true;
+    }
+    
+    public function restore()
+    {
+        $package = RehabPackage::withTrashed()->find($this->selectedPackage);
+        $package->restore();
+        
+        $this->confirmingRestore = false;
+        $this->selectedPackage = null;
+        $this->showAlert('Package restored successfully.', 'success');
     }
     
     public function confirmForceDelete($id)
@@ -72,21 +85,41 @@ class RehabPackageList extends Component
         
         $this->confirmingForceDelete = false;
         $this->selectedPackage = null;
-        session()->flash('message', 'Package permanently deleted.');
+        $this->showAlert('Package permanently deleted.', 'success');
     }
     
     public function cancelAction()
     {
-        $this->confirmingRestore = false;
         $this->confirmingDelete = false;
+        $this->confirmingRestore = false;
         $this->confirmingForceDelete = false;
         $this->selectedPackage = null;
     }
     
-    public function toggleTrashed()
+    public function toggleActive($id)
     {
-        $this->showTrashed = !$this->showTrashed;
-        $this->resetPage();
+        $package = RehabPackage::find($id);
+        $package->update(['is_active' => !$package->is_active]);
+        
+        $this->showAlert(
+            $package->is_active ? 'Package activated.' : 'Package deactivated.',
+            'info'
+        );
+    }
+    
+    private function showAlert($message, $type = 'success')
+    {
+        $this->alertMessage = $message;
+        $this->alertType = $type;
+        $this->showAlert = true;
+        
+        // Auto close after 3 seconds
+        $this->dispatch('closeAlertAfterDelay');
+    }
+    
+    public function closeAlert()
+    {
+        $this->showAlert = false;
     }
     
     public function render()
@@ -111,6 +144,6 @@ class RehabPackageList extends Component
         
         return view('livewire.forms.rehab-package-list', [
             'packages' => $packages,
-        ]);
+        ])->layout('layouts.app');
     }
 }
