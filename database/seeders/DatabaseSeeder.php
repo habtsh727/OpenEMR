@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             VitalTypesSeeder::class,
             RehabQuestionnaireTemplateSeeder::class,
             FrequencySeeder::class,
+            RehabPackageSeeder::class,
         ]);
     }
 }
