@@ -13,28 +13,28 @@ return new class extends Migration
     {
         Schema::create('rehab_package_items', function (Blueprint $table) {
             $table->id();
-
             $table->foreignId('rehab_package_id')
                 ->constrained()
                 ->cascadeOnDelete();
-
             $table->enum('item_type', [
                 'standard_medication',
                 'custom_medication',
                 'service',
                 'bed'
             ]);
-
-            $table->unsignedBigInteger('item_id')->nullable();
-
             $table->string('item_name');
 
+            // Medication fields
             $table->string('dosage')->nullable();
-            $table->unsignedBigInteger('frequency_id')->nullable();
+            $table->string('frequency')->nullable(); // Changed from frequency_id to string for custom entry
             $table->string('duration')->nullable();
+            $table->string('quantity')->nullable();
+            $table->text('instructions')->nullable();
 
+            // Bed field
             $table->integer('bed_duration_days')->nullable();
 
+            // Common fields
             $table->text('notes')->nullable();
 
             $table->timestamps();
