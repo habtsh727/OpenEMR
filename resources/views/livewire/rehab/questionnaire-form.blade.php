@@ -70,12 +70,13 @@
 
                 <!-- Auto-save Toggle -->
                 <button type="button" wire:click="toggleAutoSave"
-                    class="p-2 rounded-lg transition-colors {{ $autoSaveEnabled ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' }}">
+                    class="p-2 rounded-lg flex flex-wrap transition-colors {{ $autoSaveEnabled ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
                         </path>
                     </svg>
+                    Save
                 </button>
 
                 <!-- Last Saved Indicator -->
