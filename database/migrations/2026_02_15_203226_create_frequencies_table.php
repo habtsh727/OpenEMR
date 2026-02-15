@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('frequencies', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('code')->unique();
+            $table->integer('times_per_day')->nullable();
+            $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
