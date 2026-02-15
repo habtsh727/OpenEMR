@@ -4,6 +4,7 @@ namespace App\Livewire\Forms;
 use App\Models\RehabPackage;
 use App\Models\RehabPackageItem;
 use App\Models\Frequency;
+use App\Models\PharmacyFrequency;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
@@ -53,7 +54,8 @@ class RehabPackageForm extends Component
 
     public function mount($id = null)
     {
-        $this->frequencies = Frequency::all();
+        $this->frequencies = PharmacyFrequency::all();
+        
         
         if ($id) {
             $this->packageId = $id;
