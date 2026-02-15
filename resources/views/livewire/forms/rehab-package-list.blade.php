@@ -214,7 +214,7 @@
                         <div class="space-y-2">
                             <div class="flex justify-between items-center text-sm">
                                 <span class="text-gray-500 dark:text-gray-400">Base Price:</span>
-                                <span class="font-medium text-gray-900 dark:text-white">${{ number_format($package->base_price, 2) }}</span>
+                                <span class="font-medium text-gray-900 dark:text-white">ETB{{ number_format($package->base_price, 2) }}</span>
                             </div>
                             
                             @if($package->discount_type)
@@ -222,7 +222,7 @@
                                 <span class="text-gray-500 dark:text-gray-400">Discount:</span>
                                 <span class="font-medium text-green-600 dark:text-green-400">
                                     @if($package->discount_type === 'fixed')
-                                        -${{ number_format($package->discount_value, 2) }}
+                                        -ETB{{ number_format($package->discount_value, 2) }}
                                     @else
                                         -{{ number_format($package->discount_value, 1) }}%
                                     @endif
@@ -232,7 +232,7 @@
                             
                             <div class="flex justify-between items-center text-base font-bold pt-2 border-t border-gray-200 dark:border-gray-600">
                                 <span class="text-gray-700 dark:text-gray-300">Final Price:</span>
-                                <span class="text-2xl text-purple-600 dark:text-purple-400">${{ number_format($package->final_price, 2) }}</span>
+                                <span class="text-2xl text-purple-600 dark:text-purple-400">ETB{{ number_format($package->final_price, 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -422,14 +422,14 @@
                             <div class="grid grid-cols-3 gap-4">
                                 <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
                                     <span class="text-sm text-gray-500 dark:text-gray-400 block">Base Price</span>
-                                    <span class="text-xl font-bold text-gray-900 dark:text-white">${{ number_format($selectedPackage['base_price'], 2) }}</span>
+                                    <span class="text-xl font-bold text-gray-900 dark:text-white">ETB{{ number_format($selectedPackage['base_price'], 2) }}</span>
                                 </div>
                                 @if($selectedPackage['discount_type'])
                                 <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
                                     <span class="text-sm text-gray-500 dark:text-gray-400 block">Discount</span>
                                     <span class="text-xl font-bold text-green-600 dark:text-green-400">
                                         @if($selectedPackage['discount_type'] === 'fixed')
-                                            -${{ number_format($selectedPackage['discount_value'], 2) }}
+                                            -ETB{{ number_format($selectedPackage['discount_value'], 2) }}
                                         @else
                                             -{{ number_format($selectedPackage['discount_value'], 1) }}%
                                         @endif
@@ -438,7 +438,7 @@
                                 @endif
                                 <div class="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg">
                                     <span class="text-sm text-purple-600 dark:text-purple-400 block">Final Price</span>
-                                    <span class="text-2xl font-bold text-purple-600 dark:text-purple-400">${{ number_format($selectedPackage['final_price'], 2) }}</span>
+                                    <span class="text-2xl font-bold text-purple-600 dark:text-purple-400">ETB{{ number_format($selectedPackage['final_price'], 2) }}</span>
                                 </div>
                             </div>
                         </div>
