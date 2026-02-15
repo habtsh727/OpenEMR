@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+
 use App\Models\RehabPackage;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,6 +14,7 @@ class RehabPackageList extends Component
     public $search = '';
     public $showTrashed = false;
     public $selectedPackage = null;
+    public $viewingPackage = false;
     
     // UI State
     public $showAlert = false;
@@ -38,6 +40,40 @@ class RehabPackageList extends Component
     {
         $this->showTrashed = !$this->showTrashed;
         $this->resetPage();
+    }
+    
+    public function viewPackage($id)
+    {
+        $package = RehabPackage::withTrashed()
+            ->with(['items', 'creator'])
+            ->find($id);
+        
+        if ($package) {
+            $this->selectedPackage = [
+                'id' => $package->id,
+                'name' => $package->name,
+                'description' => $package->description,
+                'base_price' => $package->base_price,
+                'discount_type' => $package->discount_type,
+                'discount_value' => $package->discount_value,
+                'final_price' => $package->final_price,
+                'is_active' => $package->is_active,
+                'creator' => $package->creator?->name ?? 'N/A',
+                'created_at' => $package->created_at->format('M d, Y H:i A'),
+                'updated_at' => $package->updated_at ? $package->updated_at->format('M d, Y H:i A') : null,
+                'standard_medications' => $package->items->where('item_type', 'standard_medication')->values(),
+                'custom_medications' => $package->items->where('item_type', 'custom_medication')->values(),
+                'services' => $package->items->where('item_type', 'service')->values(),
+                'bed' => $package->items->where('item_type', 'bed')->first(),
+            ];
+            $this->viewingPackage = true;
+        }
+    }
+    
+    public function closeViewModal()
+    {
+        $this->viewingPackage = false;
+        $this->selectedPackage = null;
     }
     
     public function confirmDelete($id)
@@ -140,7 +176,7 @@ class RehabPackageList extends Component
             $query->whereNotNull('deleted_at');
         }
         
-        $packages = $query->latest()->paginate(10);
+        $packages = $query->latest()->paginate(9);
         
         return view('livewire.forms.rehab-package-list', [
             'packages' => $packages,

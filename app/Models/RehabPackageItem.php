@@ -35,4 +35,5 @@ class RehabPackageItem extends Model
     {
         return $this->belongsTo(RehabPackage::class);
     }
+    
 }

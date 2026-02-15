@@ -125,9 +125,9 @@
                                 Base Price <span class="text-red-500">*</span>
                             </label>
                             <div class="relative">
-                                <span class="absolute left-4 top-3 text-gray-500 dark:text-gray-400">$</span>
+                                <span class="absolute left-1 top-3 text-gray-500 dark:text-gray-400">ETB </span>
                                 <input type="number" step="0.01" wire:model.live="base_price"
-                                    class="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:text-white transition-all duration-200"
+                                    class="w-full pl-8 pr-12 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:text-white transition-all duration-200"
                                     placeholder="0.00">
                             </div>
                             @error('base_price') <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p> @enderror
@@ -167,7 +167,7 @@
                             <select wire:model.live="discount_type"
                                 class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:text-white transition-all duration-200">
                                 <option value="">No Discount</option>
-                                <option value="fixed">Fixed Amount ($)</option>
+                                <option value="fixed">Fixed Amount (Birr)</option>
                                 <option value="percentage">Percentage (%)</option>
                             </select>
                         </div>
@@ -179,10 +179,10 @@
                             </label>
                             <div class="relative">
                                 @if($discount_type === 'fixed')
-                                <span class="absolute left-4 top-3 text-gray-500 dark:text-gray-400">$</span>
+                                <span class="absolute left-4 top-3 text-gray-500 dark:text-gray-400">ETB</span>
                                 @endif
                                 <input type="number" step="0.01" wire:model.live="discount_value"
-                                    class="w-full {{ $discount_type === 'fixed' ? 'pl-8' : 'px-4' }} pr-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:text-white transition-all duration-200"
+                                    class="w-full {{ $discount_type === 'fixed' ? 'pl-12' : 'px-4' }} pr-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:text-white transition-all duration-200"
                                     placeholder="{{ $discount_type === 'percentage' ? '0' : '0.00' }}">
                                 @if($discount_type === 'percentage')
                                 <span class="absolute right-4 top-3 text-gray-500 dark:text-gray-400">%</span>
@@ -197,7 +197,7 @@
                                 Final Price
                             </label>
                             <div class="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-xl border-2 border-purple-200 dark:border-purple-800">
-                                <span class="text-2xl font-bold text-purple-600 dark:text-purple-400">${{ number_format($finalPrice, 2) }}</span>
+                                <span class="text-2xl font-bold text-purple-600 dark:text-purple-400">ETB{{ number_format($finalPrice, 2) }}</span>
                             </div>
                         </div>
                     </div>
