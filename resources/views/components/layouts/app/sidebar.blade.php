@@ -76,6 +76,9 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="home-modern" :href="route('vital-types.index')" wire:navigate>Vital Types
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('rehab.packages.index')" wire:navigate>
+                    Rehab Packages
+                </flux:sidebar.item>
                 @endif
 
                 @if(auth()->user()->hasRole(['doctor', 'clinician']))
@@ -89,6 +92,10 @@
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.rehab.queue')" wire:navigate>
                     Rehab Reviews
                 </flux:sidebar.item>
+                  <flux:sidebar.item icon="clipboard-document-list" :href="route('rehab.packages.index')" wire:navigate>
+                    Rehab Packages
+                </flux:sidebar.item>
+
                 @endif
 
                 <!-- Rehab Staff Routes -->
