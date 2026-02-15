@@ -2,10 +2,8 @@
 
 namespace App\Livewire\Forms;
 
-
 use App\Models\RehabPackage;
 use App\Models\RehabPackageItem;
-use App\Models\Frequency;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
@@ -25,9 +23,6 @@ class RehabPackageForm extends Component
     public $services = [];
     public $bed = null;
     
-    // Frequencies for dropdown (optional - can also be custom)
-    public $frequencies = [];
-    
     // UI State
     public $showAlert = false;
     public $alertMessage = '';
@@ -35,6 +30,8 @@ class RehabPackageForm extends Component
     public $editingId = null;
     public $editingType = null;
     public $editingIndex = null;
+    public $showItemForm = false;
+    public $selectedItemType = '';
     
     // Current item being added/edited
     public $currentItem = [
@@ -49,28 +46,38 @@ class RehabPackageForm extends Component
         'bed_duration_days' => null,
     ];
     
-    protected $rules = [
-        'name' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'base_price' => 'required|numeric|min:0',
-        'discount_type' => 'nullable|in:fixed,percentage',
-        'discount_value' => 'nullable|numeric|min:0',
-        'is_active' => 'boolean',
+    protected function rules()
+    {
+        $rules = [
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'base_price' => 'required|numeric|min:0',
+            'discount_type' => 'nullable|in:fixed,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
+            'is_active' => 'boolean',
+        ];
         
-        // Current item validation
-        'currentItem.item_name' => 'required|string|max:255',
-        'currentItem.dosage' => 'required_if:currentItem.item_type,standard_medication,custom_medication|nullable|string',
-        'currentItem.frequency' => 'required_if:currentItem.item_type,standard_medication,custom_medication|nullable|string',
-        'currentItem.duration' => 'required_if:currentItem.item_type,standard_medication,custom_medication|nullable|string',
-        'currentItem.quantity' => 'required_if:currentItem.item_type,standard_medication,custom_medication|nullable|string',
-        'currentItem.instructions' => 'nullable|string',
-        'currentItem.bed_duration_days' => 'required_if:currentItem.item_type,bed|nullable|integer|min:1',
-    ];
+        // Add current item validation rules only when form is shown
+        if ($this->showItemForm && $this->selectedItemType) {
+            $rules['currentItem.item_name'] = 'required|string|max:255';
+            
+            if (in_array($this->selectedItemType, ['standard_medication', 'custom_medication'])) {
+                $rules['currentItem.dosage'] = 'required|string';
+                $rules['currentItem.frequency'] = 'required|string';
+                $rules['currentItem.duration'] = 'required|string';
+                $rules['currentItem.quantity'] = 'required|string';
+            }
+            
+            if ($this->selectedItemType === 'bed') {
+                $rules['currentItem.bed_duration_days'] = 'required|integer|min:1';
+            }
+        }
+        
+        return $rules;
+    }
 
     public function mount($id = null)
     {
-        $this->frequencies = Frequency::where('is_active', true)->get();
-        
         if ($id) {
             $this->packageId = $id;
             $this->loadPackage();
@@ -123,38 +130,37 @@ class RehabPackageForm extends Component
         }
     }
 
-    public function setItemType($type)
+    public function showAddItemForm()
     {
-        $this->currentItem = [
-            'item_type' => $type,
-            'item_name' => '',
-            'dosage' => '',
-            'frequency' => '',
-            'duration' => '',
-            'quantity' => '',
-            'instructions' => '',
-            'notes' => '',
-            'bed_duration_days' => null,
-        ];
-        $this->editingType = $type;
-        $this->editingIndex = null;
-        
-        // Scroll to form
+        $this->showItemForm = true;
+        $this->selectedItemType = '';
+        $this->resetCurrentItem();
         $this->dispatch('scrollToForm');
     }
 
-    public function addItem()
+    public function selectItemType()
+    {
+        if (!$this->selectedItemType) {
+            $this->showAlert('Please select an item type.', 'error');
+            return;
+        }
+
+        // Check bed limit
+        if ($this->selectedItemType === 'bed' && $this->bed) {
+            $this->showAlert('Only one bed entry is allowed per package.', 'error');
+            $this->selectedItemType = '';
+            return;
+        }
+
+        $this->currentItem['item_type'] = $this->selectedItemType;
+    }
+
+    public function saveItem()
     {
         $this->validate();
         
-        // Check bed limit
-        if ($this->currentItem['item_type'] === 'bed' && $this->bed) {
-            $this->showAlert('Only one bed entry is allowed per package.', 'error');
-            return;
-        }
-        
         // Add to appropriate collection
-        switch ($this->currentItem['item_type']) {
+        switch ($this->selectedItemType) {
             case 'standard_medication':
                 $this->standardMedications[] = $this->currentItem;
                 break;
@@ -177,46 +183,14 @@ class RehabPackageForm extends Component
                 break;
         }
         
-        // Reset current item
-        $this->resetCurrentItem();
-        $this->editingType = null;
-        
+        $this->cancelItemForm();
         $this->showAlert('Item added successfully!', 'success');
-    }
-
-    public function updateItem()
-    {
-        $this->validate();
-        
-        if ($this->editingIndex !== null) {
-            // Update existing item
-            switch ($this->editingType) {
-                case 'standard_medication':
-                    $this->standardMedications[$this->editingIndex] = $this->currentItem;
-                    break;
-                case 'custom_medication':
-                    $this->customMedications[$this->editingIndex] = $this->currentItem;
-                    break;
-                case 'service':
-                    $this->services[$this->editingIndex] = [
-                        'item_name' => $this->currentItem['item_name'],
-                        'instructions' => $this->currentItem['instructions'],
-                        'notes' => $this->currentItem['notes'],
-                    ];
-                    break;
-            }
-        }
-        
-        $this->resetCurrentItem();
-        $this->editingType = null;
-        $this->editingIndex = null;
-        
-        $this->showAlert('Item updated successfully!', 'success');
     }
 
     public function editItem($type, $index)
     {
-        $this->editingType = $type;
+        $this->showItemForm = true;
+        $this->selectedItemType = $type;
         $this->editingIndex = $index;
         
         switch ($type) {
@@ -245,6 +219,8 @@ class RehabPackageForm extends Component
     public function editBed()
     {
         if ($this->bed) {
+            $this->showItemForm = true;
+            $this->selectedItemType = 'bed';
             $this->currentItem = [
                 'item_type' => 'bed',
                 'item_name' => 'Bed Accommodation',
@@ -256,9 +232,41 @@ class RehabPackageForm extends Component
                 'duration' => '',
                 'quantity' => '',
             ];
-            $this->editingType = 'bed';
             $this->dispatch('scrollToForm');
         }
+    }
+
+    public function updateItem()
+    {
+        $this->validate();
+        
+        if ($this->editingIndex !== null) {
+            // Update existing item
+            switch ($this->selectedItemType) {
+                case 'standard_medication':
+                    $this->standardMedications[$this->editingIndex] = $this->currentItem;
+                    break;
+                case 'custom_medication':
+                    $this->customMedications[$this->editingIndex] = $this->currentItem;
+                    break;
+                case 'service':
+                    $this->services[$this->editingIndex] = [
+                        'item_name' => $this->currentItem['item_name'],
+                        'instructions' => $this->currentItem['instructions'],
+                        'notes' => $this->currentItem['notes'],
+                    ];
+                    break;
+            }
+        } elseif ($this->selectedItemType === 'bed') {
+            $this->bed = [
+                'bed_duration_days' => $this->currentItem['bed_duration_days'],
+                'instructions' => $this->currentItem['instructions'],
+                'notes' => $this->currentItem['notes'],
+            ];
+        }
+        
+        $this->cancelItemForm();
+        $this->showAlert('Item updated successfully!', 'success');
     }
 
     public function removeItem($type, $index)
@@ -287,11 +295,12 @@ class RehabPackageForm extends Component
         $this->showAlert('Bed accommodation removed.', 'info');
     }
 
-    public function cancelEdit()
+    public function cancelItemForm()
     {
-        $this->resetCurrentItem();
-        $this->editingType = null;
+        $this->showItemForm = false;
+        $this->selectedItemType = '';
         $this->editingIndex = null;
+        $this->resetCurrentItem();
     }
 
     private function resetCurrentItem()
@@ -327,7 +336,7 @@ class RehabPackageForm extends Component
 
     public function save()
     {
-        // Custom validation
+        // Basic validation
         $this->validate([
             'name' => 'required|string|max:255',
             'base_price' => 'required|numeric|min:0',
@@ -422,19 +431,14 @@ class RehabPackageForm extends Component
         $this->dispatch('redirectAfterDelay', url: route('rehab.packages.index'));
     }
 
-    public function saveAndContinue()
-    {
-        $this->save();
-    }
-
     public function resetForm()
     {
         $this->reset([
             'name', 'description', 'base_price', 'discount_type', 
             'discount_value', 'standardMedications', 'customMedications', 
-            'services', 'bed', 'editingType', 'editingIndex'
+            'services', 'bed', 'editingIndex'
         ]);
-        $this->resetCurrentItem();
+        $this->cancelItemForm();
         $this->is_active = true;
         $this->base_price = 0;
     }
@@ -444,6 +448,9 @@ class RehabPackageForm extends Component
         $this->alertMessage = $message;
         $this->alertType = $type;
         $this->showAlert = true;
+        
+        // Auto close after 3 seconds
+        $this->dispatch('closeAlertAfterDelay');
     }
 
     public function closeAlert()
@@ -454,8 +461,7 @@ class RehabPackageForm extends Component
     public function render()
     {
         return view('livewire.forms.rehab-package-form', [
-            'frequencies' => $this->frequencies,
             'finalPrice' => $this->calculateFinalPrice(),
         ]);
     }
-}, 
+}

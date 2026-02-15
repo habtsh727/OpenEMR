@@ -83,8 +83,6 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
     Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
     Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
 
-     Route::get('/rehab-packages', action: RehabPackagesComponent::class)
-        ->name('rehab-packages.index');
 });
 
 Route::middleware(['auth'])->group(function () {
