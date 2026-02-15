@@ -144,6 +144,6 @@ class RehabPackageList extends Component
         
         return view('livewire.forms.rehab-package-list', [
             'packages' => $packages,
-        ])->layout('layouts.app');
+        ]);
     }
 }
