@@ -428,7 +428,8 @@ class RehabPackageForm extends Component
         );
         
         // Redirect after short delay
-        $this->dispatch('redirectAfterDelay', url: route('rehab.packages.index'));
+        // $this->dispatch('redirectAfterDelay', url: route('rehab.packages.index'));
+        $this->redirect(route('rehab.packages.index'), navigate: true);
     }
 
     public function resetForm()
