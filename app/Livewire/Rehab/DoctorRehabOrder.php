@@ -5,7 +5,7 @@ namespace App\Livewire\Rehab;
 
 use App\Models\RehabEncounter;
 use App\Models\RehabPackage;
-use App\Models\RehabOrder;
+use App\Models\RehabOrder as RehabOrderModel;
 use App\Models\RehabOrderPackage;
 use App\Models\RehabOrderItem;
 use Livewire\Component;
@@ -21,20 +21,32 @@ class DoctorRehabOrder extends Component
 
     public function mount($rehabEncounter)
     {
-        $this->rehabEncounter = RehabEncounter::with(['encounter.patient'])->findOrFail($rehabEncounter);
-        
+        $this->rehabEncounter = RehabEncounter::with([
+            'encounter.patient',
+            'encounter.doctor'
+        ])->findOrFail($rehabEncounter);
+
+        // Security check
+        if ($this->rehabEncounter->encounter->doctor_id !== auth()->id()) {
+            abort(403, 'This rehabilitation case is not assigned to you.');
+        }
+
+        // Only allow ordering if status is doctor_review
+        if ($this->rehabEncounter->status !== 'doctor_review') {
+            abort(403, 'Questionnaire must be reviewed before ordering packages.');
+        }
+
         $this->availablePackages = RehabPackage::with('items')
             ->where('is_active', true)
             ->get();
 
-        // Fix: Add quotes around 'draft' in the where clause
-        $this->draftOrder = RehabOrder::with(['packages.items'])
+        $this->draftOrder = RehabOrderModel::with(['packages.items'])
             ->where('rehab_encounter_id', $this->rehabEncounter->id)
-            ->where('status', 'draft') // This is correct, Laravel will add quotes automatically
+            ->where('status', 'draft')
             ->first();
 
         if (!$this->draftOrder) {
-            $this->draftOrder = RehabOrder::create([
+            $this->draftOrder = RehabOrderModel::create([
                 'rehab_encounter_id' => $this->rehabEncounter->id,
                 'doctor_id' => auth()->id(),
                 'total_amount' => 0,
@@ -42,11 +54,7 @@ class DoctorRehabOrder extends Component
             ]);
         }
 
-        // Load selected package IDs from existing order
-        if ($this->draftOrder) {
-            $this->selectedPackageIds = $this->draftOrder->packages->pluck('rehab_package_id')->toArray();
-        }
-
+        $this->selectedPackageIds = $this->draftOrder->packages->pluck('rehab_package_id')->toArray();
         $this->calculateTotal();
     }
 
@@ -58,7 +66,7 @@ class DoctorRehabOrder extends Component
 
         DB::transaction(function () use ($packageId) {
             $package = RehabPackage::with('items')->findOrFail($packageId);
-            
+
             $orderPackage = RehabOrderPackage::create([
                 'rehab_order_id' => $this->draftOrder->id,
                 'rehab_package_id' => $package->id,
@@ -97,11 +105,11 @@ class DoctorRehabOrder extends Component
     {
         DB::transaction(function () use ($orderPackageId) {
             $orderPackage = RehabOrderPackage::findOrFail($orderPackageId);
-            
+
             if (($key = array_search($orderPackage->rehab_package_id, $this->selectedPackageIds)) !== false) {
                 unset($this->selectedPackageIds[$key]);
             }
-            
+
             $orderPackage->delete();
         });
 
@@ -114,7 +122,7 @@ class DoctorRehabOrder extends Component
     {
         if ($this->draftOrder) {
             $this->totalAmount = $this->draftOrder->packages->sum('final_price');
-            
+
             $this->draftOrder->update([
                 'total_amount' => $this->totalAmount
             ]);
@@ -133,11 +141,16 @@ class DoctorRehabOrder extends Component
             ]);
 
             $this->rehabEncounter->update([
-                'status' => 'doctor_review'
+                'status' => 'pending_payment'
             ]);
         });
 
         return redirect()->route('doctor.dashboard');
+    }
+
+    public function backToReview()
+    {
+        return redirect()->route('doctor.rehab.review', $this->rehabEncounter->id);
     }
 
     public function render()
