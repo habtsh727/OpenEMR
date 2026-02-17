@@ -140,8 +140,9 @@ class DoctorRehabOrder extends Component
                 'status' => 'sent_to_cashier'
             ]);
 
+            // Update to an existing status value
             $this->rehabEncounter->update([
-                'status' => 'pending_payment'
+                'status' => 'doctor_review' // or keep as doctor_review since payment is handled separately
             ]);
         });
 
