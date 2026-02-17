@@ -72,7 +72,7 @@ use App\Livewire\Rehab\Template\Questions as TemplateQuestions;
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
     Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
-    Route::get('/rehab/order/{rehabEncounter}', DoctorRehabOrder::class)->name('doctor.rehab.order');
+    Route::get('/rehab/order/{rehabEncounter}', DoctorRehabOrder::class)->name('rehab.order');
     
 });
 
