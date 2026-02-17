@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\Rehab\Cashier;
+
 use App\Models\RehabOrder;
 use App\Models\RehabEncounter;
 use Illuminate\Support\Facades\DB;
@@ -8,7 +9,7 @@ use Livewire\Component;
 
 class RehabPaymentProcess extends Component
 {
-      public RehabOrder $rehabOrder;
+    public RehabOrder $rehabOrder;
     public $paymentMethod = 'cash';
     public $paymentAmount;
     public $changeAmount = 0;
@@ -20,8 +21,6 @@ class RehabPaymentProcess extends Component
             'encounter.encounter.patient',
             'packages.items'
         ])->findOrFail($rehabOrder);
-
-        $this->paymentAmount = $this->rehabOrder->total_amount;
     }
 
     public function updatedPaymentAmount()

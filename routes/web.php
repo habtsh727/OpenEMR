@@ -59,6 +59,8 @@ use App\Livewire\Doctor\RehabQueue;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Forms\RehabPackageForm;
 use App\Livewire\Forms\RehabPackageList;
+use App\Livewire\Rehab\Cashier\RehabPaymentProcess;
+use App\Livewire\Rehab\Cashier\RehabPaymentQueue;
 use App\Livewire\Rehab\DoctorRehabOrder;
 use App\Livewire\Rehab\QuestionnaireForm;
 use App\Livewire\Rehab\Queue;
@@ -91,6 +93,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/rehab-packages', action: RehabPackageList::class)->name('rehab.packages.index');
     Route::get('/rehab-packages/create', RehabPackageForm::class)->name('rehab.packages.create');
     Route::get('/rehab-packages/{id}/edit', RehabPackageForm::class)->name('rehab.packages.edit');
+
+    // Cashier routes
+    Route::get('/cashier/rehab/payments', action: RehabPaymentQueue::class)->name('cashier.rehab.payments');
+    Route::get('/cashier/rehab/payment/{rehabOrder}', RehabPaymentProcess::class)->name('cashier.rehab.payment');
 });
 
 
