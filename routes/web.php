@@ -59,6 +59,7 @@ use App\Livewire\Doctor\RehabQueue;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Forms\RehabPackageForm;
 use App\Livewire\Forms\RehabPackageList;
+use App\Livewire\Rehab\DoctorRehabOrder;
 use App\Livewire\Rehab\QuestionnaireForm;
 use App\Livewire\Rehab\Queue;
 use App\Livewire\Rehab\RehabPackagesComponent;
@@ -71,6 +72,7 @@ use App\Livewire\Rehab\Template\Questions as TemplateQuestions;
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
     Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
+    Route::get('/rehab/{rehabEncounter}/order', DoctorRehabOrder::class)->name('doctor.rehab.order');
     
 });
 

@@ -26,11 +26,13 @@ class Questions extends Component
     protected $rules = [
         'question' => 'required|string|max:65535',
         'type' => 'required|in:boolean,checkbox,text,textarea,number,datetime,select',
-        'options' => 'nullable|string|max:65535',
+        'options' => 'nullable|string|max:65535|array',
         'is_required' => 'boolean',
         'order' => 'integer|min:0',
     ];
-
+ protected $casts = [
+        'options' => 'array', // This will automatically cast JSON to array
+    ];
     protected function messages()
     {
         return [
