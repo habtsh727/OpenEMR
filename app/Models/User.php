@@ -75,4 +75,8 @@ class User extends Authenticatable // implements MustVerifyEmail
     {
         return $this->hasMany(Referral::class, 'referring_doctor_id');
     }
+    public function processedPayments()
+    {
+        return $this->hasMany(CardPayment::class, 'processed_by');
+    }
 }
