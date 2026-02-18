@@ -72,6 +72,7 @@ use App\Livewire\Report\ImagingPaymentReport;
 use App\Livewire\Report\LabPaymentReport;
 use App\Livewire\Report\PharmacyPaymentReport;
 use App\Livewire\Report\RegistrationPaymentReport;
+use App\Livewire\Report\RehabPaymentReport;
 
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
@@ -307,6 +308,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/reports/pharmacy-payments', PharmacyPaymentReport::class)
         ->name('reports.pharmacy-payments');
+    Route::get('/reports/rehab-payments', RehabPaymentReport::class)
+        ->name('reports.rehab-payments');
 });
 
 require __DIR__ . '/auth.php';
