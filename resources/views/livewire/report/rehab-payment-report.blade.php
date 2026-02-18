@@ -87,57 +87,87 @@
     @endif
 
     <!-- Item Type Breakdown -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        @foreach(['standard_medication', 'custom_medication', 'service', 'bed'] as $type)
-            @php
-                $stats = $itemTypeStats[$type] ?? ['item_count' => 0, 'total_amount' => 0];
-                $icon = $this->getItemTypeIcon($type);
-                $color = $this->getItemTypeColor($type);
-                $label = str_replace('_', ' ', ucfirst($type));
-            @endphp
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-2 {{ explode(' ', $color)[0] }} rounded-lg">
-                        <span class="text-xl">{{ $icon }}</span>
-                    </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $label }}</h3>
+    <!-- Item Type Breakdown -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    @foreach(['standard_medication', 'custom_medication', 'service', 'bed'] as $type)
+        @php
+            $stats = $itemTypeStats[$type] ?? null;
+            $icon = $this->getItemTypeIcon($type);
+            $color = $this->getItemTypeColor($type);
+            $label = str_replace('_', ' ', ucfirst($type));
+            
+            // Handle both object and array cases
+            $itemCount = 0;
+            $totalAmount = 0;
+            
+            if ($stats) {
+                if (is_object($stats)) {
+                    $itemCount = $stats->item_count ?? 0;
+                    $totalAmount = $stats->total_amount ?? 0;
+                } elseif (is_array($stats)) {
+                    $itemCount = $stats['item_count'] ?? 0;
+                    $totalAmount = $stats['total_amount'] ?? 0;
+                }
+            }
+        @endphp
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 {{ explode(' ', $color)[0] }} rounded-lg">
+                    <span class="text-xl">{{ $icon }}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Items</p>
-                        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ number_format($stats['item_count'] ?? 0) }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Revenue</p>
-                        <p class="text-xl font-bold text-emerald-600 dark:text-emerald-500">ETB {{ number_format($stats['total_amount'] ?? 0, 2) }}</p>
-                    </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $label }}</h3>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Items</p>
+                    <p class="text-xl font-bold text-gray-900 dark:text-white">{{ number_format($itemCount) }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Revenue</p>
+                    <p class="text-xl font-bold text-emerald-600 dark:text-emerald-500">ETB {{ number_format($totalAmount, 2) }}</p>
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+    <!-- Payment Method Breakdown -->
+ <!-- Payment Method Breakdown -->
+@if(count($paymentMethodStats) > 0)
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payment Method Breakdown</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        @foreach(['cash', 'card', 'insurance'] as $method)
+            @php
+                $stats = $paymentMethodStats[$method] ?? null;
+                $count = 0;
+                $total = 0;
+                
+                if ($stats) {
+                    if (is_object($stats)) {
+                        $count = $stats->count ?? 0;
+                        $total = $stats->total ?? 0;
+                    } elseif (is_array($stats)) {
+                        $count = $stats['count'] ?? 0;
+                        $total = $stats['total'] ?? 0;
+                    }
+                }
+            @endphp
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <p class="font-medium text-gray-900 dark:text-white capitalize">{{ $method ?: 'Not Specified' }}</p>
+                <div class="flex justify-between mt-2">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Transactions:</span>
+                    <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $count }}</span>
+                </div>
+                <div class="flex justify-between mt-1">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Amount:</span>
+                    <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($total, 2) }}</span>
                 </div>
             </div>
         @endforeach
     </div>
-
-    <!-- Payment Method Breakdown -->
-    @if(count($paymentMethodStats) > 0)
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payment Method Breakdown</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            @foreach(['cash', 'card', 'insurance'] as $method)
-                @php $stats = $paymentMethodStats[$method] ?? ['count' => 0, 'total' => 0]; @endphp
-                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <p class="font-medium text-gray-900 dark:text-white capitalize">{{ $method ?: 'Not Specified' }}</p>
-                    <div class="flex justify-between mt-2">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Transactions:</span>
-                        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $stats['count'] }}</span>
-                    </div>
-                    <div class="flex justify-between mt-1">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">Amount:</span>
-                        <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($stats['total'] ?? 0, 2) }}</span>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
+</div>
+@endif
 
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
