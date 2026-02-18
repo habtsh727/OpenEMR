@@ -1,0 +1,115 @@
+<?php
+
+namespace App\Livewire\Report;
+
+use Livewire\Component;
+use Livewire\WithPagination;
+use App\Models\LabOrder;
+use App\Models\LabTest;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+class LabPaymentReport extends Component
+{
+      use WithPagination;
+
+    public $dateFrom;
+    public $dateTo;
+    public $labTestId = '';
+    public $priority = '';
+    public $status = '';
+    public $processedBy = '';
+    
+    public $showFilters = false;
+    public $totalAmount = 0;
+    public $totalOrders = 0;
+    public $testStats = [];
+
+    public function mount()
+    {
+        $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
+        $this->dateTo = now()->format('Y-m-d');
+    }
+
+    public function updated($property)
+    {
+        $this->resetPage();
+        $this->calculateTotals();
+    }
+
+    public function calculateTotals()
+    {
+        $query = $this->getBaseQuery();
+        
+        $this->totalAmount = (clone $query)->sum('lab_orders.amount') ?? 0;
+        $this->totalOrders = (clone $query)->count();
+        
+        // Get stats by test
+        $this->testStats = LabOrder::select(
+                'lab_tests.name as test_name',
+                DB::raw('COUNT(*) as order_count'),
+                DB::raw('SUM(lab_orders.amount) as total_amount')
+            )
+            ->join('lab_tests', 'lab_orders.lab_test_id', '=', 'lab_tests.id')
+            ->whereBetween('lab_orders.created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
+            ->when($this->labTestId, fn($q) => $q->where('lab_orders.lab_test_id', $this->labTestId))
+            ->when($this->priority, fn($q) => $q->where('lab_orders.priority', $this->priority))
+            ->when($this->status, fn($q) => $q->where('lab_orders.payment_status', $this->status))
+            ->when($this->processedBy, fn($q) => $q->where('lab_orders.paid_by', $this->processedBy))
+            ->groupBy('lab_tests.id', 'lab_tests.name')
+            ->get();
+    }
+
+    protected function getBaseQuery()
+    {
+        return LabOrder::with(['labTest', 'order.encounter.patient', 'paidByUser'])
+            ->whereBetween('created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
+            ->when($this->labTestId, fn($q) => $q->where('lab_test_id', $this->labTestId))
+            ->when($this->priority, fn($q) => $q->where('priority', $this->priority))
+            ->when($this->status, fn($q) => $q->where('payment_status', $this->status))
+            ->when($this->processedBy, fn($q) => $q->where('paid_by', $this->processedBy));
+    }
+
+    public function getLabTestsProperty()
+    {
+        return LabTest::where('active', true)->get();
+    }
+
+    public function getProcessorsProperty()
+    {
+        return User::whereHas('labPayments')->get();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['labTestId', 'priority', 'status', 'processedBy']);
+        $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
+        $this->dateTo = now()->format('Y-m-d');
+        $this->calculateTotals();
+    }
+
+    public function exportToExcel()
+    {
+        session()->flash('message', 'Excel export will be implemented');
+    }
+
+    public function exportToPDF()
+    {
+        session()->flash('message', 'PDF export will be implemented');
+    }
+
+    public function render()
+    {
+        $orders = $this->getBaseQuery()
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+            
+        $this->calculateTotals();
+
+        return view('livewire.report.lab-payment-report', [
+            'orders' => $orders,
+            'labTests' => $this->labTests,
+            'processors' => $this->processors,
+        ]);
+    }
+
+}
