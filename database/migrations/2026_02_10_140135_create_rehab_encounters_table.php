@@ -29,7 +29,12 @@ return new class extends Migration
                 'pending_questionnaire',
                 'questionnaire_in_progress',
                 'submitted_to_doctor',
-                'doctor_review'
+                'doctor_review',
+                'sent_to_cashier',
+                'paid',
+                'treatment_in_progress',
+                'completed',
+                'cancelled'
             ])->default('pending_questionnaire');
 
             $table->text('doctor_notes')->nullable();

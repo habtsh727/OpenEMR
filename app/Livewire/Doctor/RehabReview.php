@@ -1,4 +1,5 @@
 <?php
+// app/Livewire/Doctor/RehabReview.php
 
 namespace App\Livewire\Doctor;
 
@@ -19,23 +20,22 @@ class RehabReview extends Component
     ];
 
     public function mount($id)
-{
-    $this->rehabEncounter = RehabEncounter::with([
-        'encounter.patient',      // RehabEncounter belongs to Encounter
-        'encounter.doctor',      // Encounter belongs to Doctor (User)
-        'encounter.patient',     // Encounter belongs to Patient
-        'answers.question.template', // Answers -> Question -> Template
-        'filledBy'               // User who filled the questionnaire
-    ])->findOrFail($id);
+    {
+        $this->rehabEncounter = RehabEncounter::with([
+            'encounter.patient',
+            'encounter.doctor',
+            'answers.question.template',
+            'filledBy'
+        ])->findOrFail($id);
 
-    // Security check - only assigned doctor can review
-    if ($this->rehabEncounter->encounter->doctor_id !== auth()->id()) {
-        abort(403, 'This rehabilitation case is not assigned to you.');
+        // Security check - only assigned doctor can review
+        if ($this->rehabEncounter->encounter->doctor_id !== auth()->id()) {
+            abort(403, 'This rehabilitation case is not assigned to you.');
+        }
+
+        // Load existing doctor notes
+        $this->doctorNotes = $this->rehabEncounter->doctor_notes ?? '';
     }
-
-    // Load existing doctor notes
-    $this->doctorNotes = $this->rehabEncounter->doctor_notes ?? '';
-}
 
     public function saveDoctorNotes()
     {
@@ -82,8 +82,6 @@ class RehabReview extends Component
                     'doctor_notes' => $this->doctorNotes,
                     'status' => 'doctor_review',
                 ]);
-
-                // Optional: Add timestamp or audit log here
             });
 
             $this->showConfirmModal = false;
@@ -92,9 +90,6 @@ class RehabReview extends Component
                 'message' => '✅ Questionnaire marked as reviewed!',
                 'type' => 'success'
             ]);
-
-            // Redirect to queue after 2 seconds
-            $this->dispatch('redirect-to-queue');
 
         } catch (\Exception $e) {
             \Log::error('Failed to mark rehab as reviewed: ' . $e->getMessage(), [
@@ -110,6 +105,11 @@ class RehabReview extends Component
             
             $this->showConfirmModal = false;
         }
+    }
+
+    public function proceedToOrder()
+    {
+       return  $this->redirect(route('doctor.rehab.order', $this->rehabEncounter->id),navigate: true);
     }
 
     public function getAnswersGroupedByTemplateProperty()

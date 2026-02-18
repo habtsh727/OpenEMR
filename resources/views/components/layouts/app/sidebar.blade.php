@@ -64,6 +64,9 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
                     Pharmacy Payment
                 </flux:sidebar.item>
+                  <flux:sidebar.item icon="currency-dollar" :href="route('cashier.rehab.payments')" wire:navigate>
+                    Rehab Payment
+                </flux:sidebar.item>
             </flux:sidebar.group>
 
             @endcanany
@@ -76,7 +79,7 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="home-modern" :href="route('vital-types.index')" wire:navigate>Vital Types
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('rehab.packages.index')" wire:navigate>
+                <flux:sidebar.item icon="archive-box" :href="route('rehab.packages.index')" wire:navigate>
                     Rehab Packages
                 </flux:sidebar.item>
                 @endif
@@ -92,7 +95,7 @@
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.rehab.queue')" wire:navigate>
                     Rehab Reviews
                 </flux:sidebar.item>
-                  <flux:sidebar.item icon="clipboard-document-list" :href="route('rehab.packages.index')" wire:navigate>
+                  <flux:sidebar.item icon="archive-box" :href="route('rehab.packages.index')" wire:navigate>
                     Rehab Packages
                 </flux:sidebar.item>
 
