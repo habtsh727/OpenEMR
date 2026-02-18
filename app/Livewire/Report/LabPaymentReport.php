@@ -8,9 +8,10 @@ use App\Models\LabOrder;
 use App\Models\LabTest;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+
 class LabPaymentReport extends Component
 {
-      use WithPagination;
+    use WithPagination;
 
     public $dateFrom;
     public $dateTo;
@@ -18,7 +19,7 @@ class LabPaymentReport extends Component
     public $priority = '';
     public $status = '';
     public $processedBy = '';
-    
+
     public $showFilters = false;
     public $totalAmount = 0;
     public $totalOrders = 0;
@@ -39,16 +40,16 @@ class LabPaymentReport extends Component
     public function calculateTotals()
     {
         $query = $this->getBaseQuery();
-        
+
         $this->totalAmount = (clone $query)->sum('lab_orders.amount') ?? 0;
         $this->totalOrders = (clone $query)->count();
-        
+
         // Get stats by test
         $this->testStats = LabOrder::select(
-                'lab_tests.name as test_name',
-                DB::raw('COUNT(*) as order_count'),
-                DB::raw('SUM(lab_orders.amount) as total_amount')
-            )
+            'lab_tests.name as test_name',
+            DB::raw('COUNT(*) as order_count'),
+            DB::raw('SUM(lab_orders.amount) as total_amount')
+        )
             ->join('lab_tests', 'lab_orders.lab_test_id', '=', 'lab_tests.id')
             ->whereBetween('lab_orders.created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
             ->when($this->labTestId, fn($q) => $q->where('lab_orders.lab_test_id', $this->labTestId))
@@ -87,22 +88,12 @@ class LabPaymentReport extends Component
         $this->calculateTotals();
     }
 
-    public function exportToExcel()
-    {
-        session()->flash('message', 'Excel export will be implemented');
-    }
-
-    public function exportToPDF()
-    {
-        session()->flash('message', 'PDF export will be implemented');
-    }
-
     public function render()
     {
         $orders = $this->getBaseQuery()
             ->orderBy('created_at', 'desc')
             ->paginate(15);
-            
+
         $this->calculateTotals();
 
         return view('livewire.report.lab-payment-report', [
@@ -111,5 +102,4 @@ class LabPaymentReport extends Component
             'processors' => $this->processors,
         ]);
     }
-
 }

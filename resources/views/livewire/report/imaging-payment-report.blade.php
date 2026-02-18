@@ -1,8 +1,8 @@
 <div class="space-y-6">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-6">
-        <h1 class="text-2xl font-bold text-white">Lab Payment Report</h1>
-        <p class="text-emerald-100 mt-1">View and export laboratory test payments</p>
+    <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl shadow-xl p-6">
+        <h1 class="text-2xl font-bold text-white">Imaging Payment Report</h1>
+        <p class="text-purple-100 mt-1">View and export radiology/imaging payments</p>
     </div>
 
     <!-- Summary Cards -->
@@ -15,7 +15,8 @@
                 </div>
                 <div class="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                 </div>
             </div>
@@ -50,14 +51,14 @@
         </div>
     </div>
 
-    <!-- Test Type Breakdown -->
-    @if(count($testStats) > 0)
+    <!-- Imaging Type Breakdown -->
+    @if(count($typeStats) > 0)
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Breakdown by Test Type</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Breakdown by Imaging Type</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            @foreach($testStats as $stat)
+            @foreach($typeStats as $stat)
             <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <p class="font-medium text-gray-900 dark:text-white">{{ $stat->test_name }}</p>
+                <p class="font-medium text-gray-900 dark:text-white">{{ $stat->type_name }}</p>
                 <div class="flex justify-between mt-2">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Orders:</span>
                     <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $stat->order_count }}</span>
@@ -94,13 +95,24 @@
                     <input type="date" wire:model.live="dateTo" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
 
-                <!-- Lab Test -->
+                <!-- Imaging Type -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lab Test</label>
-                    <select wire:model.live="labTestId" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="">All Tests</option>
-                        @foreach($labTests as $test)
-                            <option value="{{ $test->id }}">{{ $test->name }}</option>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Imaging Type</label>
+                    <select wire:model.live="imagingTypeId" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Types</option>
+                        @foreach($imagingTypes as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Body Part -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Body Part</label>
+                    <select wire:model.live="bodyPartId" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Parts</option>
+                        @foreach($bodyParts as $part)
+                            <option value="{{ $part->id }}">{{ $part->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -112,29 +124,19 @@
                         <option value="">All</option>
                         <option value="routine">Routine</option>
                         <option value="urgent">Urgent</option>
-                        <option value="stat">Stat</option>
                     </select>
                 </div>
 
-                <!-- Payment Status -->
+                <!-- Status -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Status</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Order Status</label>
                     <select wire:model.live="status" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="">All</option>
+                        <option value="pending">Pending</option>
                         <option value="paid">Paid</option>
-                        <option value="unpaid">Unpaid</option>
-                        <option value="refunded">Refunded</option>
-                    </select>
-                </div>
-
-                <!-- Processed By -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Processed By</label>
-                    <select wire:model.live="processedBy" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="">All Users</option>
-                        @foreach($processors as $processor)
-                            <option value="{{ $processor->id }}">{{ $processor->name }}</option>
-                        @endforeach
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
                     </select>
                 </div>
             </div>
@@ -156,45 +158,48 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Patient</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Test</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Imaging Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Body Part</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Amount</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Priority</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Payment</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Processed By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Ordered By</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($orders as $order)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ $order->created_at->format('Y-m-d') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ $order->order_date->format('Y-m-d') }}</td>
                         <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $order->order->encounter->patient->name ?? 'N/A' }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Encounter: #{{ $order->order->encounter_id ?? 'N/A' }}</div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $order->encounter->patient->name ?? 'N/A' }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Encounter: #{{ $order->encounter_id }}</div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $order->labTest->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $order->imagingType->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $order->bodyPart->name ?? 'N/A' }}</td>
                         <td class="px-6 py-4 text-sm font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->amount, 2) }}</td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs rounded-full 
-                                @if($order->priority === 'stat') bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
-                                @elseif($order->priority === 'urgent') bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400
+                                @if($order->priority === 'urgent') bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400
                                 @else bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 @endif">
                                 {{ ucfirst($order->priority) }}
                             </span>
                         </td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs rounded-full 
-                                @if($order->payment_status === 'paid') bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
-                                @elseif($order->payment_status === 'refunded') bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
-                                @else bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 @endif">
-                                {{ ucfirst($order->payment_status) }}
+                                @if($order->status === 'completed') bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                @elseif($order->status === 'cancelled') bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                @elseif($order->status === 'in_progress') bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                                @elseif($order->status === 'paid') bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400
+                                @else bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 @endif">
+                                {{ str_replace('_', ' ', ucfirst($order->status)) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $order->paidByUser->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $order->orderedBy->name ?? 'N/A' }}</td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                            No lab orders found
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                            No imaging orders found
                         </td>
                     </tr>
                     @endforelse

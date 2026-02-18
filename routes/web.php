@@ -68,8 +68,9 @@ use App\Livewire\Rehab\RehabPackagesComponent;
 use App\Livewire\Rehab\Template\Index as TemplateIndex;
 use App\Livewire\Rehab\Template\Form as TemplateForm;
 use App\Livewire\Rehab\Template\Questions as TemplateQuestions;
-
-
+use App\Livewire\Report\ImagingPaymentReport;
+use App\Livewire\Report\LabPaymentReport;
+use App\Livewire\Report\RegistrationPaymentReport;
 
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
@@ -289,5 +290,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/vital-types', Index::class)->name('vital-types.index');
 });
 
+
+Route::middleware(['auth'])->group(function () {
+    // Registration Payment Reports
+    Route::get('/reports/registration-payments', RegistrationPaymentReport::class)
+        ->name('reports.registration-payments');
+    
+    // Lab Payment Reports
+    Route::get('/reports/lab-payments', LabPaymentReport::class)
+        ->name('reports.lab-payments');
+    
+    // Imaging Payment Reports
+    Route::get('/reports/imaging-payments', ImagingPaymentReport::class)
+        ->name('reports.imaging-payments');
+});
 
 require __DIR__ . '/auth.php';
