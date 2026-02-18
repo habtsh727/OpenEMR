@@ -7,11 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class RehabOrder extends Model
 {
     //
-     protected $fillable = [
+    protected $fillable = [
         'rehab_encounter_id',
         'doctor_id',
         'total_amount',
         'status',
+        'payment_method',
+        'paid_at',
+    ];
+    protected $casts = [
+        'paid_at' => 'datetime', // Add this cast
     ];
 
     public function encounter()
