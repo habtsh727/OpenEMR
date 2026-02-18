@@ -64,6 +64,9 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
                     Pharmacy Payment
                 </flux:sidebar.item>
+                  <flux:sidebar.item icon="currency-dollar" :href="route('cashier.rehab.payments')" wire:navigate>
+                    Rehab Payment
+                </flux:sidebar.item>
             </flux:sidebar.group>
 
             @endcanany
