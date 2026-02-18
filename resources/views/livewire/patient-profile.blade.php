@@ -387,8 +387,19 @@
                 <div class="text-sm text-gray-500 dark:text-gray-400">
                     {{ $encounter->vitals->count() }} vitals recorded
                 </div>
+                  @if(in_array($encounter->status, ['pending','in_progress', 'triaged', 'doctor_assigned']))
+            <button 
+                wire:click="$dispatch('openEditVitals', { encounterId: {{ $encounter->id }} })"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 rounded-lg transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Edit Vitals
+            </button>
+            @endif
             </div>
         </div>
+       
 
         <!-- Vital Signs Grid -->
         <div class="p-6">
@@ -1145,4 +1156,5 @@
             @endif
         </div>
     </div>
+    <livewire:vital-types.edit-vitals-modal />
 </div>
