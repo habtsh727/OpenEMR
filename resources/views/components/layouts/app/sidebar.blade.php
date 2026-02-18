@@ -233,7 +233,7 @@
         Radiology  Payments
     </flux:sidebar.item>
     
-    <flux:sidebar.item icon="beaker" :href="route('cashier.medication.orders')" wire:navigate>
+    <flux:sidebar.item icon="beaker" :href="route('reports.pharmacy-payments')" wire:navigate>
         Pharmacy Payments
     </flux:sidebar.item>
     

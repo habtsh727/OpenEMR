@@ -70,6 +70,7 @@ use App\Livewire\Rehab\Template\Form as TemplateForm;
 use App\Livewire\Rehab\Template\Questions as TemplateQuestions;
 use App\Livewire\Report\ImagingPaymentReport;
 use App\Livewire\Report\LabPaymentReport;
+use App\Livewire\Report\PharmacyPaymentReport;
 use App\Livewire\Report\RegistrationPaymentReport;
 
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
@@ -303,6 +304,9 @@ Route::middleware(['auth'])->group(function () {
     // Imaging Payment Reports
     Route::get('/reports/imaging-payments', ImagingPaymentReport::class)
         ->name('reports.imaging-payments');
+
+    Route::get('/reports/pharmacy-payments', PharmacyPaymentReport::class)
+        ->name('reports.pharmacy-payments');
 });
 
 require __DIR__ . '/auth.php';
