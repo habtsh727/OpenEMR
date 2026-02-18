@@ -146,12 +146,14 @@ class DoctorRehabOrder extends Component
             ]);
         });
 
-        return redirect()->route('doctor.dashboard');
+        // return redirect()->route('doctor.dashboard');
+        return  $this->redirect(route('doctor.rehab.review', $this->rehabEncounter->id),navigate: true);
     }
 
     public function backToReview()
     {
-        return redirect()->route('doctor.rehab.review', $this->rehabEncounter->id);
+        // return redirect()->route('doctor.rehab.review', $this->rehabEncounter->id);
+         return  $this->redirect(route('doctor.rehab.review', $this->rehabEncounter->id),navigate: true);
     }
 
     public function render()

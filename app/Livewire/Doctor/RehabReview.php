@@ -109,7 +109,7 @@ class RehabReview extends Component
 
     public function proceedToOrder()
     {
-        return redirect()->route('doctor.rehab.order', $this->rehabEncounter->id);
+       return  $this->redirect(route('doctor.rehab.order', $this->rehabEncounter->id),navigate: true);
     }
 
     public function getAnswersGroupedByTemplateProperty()
