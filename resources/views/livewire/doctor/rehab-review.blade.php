@@ -136,9 +136,9 @@
                         <p class="text-xs text-gray-500 dark:text-gray-400">Pending</p>
                     </div>
                 </div>
-                <div class="flex-1 mx-4 h-0.5 bg-gray-300 dark:bg-gray-600"></div>
+                <div class="flex-1 mx-4 h-0.5 {{ $rehabEncounter->status === 'sent_to_cashier' ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}"></div>
                 <div class="flex items-center relative">
-                    <div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 font-semibold text-sm">4</div>
+                    <div class="w-8 h-8{{ $rehabEncounter->status === 'sent_to_cashier' ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }} bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 font-semibold text-sm">4</div>
                     <div class="ml-2">
                         <p class="text-sm font-medium text-gray-900 dark:text-white">Payment</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Cashier</p>
