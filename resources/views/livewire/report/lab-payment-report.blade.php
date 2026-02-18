@@ -58,6 +58,7 @@
             @foreach($testStats as $stat)
             <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <p class="font-medium text-gray-900 dark:text-white">{{ $stat->test_name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Code: {{ $stat->test_code }}</p>
                 <div class="flex justify-between mt-2">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Orders:</span>
                     <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $stat->order_count }}</span>
@@ -100,7 +101,7 @@
                     <select wire:model.live="labTestId" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="">All Tests</option>
                         @foreach($labTests as $test)
-                            <option value="{{ $test->id }}">{{ $test->name }}</option>
+                            <option value="{{ $test->id }}">{{ $test->name }} ({{ $test->code }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -171,8 +172,13 @@
                             <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $order->order->encounter->patient->name ?? 'N/A' }}</div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">Encounter: #{{ $order->order->encounter_id ?? 'N/A' }}</div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $order->labTest->name ?? 'N/A' }}</td>
-                        <td class="px-6 py-4 text-sm font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->amount, 2) }}</td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-700 dark:text-gray-300">{{ $order->labTest->name ?? 'N/A' }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Code: {{ $order->labTest->code ?? 'N/A' }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                            ETB {{ number_format($order->labTest->price ?? 0, 2) }}
+                        </td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs rounded-full 
                                 @if($order->priority === 'stat') bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400

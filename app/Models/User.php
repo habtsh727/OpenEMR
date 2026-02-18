@@ -79,4 +79,8 @@ class User extends Authenticatable // implements MustVerifyEmail
     {
         return $this->hasMany(CardPayment::class, 'processed_by');
     }
+    public function labPayments()
+    {
+        return $this->hasMany(LabOrder::class, 'paid_by');
+    }
 }

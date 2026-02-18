@@ -58,6 +58,10 @@ class LabOrder extends Model
     // {
     //     return $this->belongsTo(User::class, 'paid_by');
     // }
+    public function paidByUser()
+    {
+        return $this->belongsTo(User::class, 'paid_by');
+    }
     public function paidBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paid_by');
