@@ -117,6 +117,7 @@ class DoctorRehabOrder extends Component
         $this->selectedPackageIds = array_values($this->selectedPackageIds);
         $this->calculateTotal();
     }
+    
 
     private function calculateTotal()
     {
