@@ -178,7 +178,7 @@
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Amount:</span>
-                        <span class="ml-1 font-bold text-indigo-600 dark:text-indigo-400">${{ number_format($order->total_amount, 2) }}</span>
+                        <span class="ml-1 font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->total_amount, 2) }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Packages:</span>
@@ -244,7 +244,7 @@
                                 {{ $order->packages->count() }} package(s)
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">${{ number_format($order->total_amount, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->total_amount, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($order->status === 'sent_to_cashier')
                                 <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full">Pending</span>
@@ -362,7 +362,7 @@
                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
                             <div class="flex justify-between items-start mb-2">
                                 <h4 class="font-medium text-gray-900 dark:text-white">{{ $package->package_name }}</h4>
-                                <span class="font-bold text-indigo-600 dark:text-indigo-400">${{ number_format($package->final_price, 2) }}</span>
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($package->final_price, 2) }}</span>
                             </div>
                             @if($package->items->isNotEmpty())
                             <div class="mt-3 space-y-2">
@@ -389,7 +389,7 @@
                     <!-- Total -->
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4 flex justify-between items-center">
                         <span class="text-lg font-semibold text-gray-900 dark:text-white">Total Amount</span>
-                        <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">${{ number_format($selectedOrder->total_amount, 2) }}</span>
+                        <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($selectedOrder->total_amount, 2) }}</span>
                     </div>
                 </div>
                 
@@ -456,7 +456,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount Received</label>
                         <div class="relative">
-                            <span class="absolute left-3 top-3 text-gray-500 dark:text-gray-400">$</span>
+                            <span class="absolute left-3 top-3 text-gray-500 dark:text-gray-400">ETB</span>
                             <input type="number" step="0.01" wire:model.live="paymentAmount" 
                                 class="w-full pl-8 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:text-white transition-all duration-200"
                                 placeholder="0.00">
@@ -468,7 +468,7 @@
                     <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                         <div class="flex justify-between items-center">
                             <span class="font-medium text-green-800 dark:text-green-400">Change Due:</span>
-                            <span class="text-xl font-bold text-green-600 dark:text-green-400">${{ number_format($changeAmount, 2) }}</span>
+                            <span class="text-xl font-bold text-green-600 dark:text-green-400">ETB{{ number_format($changeAmount, 2) }}</span>
                         </div>
                     </div>
                     @endif
