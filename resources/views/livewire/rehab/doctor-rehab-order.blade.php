@@ -52,7 +52,7 @@
                             @if($package->description)
                                 <p class="text-sm text-gray-600 mt-1">{{ $package->description }}</p>
                             @endif
-                            <p class="text-lg font-bold text-gray-900 mt-2">${{ number_format($package->final_price, 2) }}</p>
+                            <p class="text-lg font-bold text-gray-900 mt-2">ETB{{ number_format($package->final_price, 2) }}</p>
                             
                             @if($package->items->count() > 0)
                                 <div class="mt-2 flex flex-wrap gap-1">
@@ -103,7 +103,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="font-medium text-gray-900">{{ $orderPackage->package_name }}</h3>
-                            <p class="text-sm font-medium text-indigo-600 mt-1">${{ number_format($orderPackage->final_price, 2) }}</p>
+                            <p class="text-sm font-medium text-indigo-600 mt-1">ETB {{ number_format($orderPackage->final_price, 2) }}</p>
                         </div>
                         <button wire:click="removePackage({{ $orderPackage->id }})" class="text-red-600 hover:text-red-800 text-sm font-medium">
                             Remove
@@ -146,7 +146,7 @@
             @endforeach
             
             <div class="flex justify-end items-center mt-4 pt-4 border-t border-gray-200">
-                <span class="text-lg font-semibold text-gray-900">Total Amount: ${{ number_format($totalAmount, 2) }}</span>
+                <span class="text-lg font-semibold text-gray-900">Total Amount: ETB {{ number_format($totalAmount, 2) }}</span>
             </div>
         </div>
     @endif
