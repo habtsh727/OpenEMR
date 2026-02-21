@@ -27,7 +27,7 @@ class Patient extends Model
         'created_by',
 
     ];
-        protected $casts = [
+    protected $casts = [
         'date_of_birth' => 'datetime',
         // ... other casts
     ];
@@ -102,4 +102,5 @@ class Patient extends Model
             ->latest()
             ->first();
     }
+    
 }

@@ -19,7 +19,7 @@
                 </div>
 
                 <!-- Total Due Summary -->
-                <div class="bg-red-300 dark:bg-red-800 w-full md:w-64 border-0 rounded-md">
+                <div class="bg-red-300  w-full md:w-64 border-0 rounded-md">
                     <div class="text-center space-y-2 p-4">
 
                         <p class="text-4xl font-bold text-red-800">
@@ -28,7 +28,7 @@
                                     ($patient->servicePayments?->where('is_paid', false)->sum('amount') ?? 0),
                                 2,
                             ) }}
-                            birr
+                            Birr
                         </p>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                                     <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Amount
                                         Due</p>
                                     <p class="text-3xl font-bold text-red-600 dark:text-red-400">
-                                        {{ number_format($latestCard->amount, 2) }} birr
+                                        {{ number_format($latestCard->amount, 2) }} Birr
                                     </p>
                                 </div>
                                 <div>

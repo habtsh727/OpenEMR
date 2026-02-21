@@ -22,6 +22,8 @@ class ImagingOrder extends Model
     ];
 
     protected $casts = [
+           'order_date' => 'datetime',  // Cast to Carbon instance
+        'completed_date' => 'datetime',  // Cast to Carbon instance
         'amount' => 'decimal:2'
     ];
     public function patient()

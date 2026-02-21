@@ -64,7 +64,7 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
                     Pharmacy Payment
                 </flux:sidebar.item>
-                  <flux:sidebar.item icon="currency-dollar" :href="route('cashier.rehab.payments')" wire:navigate>
+                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.rehab.payments')" wire:navigate>
                     Rehab Payment
                 </flux:sidebar.item>
             </flux:sidebar.group>
@@ -95,7 +95,7 @@
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.rehab.queue')" wire:navigate>
                     Rehab Reviews
                 </flux:sidebar.item>
-                  <flux:sidebar.item icon="archive-box" :href="route('rehab.packages.index')" wire:navigate>
+                <flux:sidebar.item icon="archive-box" :href="route('rehab.packages.index')" wire:navigate>
                     Rehab Packages
                 </flux:sidebar.item>
 
@@ -218,7 +218,29 @@
 
             </flux:sidebar.group>
             @endcanany
+            <flux:sidebar.group expandable heading="Financial Management" class="grid">
 
+                <flux:sidebar.item icon="currency-dollar" :href="route('reports.registration-payments')" wire:navigate>
+                    Registration Payments
+                </flux:sidebar.item>
+
+
+                <flux:sidebar.item icon="beaker" :href="route('reports.lab-payments')" wire:navigate>
+                    Laboratory Payments
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="camera" :href="route('reports.imaging-payments')" wire:navigate>
+                    Radiology Payments
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="beaker" :href="route('reports.pharmacy-payments')" wire:navigate>
+                    Pharmacy Payments
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="heart" :href="route('reports.rehab-payments')" wire:navigate>
+                    Rehabilitation Payments
+                </flux:sidebar.item>
+            </flux:sidebar.group>
         </flux:sidebar.nav>
 
         <flux:spacer />

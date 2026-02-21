@@ -16,8 +16,10 @@ class RehabOrder extends Model
         'paid_at',
     ];
     protected $casts = [
-        'paid_at' => 'datetime', // Add this cast
+        'paid_at' => 'datetime',
+        'total_amount' => 'decimal:2'
     ];
+
 
     public function encounter()
     {
@@ -32,6 +34,10 @@ class RehabOrder extends Model
     public function packages()
     {
         return $this->hasMany(RehabOrderPackage::class);
+    }
+    public function rehabEncounter()
+    {
+        return $this->belongsTo(RehabEncounter::class);
     }
 
     public function items()
