@@ -6,27 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('encounters', function (Blueprint $table) {
-            //
-            $table->enum('priority', ['low', 'medium', 'high', 'critical'])
-              ->nullable()
-              ->after('status');
-        });
+        if (!Schema::hasColumn('encounters', 'priority')) {
+            Schema::table('encounters', function (Blueprint $table) {
+                $table->enum('priority', ['low', 'medium', 'high', 'critical'])
+                    ->nullable()
+                    ->after('status');
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('encounters', function (Blueprint $table) {
-            //
-             $table->dropColumn('priority');
-        });
+        if (Schema::hasColumn('encounters', 'priority')) {
+            Schema::table('encounters', function (Blueprint $table) {
+                $table->dropColumn('priority');
+            });
+        }
     }
 };
