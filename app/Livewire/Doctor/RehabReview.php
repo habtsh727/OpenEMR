@@ -29,7 +29,7 @@ class RehabReview extends Component
         ])->findOrFail($id);
 
         // Security check - only assigned doctor can review
-        if ($this->rehabEncounter->encounter->doctor_id !== auth()->id()) {
+        if ($this->rehabEncounter->encounter->doctor_id != auth()->id()) {
             abort(403, 'This rehabilitation case is not assigned to you.');
         }
 

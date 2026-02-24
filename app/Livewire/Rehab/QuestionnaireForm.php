@@ -106,7 +106,7 @@ class QuestionnaireForm extends Component
 
         // Security check - only assigned staff can edit
         if ($this->rehabEncounter->questionnaire_filled_by && 
-            $this->rehabEncounter->questionnaire_filled_by !== auth()->id()) {
+            $this->rehabEncounter->questionnaire_filled_by != auth()->id()) {
             abort(403, 'This questionnaire is being filled by another staff member.');
         }
 
