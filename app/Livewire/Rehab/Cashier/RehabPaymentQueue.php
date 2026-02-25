@@ -121,7 +121,39 @@ class RehabPaymentQueue extends Component
     //     }
     // }
 
-    public function recheckPayment($orderId)
+   
+ public function processPayment()
+{
+    DB::transaction(function () {
+        // Update order status
+        $this->paymentOrder->update([
+            'status' => 'paid',
+            'payment_method' => $this->paymentMethod,
+            'paid_at' => now()
+        ]);
+
+        // Check if order contains bed items
+        $hasBedItems = $this->paymentOrder->packages
+            ->flatMap->items
+            ->where('item_type', 'bed')
+            ->isNotEmpty();
+
+        // Update rehab encounter status based on bed items
+        $newStatus = $hasBedItems ? 'waiting_bed_selection' : 'treatment_in_progress';
+        
+        $this->paymentOrder->encounter->update([
+            'status' => $newStatus
+        ]);
+    });
+    
+    // Redirect based on bed items
+    if ($hasBedItems) {
+        return redirect()->route('rehab.bed.queue'); // Send to bed queue
+    } else {
+        return redirect()->route('rehab.treatment.queue'); // Send directly to treatment
+    }
+}
+   public function recheckPayment($orderId)
     {
         $order = RehabOrder::with('encounter.encounter.patient')->find($orderId);
 
