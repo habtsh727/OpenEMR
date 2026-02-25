@@ -218,34 +218,47 @@ class DoctorRehabOrder extends Component
         try {
             DB::transaction(function () {
                 $hasBedItems = $this->orderHasBedItems();
-                $destination = $this->getDestination();
                 
-                // Update order status
-                $this->draftOrder->update([
-                    'status' => 'sent_to_cashier'
-                ]);
+                if ($hasBedItems) {
+                    // Order has bed items - send to bed manager first
+                    $this->draftOrder->update([
+                        'status' => 'sent_to_bed_manager'
+                    ]);
 
-                // Update encounter status
-                $this->rehabEncounter->update([
-                    'status' => 'bed_selected'
-                ]);
+                    $this->rehabEncounter->update([
+                        'status' => 'sent_to_bed_manager' // Changed from bed_selected to match enum
+                    ]);
+
+                    $message = 'Order sent to Bed Manager for bed selection.';
+                    $redirectRoute = 'rehab.bed-manager.queue';
+                    $destination = 'Bed Manager';
+                } else {
+                    // No bed items - go directly to cashier
+                    $this->draftOrder->update([
+                        'status' => 'sent_to_cashier'
+                    ]);
+
+                    $this->rehabEncounter->update([
+                        'status' => 'sent_to_cashier'
+                    ]);
+
+                    $message = 'Order sent directly to Cashier for payment.';
+                    $redirectRoute = 'rehab.cashier.queue';
+                    $destination = 'Cashier';
+                }
 
                 // Log the action
                 Log::info('Order sent to ' . $destination, [
                     'order_id' => $this->draftOrder->id,
                     'encounter_id' => $this->rehabEncounter->id,
                     'has_bed_items' => $hasBedItems,
+                    'order_status' => $this->draftOrder->status,
+                    'encounter_status' => $this->rehabEncounter->status,
                     'doctor_id' => auth()->id()
                 ]);
 
-                // Store in session which queue they should go to
-                if ($hasBedItems) {
-                    session()->flash('success', 'Order sent to Bed Manager for bed selection. They will assign a bed before sending to cashier.');
-                    session()->flash('redirect_to', 'bed-manager');
-                } else {
-                    session()->flash('success', 'Order sent directly to Cashier for payment.');
-                    session()->flash('redirect_to', 'cashier');
-                }
+                // Store in session
+                session()->flash('success', $message);
             });
 
             // Dispatch success notification
@@ -256,10 +269,8 @@ class DoctorRehabOrder extends Component
 
             // Redirect based on destination
             if ($this->orderHasBedItems()) {
-                // Redirect to bed manager queue
                 return redirect()->route('rehab.bed-manager.queue');
             } else {
-                // Redirect to cashier queue
                 return redirect()->route('rehab.cashier.queue');
             }
 
