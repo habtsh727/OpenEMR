@@ -260,154 +260,135 @@
         </div>
 
         <!-- Desktop Table -->
-        <div
-            class="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Order</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Patient</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Doctor</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Packages</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Bed Details</th>
-                        {{-- <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Package Total</th> --}}
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Bed Cost</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Grand Total</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                            Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($orders as $order)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">#{{ $order->id
-                            }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{
-                                $order->encounter->encounter->patient->name }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{
-                                $order->encounter->encounter->patient->id }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{
-                            $order->encounter->encounter->doctor->name ?? 'N/A' }}</td>
-                        {{-- <td class="px-6 py-4 whitespace-nowrap">
-                            <span
-                                class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 text-xs rounded-full">
-                                {{ $order->packages->count() }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($order->bed_cost > 0)
-                            <div class="text-sm">
-                                <span class="font-medium text-purple-600 dark:text-purple-400">{{ $order->bed_class_name
-                                    }}</span>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ $order->bed_duration }}
-                                    days</span>
-                            </div>
-                            @else
-                            <span class="text-xs text-gray-400 dark:text-gray-500">No bed</span>
-                            @endif
-                        </td> --}}
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">ETB {{
-                            number_format($order->total_amount, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($order->bed_cost > 0)
-                            <span class="text-sm font-medium text-purple-600 dark:text-purple-400">ETB {{
-                                number_format($order->bed_cost, 2) }}</span>
-                            @else
-                            <span class="text-xs text-gray-400 dark:text-gray-500">-</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">ETB {{
-                            number_format($order->grand_total, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($order->status === 'bed_selected')
-                            <span
-                                class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs rounded-full flex items-center gap-1 w-fit">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                                    </path>
-                                </svg>
-                                Bed Selected
-                            </span>
-                            @elseif($order->status === 'sent_to_cashier')
-                            <span
-                                class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1 w-fit">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Pending
-                            </span>
-                            @else
-                            <span
-                                class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full flex items-center gap-1 w-fit">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Paid
-                            </span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <button wire:click="viewOrder({{ $order->id }})"
-                                    class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                    title="View Details">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                        </path>
-                                    </svg>
-                                </button>
+        <div class="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Order</th>
+                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Patient</th>
+                {{-- <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Doctor</th> --}}
+                {{-- <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Packages</th> --}}
+                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Bed Details</th>
+                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Package Total</th>
+                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Bed Cost</th>
+                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Grand Total</th>
+                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            @forelse($orders as $order)
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">#{{ $order->id }}</td>
+                
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $order->encounter->encounter->patient->name }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{ $order->encounter->encounter->patient->id }}</div>
+                </td>
+                
+                {{-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $order->encounter->encounter->doctor->name ?? 'N/A' }}</td> --}}
+                
+                {{-- <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 text-xs rounded-full">
+                        {{ $order->packages->count() }}
+                    </span>
+                </td> --}}
+                
+                <td class="px-6 py-4 whitespace-nowrap">
+                    @if($order->bed_cost > 0)
+                    <div class="text-sm">
+                        <span class="font-medium text-purple-600 dark:text-purple-400">{{ $order->bed_class_name }}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ $order->bed_duration }} days</span>
+                    </div>
+                    @else
+                    <span class="text-xs text-gray-400 dark:text-gray-500">No bed</span>
+                    @endif
+                </td>
+                
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                    ETB {{ number_format($order->total_amount, 2) }}
+                </td>
+                
+                <td class="px-6 py-4 whitespace-nowrap">
+                    @if($order->bed_cost > 0)
+                    <span class="text-sm font-medium text-purple-600 dark:text-purple-400">
+                        ETB {{ number_format($order->bed_cost, 2) }}
+                    </span>
+                    @else
+                    <span class="text-xs text-gray-400 dark:text-gray-500">-</span>
+                    @endif
+                </td>
+                
+                <td class="px-6 py-4 whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">
+                    ETB {{ number_format($order->grand_total, 2) }}
+                </td>
+                
+                <td class="px-6 py-4 whitespace-nowrap">
+                    @if($order->status === 'bed_selected')
+                    <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs rounded-full flex items-center gap-1 w-fit">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        Bed Selected
+                    </span>
+                    @elseif($order->status === 'sent_to_cashier')
+                    <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1 w-fit">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Pending
+                    </span>
+                    @else
+                    <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full flex items-center gap-1 w-fit">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Paid
+                    </span>
+                    @endif
+                </td>
+                
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                        <button wire:click="viewOrder({{ $order->id }})"
+                            class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            title="View Details">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                        </button>
 
-                                @if(in_array($order->status, ['sent_to_cashier', 'bed_selected']))
-                                <button wire:click="openPaymentModal({{ $order->id }})"
-                                    class="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                                    title="Process Payment">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                @else
-                                <button wire:click="recheckPayment({{ $order->id }})"
-                                    class="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
-                                    title="Recheck Payment">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </button>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="10" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                            No orders found
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                        @if(in_array($order->status, ['sent_to_cashier', 'bed_selected']))
+                        <button wire:click="openPaymentModal({{ $order->id }})"
+                            class="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                            title="Process Payment">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </button>
+                        @else
+                        <button wire:click="recheckPayment({{ $order->id }})"
+                            class="p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                            title="Recheck Payment">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </button>
+                        @endif
+                    </div>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="10" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    No orders found
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
         <!-- Pagination -->
         <div class="mt-6">
