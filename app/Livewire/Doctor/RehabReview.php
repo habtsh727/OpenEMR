@@ -1,157 +1,124 @@
 <?php
-// app/Livewire/Doctor/RehabReview.php
 
 namespace App\Livewire\Doctor;
 
 use App\Models\RehabEncounter;
-use App\Models\RehabQuestionnaireAnswer;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithPagination;
+use Illuminate\Support\Facades\Log;
 
-class RehabReview extends Component
+class RehabQueue extends Component
 {
-    public RehabEncounter $rehabEncounter;
-    public $doctorNotes = '';
-    public $showConfirmModal = false;
-    public $showNotesHistory = false;
+    use WithPagination;
 
-    protected $rules = [
-        'doctorNotes' => 'nullable|string|max:5000',
-    ];
+    public $search = '';
+    public $statusFilter = 'all'; // all, pending_review, reviewed, ordered
+    public $perPage = 10;
+    
+    // Alert properties
+    public $showAlert = false;
+    public $alertMessage = '';
+    public $alertType = 'success';
 
-    public function mount($id)
+    protected $queryString = ['search', 'statusFilter'];
+
+    public function updatedSearch()
     {
-        $this->rehabEncounter = RehabEncounter::with([
-            'encounter.patient',
-            'encounter.doctor',
-            'answers.question.template',
-            'filledBy'
-        ])->findOrFail($id);
-
-        // Security check - only assigned doctor can review
-        if ($this->rehabEncounter->encounter->doctor_id != auth()->id()) {
-            abort(403, 'This rehabilitation case is not assigned to you.');
-        }
-
-        // Load existing doctor notes
-        $this->doctorNotes = $this->rehabEncounter->doctor_notes ?? '';
+        $this->resetPage();
     }
 
-    public function saveDoctorNotes()
+    public function updatedStatusFilter()
     {
-        $this->validate();
-
-        try {
-            $this->rehabEncounter->update([
-                'doctor_notes' => $this->doctorNotes,
-            ]);
-
-            $this->dispatch('notify', [
-                'message' => 'Doctor notes saved successfully!',
-                'type' => 'success'
-            ]);
-
-        } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'message' => 'Failed to save notes. Please try again.',
-                'type' => 'error'
-            ]);
-        }
+        $this->resetPage();
     }
 
-    public function markAsReviewed()
-    {
-        // Check if status is valid for review
-        if (!in_array($this->rehabEncounter->status, ['submitted_to_doctor', 'doctor_review'])) {
-            $this->dispatch('notify', [
-                'message' => 'This questionnaire cannot be reviewed at this stage.',
-                'type' => 'error'
-            ]);
-            return;
-        }
-
-        $this->showConfirmModal = true;
-    }
-
-    public function confirmReview()
+    public function startReview($encounterId)
     {
         try {
-            DB::transaction(function () {
-                // Save notes first
-                $this->rehabEncounter->update([
-                    'doctor_notes' => $this->doctorNotes,
-                    'status' => 'doctor_review',
-                ]);
-            });
-
-            $this->showConfirmModal = false;
-
-            $this->dispatch('notify', [
-                'message' => '✅ Questionnaire marked as reviewed!',
-                'type' => 'success'
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error('Failed to mark rehab as reviewed: ' . $e->getMessage(), [
-                'rehab_encounter_id' => $this->rehabEncounter->id,
-                'doctor_id' => auth()->id(),
-                'error' => $e->getMessage()
-            ]);
-
-            $this->dispatch('notify', [
-                'message' => '❌ Failed to mark as reviewed. Please try again.',
-                'type' => 'error'
-            ]);
+            $encounter = RehabEncounter::findOrFail($encounterId);
             
-            $this->showConfirmModal = false;
+            // Security check - only assigned doctor can review
+            if ($encounter->encounter->doctor_id != auth()->id()) {
+                $this->showAlertMessage('This rehabilitation case is not assigned to you.', 'error');
+                return;
+            }
+
+            // Redirect to review page
+            return redirect()->route('doctor.rehab.review', $encounterId);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to start review: ' . $e->getMessage());
+            $this->showAlertMessage('Failed to load review. Please try again.', 'error');
         }
     }
 
-    public function proceedToOrder()
+    public function showAlertMessage($message, $type = 'success')
     {
-       return  $this->redirect(route('doctor.rehab.order', $this->rehabEncounter->id),navigate: true);
+        $this->alertMessage = $message;
+        $this->alertType = $type;
+        $this->showAlert = true;
+        
+        $this->dispatch('alert-shown');
     }
 
-    public function getAnswersGroupedByTemplateProperty()
+    public function closeAlert()
     {
-        return $this->rehabEncounter->answers
-            ->groupBy(function ($answer) {
-                return $answer->question->template->title ?? 'General Assessment';
-            });
-    }
-
-    public function getFormattedDoctorNotesProperty()
-    {
-        if (empty($this->rehabEncounter->doctor_notes)) {
-            return null;
-        }
-
-        return nl2br(e($this->rehabEncounter->doctor_notes));
-    }
-
-    public function getTimeElapsedProperty()
-    {
-        return $this->rehabEncounter->updated_at->diffForHumans();
+        $this->showAlert = false;
     }
 
     public function render()
     {
-        // Parse patient DOB if needed
-        $patient = $this->rehabEncounter->encounter->patient;
-        if ($patient && is_string($patient->date_of_birth)) {
-            try {
-                $patient->date_of_birth = \Carbon\Carbon::parse($patient->date_of_birth);
-            } catch (\Exception $e) {
-                $patient->date_of_birth = null;
-            }
+        $query = RehabEncounter::query()
+            ->with([
+                'encounter.patient',
+                'encounter.doctor',
+                'filledBy'
+            ])
+            ->whereHas('encounter.doctor', function ($q) {
+                $q->where('id', auth()->id()); // Only show encounters assigned to current doctor
+            });
+
+        // Apply status filter
+        switch ($this->statusFilter) {
+            case 'pending_review':
+                $query->where('status', 'submitted_to_doctor');
+                break;
+            case 'reviewed':
+                $query->where('status', 'doctor_review');
+                break;
+            case 'ordered':
+                $query->whereIn('status', ['sent_to_bed_manager', 'sent_to_cashier', 'bed_selected', 'paid']);
+                break;
+            // 'all' shows everything
         }
 
-        return view('livewire.doctor.rehab-review', [
-            'patient' => $patient,
-            'doctor' => $this->rehabEncounter->encounter->doctor,
-            'rehabStaff' => $this->rehabEncounter->filledBy,
-            'answersGrouped' => $this->answersGroupedByTemplate,
-            'formattedNotes' => $this->formattedDoctorNotes,
+        // Apply search
+        if ($this->search) {
+            $query->whereHas('encounter.patient', function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                  ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Order by most recent first
+        $query->latest();
+
+        $encounters = $query->paginate($this->perPage);
+
+        // Calculate stats
+        $stats = [
+            'total' => RehabEncounter::whereHas('encounter.doctor', fn($q) => $q->where('id', auth()->id()))->count(),
+            'pending' => RehabEncounter::whereHas('encounter.doctor', fn($q) => $q->where('id', auth()->id()))
+                ->where('status', 'submitted_to_doctor')->count(),
+            'reviewed' => RehabEncounter::whereHas('encounter.doctor', fn($q) => $q->where('id', auth()->id()))
+                ->where('status', 'doctor_review')->count(),
+            'ordered' => RehabEncounter::whereHas('encounter.doctor', fn($q) => $q->where('id', auth()->id()))
+                ->whereIn('status', ['sent_to_bed_manager', 'sent_to_cashier', 'bed_selected', 'paid'])->count(),
+        ];
+
+        return view('livewire.doctor.rehab-queue', [
+            'encounters' => $encounters,
+            'stats' => $stats
         ]);
     }
 }

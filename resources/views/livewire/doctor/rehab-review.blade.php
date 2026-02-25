@@ -111,41 +111,63 @@
         </div>
 
         <!-- Progress Steps -->
-        <div class="mt-6 flex items-center justify-between">
-            <div class="flex items-center flex-1">
-                <div class="flex items-center relative">
-                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">1</div>
-                    <div class="ml-2">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">Questionnaire</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Completed by Rehab</p>
-                    </div>
-                </div>
-                <div class="flex-1 mx-4 h-0.5 bg-green-500"></div>
-                <div class="flex items-center relative">
-                    <div class="w-8 h-8 {{ $rehabEncounter->status === 'doctor_review' ? 'bg-green-500' : 'bg-indigo-500' }} rounded-full flex items-center justify-center text-white font-semibold text-sm">2</div>
-                    <div class="ml-2">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">Doctor Review</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $rehabEncounter->status === 'doctor_review' ? 'Completed' : 'In Progress' }}</p>
-                    </div>
-                </div>
-                <div class="flex-1 mx-4 h-0.5 {{ $rehabEncounter->status === 'doctor_review' ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}"></div>
-                <div class="flex items-center relative">
-                    <div class="w-8 h-8 {{ $rehabEncounter->status === 'doctor_review' ? 'bg-indigo-500' : 'bg-gray-300 dark:bg-gray-600' }} rounded-full flex items-center justify-center text-white font-semibold text-sm">3</div>
-                    <div class="ml-2">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">Order Packages</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Pending</p>
-                    </div>
-                </div>
-                <div class="flex-1 mx-4 h-0.5 {{ $rehabEncounter->status === 'sent_to_cashier' ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}"></div>
-                <div class="flex items-center relative">
-                    <div class="w-8 h-8{{ $rehabEncounter->status === 'sent_to_cashier' ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }} bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 font-semibold text-sm">4</div>
-                    <div class="ml-2">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">Payment</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Cashier</p>
-                    </div>
-                </div>
+<!-- Progress Steps - UPDATED to show Bed Manager instead of Cashier -->
+<div class="mt-6 flex items-center justify-between">
+    <div class="flex items-center flex-1">
+        <!-- Step 1: Questionnaire -->
+        <div class="flex items-center relative">
+            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">1</div>
+            <div class="ml-2">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Questionnaire</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Completed by Rehab</p>
             </div>
         </div>
+        <div class="flex-1 mx-4 h-0.5 bg-green-500"></div>
+        
+        <!-- Step 2: Doctor Review -->
+        <div class="flex items-center relative">
+            <div class="w-8 h-8 {{ $rehabEncounter->status === 'doctor_review' ? 'bg-green-500' : 'bg-indigo-500' }} rounded-full flex items-center justify-center text-white font-semibold text-sm">2</div>
+            <div class="ml-2">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Doctor Review</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $rehabEncounter->status === 'doctor_review' ? 'Completed' : 'In Progress' }}</p>
+            </div>
+        </div>
+        <div class="flex-1 mx-4 h-0.5 {{ $rehabEncounter->status === 'doctor_review' ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}"></div>
+        
+        <!-- Step 3: Order Packages -->
+        <div class="flex items-center relative">
+            <div class="w-8 h-8 {{ $rehabEncounter->status === 'doctor_review' ? 'bg-indigo-500' : 'bg-gray-300 dark:bg-gray-600' }} rounded-full flex items-center justify-center text-white font-semibold text-sm">3</div>
+            <div class="ml-2">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Order Packages</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Doctor creates order</p>
+            </div>
+        </div>
+        <div class="flex-1 mx-4 h-0.5 bg-gray-300 dark:bg-gray-600"></div>
+        
+        <!-- Step 4: Bed Manager (UPDATED - was Cashier) -->
+        <div class="flex items-center relative">
+            <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">4</div>
+            <div class="ml-2">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Bed Manager</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Bed selection</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Message - NEW to explain the flow -->
+<div class="mt-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+    <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="text-sm text-purple-700 dark:text-purple-300">
+            After ordering packages: 
+            <span class="font-semibold">If order contains bed items → Sent to Bed Manager for bed selection</span><br>
+            <span class="font-semibold">If no bed items → Sent directly to Cashier for payment</span>
+        </p>
+    </div>
+</div>
     </div>
 
     <!-- Tabs -->
