@@ -229,26 +229,26 @@ class BedQueue extends Component
     }
 
     public function render()
-    {
-        $encounters = RehabEncounter::query()
-            ->with([
-                'encounter.patient',
-                'encounter.doctor',
-                'rehabOrders.orderPackages.orderItems' => function ($query) {
-                    $query->where('item_type', 'bed');
-                }
-            ])
-            ->where('status', 'paid') // Changed from 'waiting_bed_selection' since migration shows 'paid'
-            ->when($this->search, function ($query) {
-                $query->whereHas('encounter.patient', function ($patientQuery) {
-                    $patientQuery->where('name', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->latest()
-            ->paginate($this->perPage);
+{
+    $encounters = RehabEncounter::query()
+        ->with([
+            'encounter.patient',
+            'encounter.doctor',
+            'rehabOrders.orderPackages.orderItems' => function ($query) {
+                $query->where('item_type', 'bed');
+            }
+        ])
+        ->where('status', 'waiting_bed_selection') // Changed from 'paid' to 'waiting_bed_selection'
+        ->when($this->search, function ($query) {
+            $query->whereHas('encounter.patient', function ($patientQuery) {
+                $patientQuery->where('name', 'like', '%' . $this->search . '%');
+            });
+        })
+        ->latest()
+        ->paginate($this->perPage);
 
-        return view('livewire.rehab.bed-queue', [
-            'encounters' => $encounters
-        ]);
-    }
+    return view('livewire.rehab.bed-queue', [
+        'encounters' => $encounters
+    ]);
+}
 }

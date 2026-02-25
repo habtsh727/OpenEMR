@@ -88,4 +88,8 @@ class RehabEncounter extends Model
         return $this->hasOne(RehabOrder::class)
             ->where('status', 'draft');
     }
+     public function bedAssignments()
+    {
+        return $this->hasMany(RehabBedAssignment::class);
+    }
 }
