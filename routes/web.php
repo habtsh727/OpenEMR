@@ -49,6 +49,7 @@ use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
+use App\Livewire\Doctor\RehabQueue;
 use App\Livewire\Pharmacy\PharmacyQueueComponent;
 use App\Livewire\Referral\CreateReferral;
 use App\Livewire\Referral\PrintReferral;
@@ -75,7 +76,9 @@ use App\Livewire\Report\RehabPaymentReport;
 
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/rehab/order/{rehabEncounter}', DoctorRehabOrder::class)->name('rehab.order');
+    Route::get('/rehab-queue', RehabQueue::class)->name('rehab.queue');
 });
+
 
 Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () {
     Route::get('/queue', Queue::class)->name('queue');
@@ -83,7 +86,7 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
 
     Route::get('/templates', TemplateIndex::class)->name('templates.index');
     Route::get('/templates/create', TemplateForm::class)->name('templates.create');
-    Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
+Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
     Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
 
 });
