@@ -54,9 +54,6 @@ use App\Livewire\Referral\CreateReferral;
 use App\Livewire\Referral\PrintReferral;
 use App\Livewire\Referral\SubmitResultModal;
 use App\Livewire\VitalTypes\Index;
-
-use App\Livewire\Doctor\RehabQueue;
-use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Forms\RehabPackageForm;
 use App\Livewire\Forms\RehabPackageList;
 use App\Livewire\Rehab\BedManager\BedSelectionQueue;
@@ -77,10 +74,7 @@ use App\Livewire\Report\RegistrationPaymentReport;
 use App\Livewire\Report\RehabPaymentReport;
 
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
-    Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
-    Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
     Route::get('/rehab/order/{rehabEncounter}', DoctorRehabOrder::class)->name('rehab.order');
-    
 });
 
 Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () {
