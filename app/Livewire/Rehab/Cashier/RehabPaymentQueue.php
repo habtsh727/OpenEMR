@@ -85,41 +85,41 @@ class RehabPaymentQueue extends Component
         }
     }
     
-    public function processPayment()
-    {
-        if (!$this->paymentOrder) {
-            return;
-        }
+    // public function processPayment()
+    // {
+    //     if (!$this->paymentOrder) {
+    //         return;
+    //     }
 
-        $this->validate([
-            'paymentMethod' => 'required|in:cash,card,insurance',
-            'paymentAmount' => 'required|numeric|min:' . $this->paymentOrder->total_amount,
-        ]);
+    //     $this->validate([
+    //         'paymentMethod' => 'required|in:cash,card,insurance',
+    //         'paymentAmount' => 'required|numeric|min:' . $this->paymentOrder->total_amount,
+    //     ]);
         
-        try {
-            DB::transaction(function () {
-                // Update order status with payment details
-                $this->paymentOrder->update([
-                    'status' => 'paid',
-                    'payment_method' => $this->paymentMethod,
-                    'paid_at' => now()
-                ]);
+    //     try {
+    //         DB::transaction(function () {
+    //             // Update order status with payment details
+    //             $this->paymentOrder->update([
+    //                 'status' => 'paid',
+    //                 'payment_method' => $this->paymentMethod,
+    //                 'paid_at' => now()
+    //             ]);
 
-                // Update rehab encounter status
-                $this->paymentOrder->encounter->update([
-                    'status' => 'submitted_to_doctor'
-                ]);
-            });
+    //             // Update rehab encounter status
+    //             $this->paymentOrder->encounter->update([
+    //                 'status' => 'submitted_to_doctor'
+    //             ]);
+    //         });
             
-            $orderId = $this->paymentOrder->id;
-            $this->closePaymentModal();
-            $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid.', 'success');
-            $this->dispatch('refreshQueue');
+    //         $orderId = $this->paymentOrder->id;
+    //         $this->closePaymentModal();
+    //         $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid.', 'success');
+    //         $this->dispatch('refreshQueue');
             
-        } catch (\Exception $e) {
-            $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
+    //     }
+    // }
 
     public function recheckPayment($orderId)
     {
