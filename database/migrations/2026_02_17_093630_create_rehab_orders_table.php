@@ -1,4 +1,5 @@
 <?php
+// database/migrations/[timestamp]_create_rehab_orders_table.php
 
 use App\Models\RehabEncounter;
 use App\Models\User;
@@ -14,7 +15,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rehab_orders', function (Blueprint $table) {
-             $table->id();
+            $table->id();
 
             $table->foreignId('rehab_encounter_id')
                 ->constrained()
@@ -25,10 +26,18 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->decimal('total_amount', 12, 2)->default(0);
+            
+            // Payment fields - REMOVE the 'after' clauses
+            $table->string('payment_method')->nullable();
+            $table->timestamp('paid_at')->nullable();
 
             $table->enum('status', [
                 'draft',
+                'sent_to_bed_manager',
+                'bed_selected',
                 'sent_to_cashier',
+                'paid',
+                'completed',
                 'cancelled'
             ])->default('draft');
 
