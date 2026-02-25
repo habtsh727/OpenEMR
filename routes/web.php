@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
+use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
 use App\Livewire\Referral\ReferralQueue;
@@ -77,6 +78,7 @@ use App\Livewire\Report\RehabPaymentReport;
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
     Route::get('/rehab/order/{rehabEncounter}', DoctorRehabOrder::class)->name('rehab.order');
     Route::get('/rehab-queue', RehabQueue::class)->name('rehab.queue');
+    Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
 });
 
 
@@ -86,9 +88,8 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
 
     Route::get('/templates', TemplateIndex::class)->name('templates.index');
     Route::get('/templates/create', TemplateForm::class)->name('templates.create');
-Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
+    Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
     Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
-
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -296,11 +297,11 @@ Route::middleware(['auth'])->group(function () {
     // Registration Payment Reports
     Route::get('/reports/registration-payments', RegistrationPaymentReport::class)
         ->name('reports.registration-payments');
-    
+
     // Lab Payment Reports
     Route::get('/reports/lab-payments', LabPaymentReport::class)
         ->name('reports.lab-payments');
-    
+
     // Imaging Payment Reports
     Route::get('/reports/imaging-payments', ImagingPaymentReport::class)
         ->name('reports.imaging-payments');
@@ -311,7 +312,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('reports.rehab-payments');
     Route::get('/bed-manager/queue', BedSelectionQueue::class)
         ->name('bed-manager.queue');
-    
+
     // Cashier routes
     Route::get('/cashier/queue', RehabPaymentQueue::class)
         ->name('cashier.queue');
