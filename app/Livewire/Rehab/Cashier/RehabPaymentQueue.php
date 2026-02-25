@@ -4,6 +4,7 @@ namespace App\Livewire\Rehab\Cashier;
 
 use App\Models\RehabOrder;
 use App\Models\RehabEncounter;
+use App\Models\RehabBedSelection;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,12 @@ class RehabPaymentQueue extends Component
     public $paymentAmount = 0;
     public $changeAmount = 0;
 
+    // Bed selection properties
+    public $bedSelection = null;
+    public $bedCost = 0;
+    public $packageTotal = 0;
+    public $grandTotal = 0;
+
     // Alert properties
     public $showAlert = false;
     public $alertMessage = '';
@@ -36,8 +43,17 @@ class RehabPaymentQueue extends Component
         $this->selectedOrder = RehabOrder::with([
             'encounter.encounter.patient',
             'packages.items',
-            'encounter.encounter.doctor'
+            'encounter.encounter.doctor',
+            'bedSelections' => function ($query) {
+                $query->with(['bedClass', 'bed'])->latest();
+            }
         ])->find($orderId);
+
+        // Calculate bed cost if exists
+        if ($this->selectedOrder->bedSelections->isNotEmpty()) {
+            $this->bedSelection = $this->selectedOrder->bedSelections->first();
+            $this->bedCost = $this->bedSelection->total_price ?? 0;
+        }
 
         $this->showDetailsModal = true;
     }
@@ -46,16 +62,31 @@ class RehabPaymentQueue extends Component
     {
         $this->showDetailsModal = false;
         $this->selectedOrder = null;
+        $this->bedSelection = null;
+        $this->bedCost = 0;
     }
 
     public function openPaymentModal($orderId)
     {
         $this->paymentOrder = RehabOrder::with([
             'encounter.encounter.patient',
-            'packages'
+            'packages',
+            'bedSelections' => function ($query) {
+                $query->with(['bedClass', 'bed'])->latest();
+            }
         ])->find($orderId);
 
-        $this->paymentAmount = $this->paymentOrder->total_amount;
+        // Calculate package total
+        $this->packageTotal = $this->paymentOrder->total_amount;
+        
+        // Get bed selection and cost
+        $this->bedSelection = $this->paymentOrder->bedSelections->first();
+        $this->bedCost = $this->bedSelection->total_price ?? 0;
+        
+        // Calculate grand total
+        $this->grandTotal = $this->packageTotal + $this->bedCost;
+        
+        $this->paymentAmount = $this->grandTotal;
         $this->changeAmount = 0;
         $this->paymentMethod = 'cash';
         $this->showPaymentModal = true;
@@ -69,6 +100,10 @@ class RehabPaymentQueue extends Component
     {
         $this->showPaymentModal = false;
         $this->paymentOrder = null;
+        $this->bedSelection = null;
+        $this->bedCost = 0;
+        $this->packageTotal = 0;
+        $this->grandTotal = 0;
         $this->paymentMethod = 'cash';
         $this->paymentAmount = 0;
         $this->changeAmount = 0;
@@ -77,50 +112,13 @@ class RehabPaymentQueue extends Component
     public function updatedPaymentAmount()
     {
         if ($this->paymentOrder) {
-            if ($this->paymentAmount >= $this->paymentOrder->total_amount) {
-                $this->changeAmount = $this->paymentAmount - $this->paymentOrder->total_amount;
+            if ($this->paymentAmount >= $this->grandTotal) {
+                $this->changeAmount = $this->paymentAmount - $this->grandTotal;
             } else {
                 $this->changeAmount = 0;
             }
         }
     }
-
-    // public function processPayment()
-    // {
-    //     if (!$this->paymentOrder) {
-    //         return;
-    //     }
-
-    //     $this->validate([
-    //         'paymentMethod' => 'required|in:cash,card,insurance',
-    //         'paymentAmount' => 'required|numeric|min:' . $this->paymentOrder->total_amount,
-    //     ]);
-
-    //     try {
-    //         DB::transaction(function () {
-    //             // Update order status with payment details
-    //             $this->paymentOrder->update([
-    //                 'status' => 'paid',
-    //                 'payment_method' => $this->paymentMethod,
-    //                 'paid_at' => now()
-    //             ]);
-
-    //             // Update rehab encounter status
-    //             $this->paymentOrder->encounter->update([
-    //                 'status' => 'submitted_to_doctor'
-    //             ]);
-    //         });
-
-    //         $orderId = $this->paymentOrder->id;
-    //         $this->closePaymentModal();
-    //         $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid.', 'success');
-    //         $this->dispatch('refreshQueue');
-
-    //     } catch (\Exception $e) {
-    //         $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
-    //     }
-    // }
-
 
     public function processPayment()
     {
@@ -130,19 +128,29 @@ class RehabPaymentQueue extends Component
 
         $this->validate([
             'paymentMethod' => 'required|in:cash,card,insurance',
-            'paymentAmount' => 'required|numeric|min:' . $this->paymentOrder->total_amount,
+            'paymentAmount' => 'required|numeric|min:' . $this->grandTotal,
         ]);
 
         try {
-            $hasBedItems = false; // Declare outside transaction
-
-            DB::transaction(function () use (&$hasBedItems) { // Pass by reference
+            DB::transaction(function () {
                 // Update order status with payment details
                 $this->paymentOrder->update([
                     'status' => 'paid',
                     'payment_method' => $this->paymentMethod,
                     'paid_at' => now()
                 ]);
+
+                // If there's a bed selection, update bed status to occupied
+                if ($this->bedSelection) {
+                    $this->bedSelection->bed->update([
+                        'status' => 'occupied'
+                    ]);
+                    
+                    // Update bed selection status if needed
+                    $this->bedSelection->update([
+                        'status' => 'completed'
+                    ]);
+                }
 
                 // Check if order contains bed items
                 $hasBedItems = $this->paymentOrder->packages
@@ -152,9 +160,9 @@ class RehabPaymentQueue extends Component
                     ->where('item_type', 'bed')
                     ->isNotEmpty();
 
-                // Update rehab encounter status based on bed items
-                $newStatus = $hasBedItems ? 'waiting_bed_selection' : 'treatment_in_progress';
-
+                // Update rehab encounter status
+                $newStatus = $hasBedItems ? 'treatment_in_progress' : 'treatment_in_progress';
+                
                 $this->paymentOrder->encounter->update([
                     'status' => $newStatus
                 ]);
@@ -162,26 +170,32 @@ class RehabPaymentQueue extends Component
 
             $orderId = $this->paymentOrder->id;
             $this->closePaymentModal();
+            
+            $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid.', 'success');
+            $this->dispatch('refreshQueue');
 
-            // Use $hasBedItems here - now it's accessible
-            if ($hasBedItems) {
-                $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid. Patient moved to bed queue.', 'success');
-                return redirect()->route('rehab.bed.queue');
-            } else {
-                $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid. Patient moved to treatment queue.', 'success');
-                return redirect()->route('rehab.treatment.queue');
-            }
         } catch (\Exception $e) {
             $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
         }
     }
+
     public function recheckPayment($orderId)
     {
-        $order = RehabOrder::with('encounter.encounter.patient')->find($orderId);
+        $order = RehabOrder::with([
+            'encounter.encounter.patient',
+            'bedSelections.bedClass'
+        ])->find($orderId);
 
         if ($order && $order->status === 'paid') {
             $paidDate = $order->paid_at ? $order->paid_at->format('M d, Y H:i') : 'Unknown date';
-            $this->showAlertMessage('Payment rechecked and verified for Order #' . $orderId . ' - Paid on ' . $paidDate, 'info');
+            
+            $bedInfo = '';
+            if ($order->bedSelections->isNotEmpty()) {
+                $bedSelection = $order->bedSelections->first();
+                $bedInfo = " - Bed: {$bedSelection->bedClass->name} ({$bedSelection->duration_days} days, ETB " . number_format($bedSelection->total_price, 2) . ")";
+            }
+            
+            $this->showAlertMessage('Payment rechecked and verified for Order #' . $orderId . ' - Paid on ' . $paidDate . $bedInfo, 'info');
         } else {
             $this->showAlertMessage('Order #' . $orderId . ' is not in paid status.', 'warning');
         }
@@ -201,7 +215,7 @@ class RehabPaymentQueue extends Component
     {
         $this->showAlert = false;
     }
-    // Add this method to calculate total with bed
+
     public function getTotalWithBedProperty()
     {
         if (!$this->paymentOrder) {
@@ -221,12 +235,16 @@ class RehabPaymentQueue extends Component
 
         return $total;
     }
+
     public function render()
     {
         $query = RehabOrder::with([
             'encounter.encounter.patient',
             'encounter.encounter.doctor',
-            'packages'
+            'packages',
+            'bedSelections' => function ($query) {
+                $query->with(['bedClass'])->latest();
+            }
         ])
             ->when($this->tab === 'pending', function ($q) {
                 $q->where('status', 'sent_to_cashier');
@@ -242,6 +260,22 @@ class RehabPaymentQueue extends Component
             ->latest();
 
         $orders = $query->paginate(10);
+
+        // Calculate totals with bed cost for each order
+        foreach ($orders as $order) {
+            $order->bed_cost = 0;
+            $order->bed_duration = 0;
+            $order->bed_class_name = null;
+            
+            if ($order->bedSelections->isNotEmpty()) {
+                $bedSelection = $order->bedSelections->first();
+                $order->bed_cost = $bedSelection->total_price ?? 0;
+                $order->bed_duration = $bedSelection->duration_days ?? 0;
+                $order->bed_class_name = $bedSelection->bedClass->name ?? null;
+            }
+            
+            $order->grand_total = $order->total_amount + $order->bed_cost;
+        }
 
         return view('livewire.rehab.cashier.rehab-payment-queue', [
             'orders' => $orders
