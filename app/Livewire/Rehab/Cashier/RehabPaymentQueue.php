@@ -124,33 +124,56 @@ class RehabPaymentQueue extends Component
    
  public function processPayment()
 {
-    DB::transaction(function () {
-        // Update order status
-        $this->paymentOrder->update([
-            'status' => 'paid',
-            'payment_method' => $this->paymentMethod,
-            'paid_at' => now()
-        ]);
+    if (!$this->paymentOrder) {
+        return;
+    }
 
-        // Check if order contains bed items
-        $hasBedItems = $this->paymentOrder->packages
-            ->flatMap->items
-            ->where('item_type', 'bed')
-            ->isNotEmpty();
-
-        // Update rehab encounter status based on bed items
-        $newStatus = $hasBedItems ? 'waiting_bed_selection' : 'treatment_in_progress';
-        
-        $this->paymentOrder->encounter->update([
-            'status' => $newStatus
-        ]);
-    });
+    $this->validate([
+        'paymentMethod' => 'required|in:cash,card,insurance',
+        'paymentAmount' => 'required|numeric|min:' . $this->paymentOrder->total_amount,
+    ]);
     
-    // Redirect based on bed items
-    if ($hasBedItems) {
-        return redirect()->route('rehab.bed.queue'); // Send to bed queue
-    } else {
-        return redirect()->route('rehab.treatment.queue'); // Send directly to treatment
+    try {
+        $hasBedItems = false; // Declare outside transaction
+        
+        DB::transaction(function () use (&$hasBedItems) { // Pass by reference
+            // Update order status with payment details
+            $this->paymentOrder->update([
+                'status' => 'paid',
+                'payment_method' => $this->paymentMethod,
+                'paid_at' => now()
+            ]);
+
+            // Check if order contains bed items
+            $hasBedItems = $this->paymentOrder->packages
+                ->flatMap(function($package) {
+                    return $package->items;
+                })
+                ->where('item_type', 'bed')
+                ->isNotEmpty();
+
+            // Update rehab encounter status based on bed items
+            $newStatus = $hasBedItems ? 'waiting_bed_selection' : 'treatment_in_progress';
+            
+            $this->paymentOrder->encounter->update([
+                'status' => $newStatus
+            ]);
+        });
+        
+        $orderId = $this->paymentOrder->id;
+        $this->closePaymentModal();
+        
+        // Use $hasBedItems here - now it's accessible
+        if ($hasBedItems) {
+            $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid. Patient moved to bed queue.', 'success');
+            return redirect()->route('rehab.bed.queue');
+        } else {
+            $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid. Patient moved to treatment queue.', 'success');
+            return redirect()->route('rehab.treatment.queue');
+        }
+        
+    } catch (\Exception $e) {
+        $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
     }
 }
    public function recheckPayment($orderId)
