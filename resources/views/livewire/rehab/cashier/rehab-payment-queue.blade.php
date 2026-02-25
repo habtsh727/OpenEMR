@@ -1,10 +1,9 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200" 
-     x-data="{ 
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200" x-data="{ 
         showAlert: @entangle('showAlert'),
         alertMessage: @entangle('alertMessage'),
         alertType: @entangle('alertType')
      }">
-    
+
     <!-- Alert Notification with Dark/Light Theme -->
     <div x-show="showAlert" x-cloak x-init="setTimeout(() => showAlert = false, 5000)"
         x-transition:enter="transition ease-out duration-300"
@@ -122,11 +121,13 @@
                         </div>
                         <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                             <p class="text-white/60 text-sm">Pending</p>
-                            <p class="text-yellow-300 text-2xl font-bold">{{ App\Models\RehabOrder::where('status', 'sent_to_cashier')->count() }}</p>
+                            <p class="text-yellow-300 text-2xl font-bold">{{ App\Models\RehabOrder::where('status',
+                                'sent_to_cashier')->count() }}</p>
                         </div>
                         <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                             <p class="text-white/60 text-sm">Processed</p>
-                            <p class="text-green-300 text-2xl font-bold">{{ App\Models\RehabOrder::where('status', 'paid')->count() }}</p>
+                            <p class="text-green-300 text-2xl font-bold">{{ App\Models\RehabOrder::where('status',
+                                'paid')->count() }}</p>
                         </div>
                     </div>
                 </div>
@@ -186,7 +187,8 @@
                 <div class="flex justify-between items-start mb-3">
                     <div>
                         <span class="text-sm text-gray-500 dark:text-gray-400">Order #{{ $order->id }}</span>
-                        <h3 class="font-semibold text-gray-900 dark:text-white">{{ $order->encounter->encounter->patient->name }}</h3>
+                        <h3 class="font-semibold text-gray-900 dark:text-white">{{
+                            $order->encounter->encounter->patient->name }}</h3>
                     </div>
                     @if($order->status === 'sent_to_cashier')
                     <span
@@ -200,13 +202,14 @@
                 <div class="space-y-2 mb-3 text-sm">
                     <div class="flex justify-between">
                         <span class="text-gray-500 dark:text-gray-400">Doctor:</span>
-                        <span class="text-gray-900 dark:text-white">{{ $order->encounter->encounter->doctor->name ?? 'N/A' }}</span>
+                        <span class="text-gray-900 dark:text-white">{{ $order->encounter->encounter->doctor->name ??
+                            'N/A' }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-500 dark:text-gray-400">Packages:</span>
                         <span class="text-gray-900 dark:text-white">{{ $order->packages->count() }}</span>
                     </div>
-                    
+
                     @if($order->bed_cost > 0)
                     <div class="flex justify-between text-purple-600 dark:text-purple-400">
                         <span class="font-medium">Bed ({{ $order->bed_class_name }}):</span>
@@ -217,12 +220,14 @@
                         <span>ETB {{ number_format($order->bed_cost, 2) }}</span>
                     </div>
                     @endif
-                    
-                    <div class="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+
+                    <div
+                        class="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                         <span class="text-gray-900 dark:text-white">Grand Total:</span>
-                        <span class="text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->grand_total, 2) }}</span>
+                        <span class="text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->grand_total, 2)
+                            }}</span>
                     </div>
-                    
+
                     <div class="text-xs text-gray-500 dark:text-gray-400">
                         Order Date: {{ $order->created_at->format('M d, Y') }}
                     </div>
@@ -233,7 +238,7 @@
                         class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                         View Details
                     </button>
-                    @if($order->status === 'sent_to_cashier')
+                    @if(in_array($order->status, ['sent_to_cashier', 'bed_selected']))
                     <button wire:click="openPaymentModal({{ $order->id }})"
                         class="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors">
                         Pay
@@ -260,66 +265,100 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Order</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Patient</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Doctor</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Packages</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Bed Details</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Package Total</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Bed Cost</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Grand Total</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Actions</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Order</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Patient</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Doctor</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Packages</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Bed Details</th>
+                        {{-- <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Package Total</th> --}}
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Bed Cost</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Grand Total</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($orders as $order)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">#{{ $order->id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">#{{ $order->id
+                            }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $order->encounter->encounter->patient->name }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{ $order->encounter->encounter->patient->id }}</div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{
+                                $order->encounter->encounter->patient->name }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{
+                                $order->encounter->encounter->patient->id }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $order->encounter->encounter->doctor->name ?? 'N/A' }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 text-xs rounded-full">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{
+                            $order->encounter->encounter->doctor->name ?? 'N/A' }}</td>
+                        {{-- <td class="px-6 py-4 whitespace-nowrap">
+                            <span
+                                class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 text-xs rounded-full">
                                 {{ $order->packages->count() }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($order->bed_cost > 0)
-                                <div class="text-sm">
-                                    <span class="font-medium text-purple-600 dark:text-purple-400">{{ $order->bed_class_name }}</span>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ $order->bed_duration }} days</span>
-                                </div>
+                            <div class="text-sm">
+                                <span class="font-medium text-purple-600 dark:text-purple-400">{{ $order->bed_class_name
+                                    }}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ $order->bed_duration }}
+                                    days</span>
+                            </div>
                             @else
-                                <span class="text-xs text-gray-400 dark:text-gray-500">No bed</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">No bed</span>
                             @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">ETB {{ number_format($order->total_amount, 2) }}</td>
+                        </td> --}}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">ETB {{
+                            number_format($order->total_amount, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($order->bed_cost > 0)
-                                <span class="text-sm font-medium text-purple-600 dark:text-purple-400">ETB {{ number_format($order->bed_cost, 2) }}</span>
+                            <span class="text-sm font-medium text-purple-600 dark:text-purple-400">ETB {{
+                                number_format($order->bed_cost, 2) }}</span>
                             @else
-                                <span class="text-xs text-gray-400 dark:text-gray-500">-</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">-</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->grand_total, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold text-indigo-600 dark:text-indigo-400">ETB {{
+                            number_format($order->grand_total, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($order->status === 'sent_to_cashier')
-                                <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1 w-fit">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    Pending
-                                </span>
+                            @if($order->status === 'bed_selected')
+                            <span
+                                class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs rounded-full flex items-center gap-1 w-fit">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                    </path>
+                                </svg>
+                                Bed Selected
+                            </span>
+                            @elseif($order->status === 'sent_to_cashier')
+                            <span
+                                class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1 w-fit">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Pending
+                            </span>
                             @else
-                                <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full flex items-center gap-1 w-fit">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Paid
-                                </span>
+                            <span
+                                class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full flex items-center gap-1 w-fit">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Paid
+                            </span>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -336,7 +375,7 @@
                                     </svg>
                                 </button>
 
-                                @if($order->status === 'sent_to_cashier')
+                                @if(in_array($order->status, ['sent_to_cashier', 'bed_selected']))
                                 <button wire:click="openPaymentModal({{ $order->id }})"
                                     class="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                                     title="Process Payment">
@@ -400,15 +439,18 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Name</p>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ $selectedOrder->encounter->encounter->patient->name }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{
+                                    $selectedOrder->encounter->encounter->patient->name }}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Doctor</p>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ $selectedOrder->encounter->encounter->doctor->name ?? 'N/A' }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{
+                                    $selectedOrder->encounter->encounter->doctor->name ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Order Date</p>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ $selectedOrder->created_at->format('M d, Y H:i') }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{
+                                    $selectedOrder->created_at->format('M d, Y H:i') }}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
@@ -423,13 +465,15 @@
                             @if($selectedOrder->paid_at)
                             <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Paid At</p>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ $selectedOrder->paid_at->format('M d, Y H:i') }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{
+                                    $selectedOrder->paid_at->format('M d, Y H:i') }}</p>
                             </div>
                             @endif
                             @if($selectedOrder->payment_method)
                             <div>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Payment Method</p>
-                                <p class="font-medium text-gray-900 dark:text-white capitalize">{{ $selectedOrder->payment_method }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white capitalize">{{
+                                    $selectedOrder->payment_method }}</p>
                             </div>
                             @endif
                         </div>
@@ -437,35 +481,43 @@
 
                     <!-- Bed Selection Info (if exists) -->
                     @if($bedSelection)
-                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
+                    <div
+                        class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
                         <h3 class="font-semibold text-purple-800 dark:text-purple-300 mb-3 flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                </path>
                             </svg>
                             Bed Selection Details
                         </h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                                 <p class="text-xs text-purple-600 dark:text-purple-400">Bed Class</p>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ $bedSelection->bedClass->name ?? 'N/A' }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{ $bedSelection->bedClass->name ??
+                                    'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-purple-600 dark:text-purple-400">Bed Number</p>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ $bedSelection->bed->bed_number ?? 'N/A' }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{ $bedSelection->bed->bed_number
+                                    ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-purple-600 dark:text-purple-400">Duration</p>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ $bedSelection->duration_days ?? 0 }} days</p>
+                                <p class="font-medium text-gray-900 dark:text-white">{{ $bedSelection->duration_days ??
+                                    0 }} days</p>
                             </div>
                             <div>
                                 <p class="text-xs text-purple-600 dark:text-purple-400">Price per Day</p>
-                                <p class="font-medium text-gray-900 dark:text-white">ETB {{ number_format($bedSelection->price_per_day ?? 0, 2) }}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">ETB {{
+                                    number_format($bedSelection->price_per_day ?? 0, 2) }}</p>
                             </div>
                         </div>
                         <div class="mt-3 pt-3 border-t border-purple-200 dark:border-purple-800">
                             <div class="flex justify-between items-center">
                                 <span class="font-semibold text-purple-800 dark:text-purple-300">Total Bed Cost:</span>
-                                <span class="text-xl font-bold text-purple-600 dark:text-purple-400">ETB {{ number_format($bedCost, 2) }}</span>
+                                <span class="text-xl font-bold text-purple-600 dark:text-purple-400">ETB {{
+                                    number_format($bedCost, 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -478,22 +530,26 @@
                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
                             <div class="flex justify-between items-start mb-2">
                                 <h4 class="font-medium text-gray-900 dark:text-white">{{ $package->package_name }}</h4>
-                                <span class="font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($package->final_price, 2) }}</span>
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400">ETB {{
+                                    number_format($package->final_price, 2) }}</span>
                             </div>
                             @if($package->items->isNotEmpty())
                             <div class="mt-3 space-y-2">
                                 @foreach($package->items as $item)
                                 <div class="text-sm p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                                     <div class="flex justify-between">
-                                        <span class="font-medium text-gray-900 dark:text-white">{{ $item->item_name }}</span>
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">{{ str_replace('_', ' ', $item->item_type) }}</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">{{ $item->item_name
+                                            }}</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">{{ str_replace('_', ' ',
+                                            $item->item_type) }}</span>
                                     </div>
                                     <div
                                         class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
                                         @if($item->dosage)<div>Dosage: {{ $item->dosage }}</div>@endif
                                         @if($item->frequency)<div>Freq: {{ $item->frequency }}</div>@endif
                                         @if($item->duration)<div>Duration: {{ $item->duration }}</div>@endif
-                                        @if($item->bed_duration_days)<div>Bed: {{ $item->bed_duration_days }} days</div>@endif
+                                        @if($item->bed_duration_days)<div>Bed: {{ $item->bed_duration_days }} days</div>
+                                        @endif
                                     </div>
                                 </div>
                                 @endforeach
@@ -507,17 +563,21 @@
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600 dark:text-gray-400">Package Total:</span>
-                            <span class="font-medium text-gray-900 dark:text-white">ETB {{ number_format($selectedOrder->total_amount, 2) }}</span>
+                            <span class="font-medium text-gray-900 dark:text-white">ETB {{
+                                number_format($selectedOrder->total_amount, 2) }}</span>
                         </div>
                         @if($bedCost > 0)
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600 dark:text-gray-400">Bed Cost:</span>
-                            <span class="font-medium text-purple-600 dark:text-purple-400">ETB {{ number_format($bedCost, 2) }}</span>
+                            <span class="font-medium text-purple-600 dark:text-purple-400">ETB {{
+                                number_format($bedCost, 2) }}</span>
                         </div>
                         @endif
-                        <div class="flex justify-between items-center text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div
+                            class="flex justify-between items-center text-lg font-bold pt-2 border-t border-gray-200 dark:border-gray-700">
                             <span class="text-gray-900 dark:text-white">Grand Total:</span>
-                            <span class="text-indigo-600 dark:text-indigo-400">ETB {{ number_format($selectedOrder->total_amount + $bedCost, 2) }}</span>
+                            <span class="text-indigo-600 dark:text-indigo-400">ETB {{
+                                number_format($selectedOrder->total_amount + $bedCost, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -528,7 +588,7 @@
                         class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                         Close
                     </button>
-                    @if($selectedOrder->status === 'sent_to_cashier')
+                    @if(in_array($selectedOrder->status, ['sent_to_cashier', 'bed_selected']))
                     <button wire:click="openPaymentModal({{ $selectedOrder->id }})"
                         class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                         Process Payment
@@ -545,7 +605,8 @@
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
                 <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white">Process Payment</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Order #{{ $paymentOrder->id }} - {{ $paymentOrder->encounter->encounter->patient->name }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Order #{{ $paymentOrder->id }} - {{
+                        $paymentOrder->encounter->encounter->patient->name }}</p>
                 </div>
 
                 <div class="p-6 space-y-4">
@@ -553,25 +614,30 @@
                     <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg space-y-2">
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-600 dark:text-gray-400">Package Total:</span>
-                            <span class="font-medium text-gray-900 dark:text-white">ETB {{ number_format($packageTotal, 2) }}</span>
+                            <span class="font-medium text-gray-900 dark:text-white">ETB {{ number_format($packageTotal,
+                                2) }}</span>
                         </div>
-                        
+
                         @if($bedCost > 0)
                         <div class="flex justify-between text-sm">
-                            <span class="text-gray-600 dark:text-gray-400">Bed Cost ({{ $bedSelection->duration_days }} days):</span>
-                            <span class="font-medium text-purple-600 dark:text-purple-400">ETB {{ number_format($bedCost, 2) }}</span>
+                            <span class="text-gray-600 dark:text-gray-400">Bed Cost ({{ $bedSelection->duration_days }}
+                                days):</span>
+                            <span class="font-medium text-purple-600 dark:text-purple-400">ETB {{
+                                number_format($bedCost, 2) }}</span>
                         </div>
                         <div class="border-t border-gray-200 dark:border-gray-600 my-2 pt-2">
                             <div class="flex justify-between items-center">
                                 <span class="font-semibold text-gray-900 dark:text-white">Grand Total:</span>
-                                <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($grandTotal, 2) }}</span>
+                                <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400">ETB {{
+                                    number_format($grandTotal, 2) }}</span>
                             </div>
                         </div>
                         @else
                         <div class="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
                             <div class="flex justify-between items-center">
                                 <span class="font-semibold text-gray-900 dark:text-white">Total:</span>
-                                <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($grandTotal, 2) }}</span>
+                                <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400">ETB {{
+                                    number_format($grandTotal, 2) }}</span>
                             </div>
                         </div>
                         @endif
@@ -620,17 +686,18 @@
                     <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                         <div class="flex justify-between items-center">
                             <span class="font-medium text-green-800 dark:text-green-400">Change Due:</span>
-                            <span class="text-xl font-bold text-green-600 dark:text-green-400">ETB {{ number_format($changeAmount, 2) }}</span>
+                            <span class="text-xl font-bold text-green-600 dark:text-green-400">ETB {{
+                                number_format($changeAmount, 2) }}</span>
                         </div>
                     </div>
                     @endif
 
                     <!-- Validation Message -->
-                    @if($paymentAmount < $grandTotal && $paymentAmount > 0)
+                    @if($paymentAmount < $grandTotal && $paymentAmount> 0)
                         <div class="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg">
                             Amount received is less than grand total
                         </div>
-                    @endif
+                        @endif
                 </div>
 
                 <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
@@ -638,8 +705,7 @@
                         class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                         Cancel
                     </button>
-                    <button wire:click="processPayment" @if($paymentAmount < $grandTotal) disabled @endif
-                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50
+                    <button wire:click="processPayment" @if($paymentAmount < $grandTotal) disabled @endif class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50
                         disabled:cursor-not-allowed transition-colors">
                         Confirm Payment
                     </button>
