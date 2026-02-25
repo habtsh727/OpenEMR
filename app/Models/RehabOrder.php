@@ -17,7 +17,8 @@ class RehabOrder extends Model
     ];
     protected $casts = [
         'paid_at' => 'datetime',
-        'total_amount' => 'decimal:2'
+        'total_amount' => 'decimal:2',
+        'updated_at' => 'datetime'
     ];
 
 
@@ -47,9 +48,9 @@ class RehabOrder extends Model
             RehabOrderPackage::class
         );
     }
-    public function bedSelections()
+      public function bedSelections()
     {
-        return $this->hasMany(RehabBedSelection::class);
+        return $this->hasMany(RehabBedSelection::class, 'rehab_order_id');
     }
     public function orderPackages()
     {

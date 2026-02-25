@@ -50,7 +50,7 @@ class RehabPaymentQueue extends Component
         ])->find($orderId);
 
         // Calculate bed cost if exists
-        if ($this->selectedOrder->bedSelections->isNotEmpty()) {
+        if ($this->selectedOrder && $this->selectedOrder->bedSelections->isNotEmpty()) {
             $this->bedSelection = $this->selectedOrder->bedSelections->first();
             $this->bedCost = $this->bedSelection->total_price ?? 0;
         }
@@ -75,6 +75,11 @@ class RehabPaymentQueue extends Component
                 $query->with(['bedClass', 'bed'])->latest();
             }
         ])->find($orderId);
+
+        if (!$this->paymentOrder) {
+            $this->showAlertMessage('Order not found', 'error');
+            return;
+        }
 
         // Calculate package total
         $this->packageTotal = $this->paymentOrder->total_amount;
@@ -142,29 +147,22 @@ class RehabPaymentQueue extends Component
 
                 // If there's a bed selection, update bed status to occupied
                 if ($this->bedSelection) {
-                    $this->bedSelection->bed->update([
-                        'status' => 'occupied'
-                    ]);
+                    $bed = \App\Models\Bed::find($this->bedSelection->bed_id);
+                    if ($bed) {
+                        $bed->update([
+                            'status' => 'occupied'
+                        ]);
+                    }
                     
-                    // Update bed selection status if needed
+                    // Update bed selection status
                     $this->bedSelection->update([
                         'status' => 'completed'
                     ]);
                 }
 
-                // Check if order contains bed items
-                $hasBedItems = $this->paymentOrder->packages
-                    ->flatMap(function ($package) {
-                        return $package->items;
-                    })
-                    ->where('item_type', 'bed')
-                    ->isNotEmpty();
-
                 // Update rehab encounter status
-                $newStatus = $hasBedItems ? 'treatment_in_progress' : 'treatment_in_progress';
-                
                 $this->paymentOrder->encounter->update([
-                    'status' => $newStatus
+                    'status' => 'sent_to_rehab'
                 ]);
             });
 
@@ -216,28 +214,9 @@ class RehabPaymentQueue extends Component
         $this->showAlert = false;
     }
 
-    public function getTotalWithBedProperty()
-    {
-        if (!$this->paymentOrder) {
-            return 0;
-        }
-
-        $total = $this->paymentOrder->total_amount;
-
-        // Add bed cost if exists
-        $bedSelection = $this->paymentOrder->bedSelections()
-            ->where('status', 'selected')
-            ->first();
-
-        if ($bedSelection) {
-            $total += $bedSelection->total_price;
-        }
-
-        return $total;
-    }
-
     public function render()
     {
+        // Base query
         $query = RehabOrder::with([
             'encounter.encounter.patient',
             'encounter.encounter.doctor',
@@ -245,20 +224,26 @@ class RehabPaymentQueue extends Component
             'bedSelections' => function ($query) {
                 $query->with(['bedClass'])->latest();
             }
-        ])
-            ->when($this->tab === 'pending', function ($q) {
-                $q->where('status', 'sent_to_cashier');
-            })
-            ->when($this->tab === 'processed', function ($q) {
-                $q->where('status', 'paid');
-            })
-            ->when($this->search, function ($q) {
-                $q->whereHas('encounter.encounter.patient', function ($patient) {
-                    $patient->where('name', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->latest();
+        ]);
 
+        // Apply tab filter
+        if ($this->tab === 'pending') {
+            $query->where('status', 'sent_to_cashier');
+        } elseif ($this->tab === 'processed') {
+            $query->where('status', 'paid');
+        }
+
+        // Apply search filter
+        if ($this->search) {
+            $query->whereHas('encounter.encounter.patient', function ($patient) {
+                $patient->where('name', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Order by latest
+        $query->latest();
+
+        // Paginate
         $orders = $query->paginate(10);
 
         // Calculate totals with bed cost for each order

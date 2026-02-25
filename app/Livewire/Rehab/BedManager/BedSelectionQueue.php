@@ -275,7 +275,7 @@ class BedSelectionQueue extends Component
 
                 // Update encounter status
                 $this->selectedEncounter->update([
-                    'status' => 'bed_selected'
+                    'status' => 'sent_to_cashier'
                 ]);
 
                 // Log the action

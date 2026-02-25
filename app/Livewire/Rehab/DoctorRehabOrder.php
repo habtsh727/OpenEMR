@@ -185,17 +185,27 @@ class DoctorRehabOrder extends Component
     }
 
     /**
-     * Get status based on bed items
+     * Get the button text based on destination
      */
-    private function getNextStatus(): string
+    private function getButtonText(): string
     {
-        return 'sent_to_cashier'; // Both go to sent_to_cashier, but bed manager intercepts
+        return $this->orderHasBedItems() ? 'Send to Bed Manager' : 'Send to Cashier';
+    }
+
+    /**
+     * Get the button color classes based on destination
+     */
+    private function getButtonClasses(): string
+    {
+        return $this->orderHasBedItems() 
+            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700' 
+            : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700';
     }
 
     /**
      * Send order to appropriate queue (Bed Manager if has bed, otherwise Cashier)
      */
-    public function sendToCashier()
+    public function sendOrder()
     {
         if ($this->draftOrder->packages->isEmpty()) {
             $this->dispatch('notify', [
@@ -217,7 +227,7 @@ class DoctorRehabOrder extends Component
 
                 // Update encounter status
                 $this->rehabEncounter->update([
-                    'status' => 'sent_to_cashier'
+                    'status' => 'bed_selected'
                 ]);
 
                 // Log the action
@@ -228,11 +238,13 @@ class DoctorRehabOrder extends Component
                     'doctor_id' => auth()->id()
                 ]);
 
-                // Set session message
+                // Store in session which queue they should go to
                 if ($hasBedItems) {
                     session()->flash('success', 'Order sent to Bed Manager for bed selection. They will assign a bed before sending to cashier.');
+                    session()->flash('redirect_to', 'bed-manager');
                 } else {
                     session()->flash('success', 'Order sent directly to Cashier for payment.');
+                    session()->flash('redirect_to', 'cashier');
                 }
             });
 
@@ -242,8 +254,14 @@ class DoctorRehabOrder extends Component
                 'type' => 'success'
             ]);
 
-            // Redirect back to review page
-            return $this->redirect(route('doctor.rehab.review', $this->rehabEncounter->id), navigate: true);
+            // Redirect based on destination
+            if ($this->orderHasBedItems()) {
+                // Redirect to bed manager queue
+                return redirect()->route('rehab.bed-manager.queue');
+            } else {
+                // Redirect to cashier queue
+                return redirect()->route('rehab.cashier.queue');
+            }
 
         } catch (\Exception $e) {
             Log::error('Failed to send order: ' . $e->getMessage());
@@ -255,6 +273,14 @@ class DoctorRehabOrder extends Component
         }
     }
 
+    /**
+     * Keep old method for backward compatibility
+     */
+    public function sendToCashier()
+    {
+        return $this->sendOrder();
+    }
+
     public function backToReview()
     {
         return $this->redirect(route('doctor.rehab.review', $this->rehabEncounter->id), navigate: true);
@@ -264,10 +290,14 @@ class DoctorRehabOrder extends Component
     {
         $hasBedItems = $this->orderHasBedItems();
         $destination = $this->getDestination();
+        $buttonText = $this->getButtonText();
+        $buttonClasses = $this->getButtonClasses();
         
         return view('livewire.rehab.doctor-rehab-order', [
             'hasBedItems' => $hasBedItems,
-            'destination' => $destination
+            'destination' => $destination,
+            'buttonText' => $buttonText,
+            'buttonClasses' => $buttonClasses
         ]);
     }
 }
