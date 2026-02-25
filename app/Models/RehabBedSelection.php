@@ -1,5 +1,4 @@
 <?php
-// app/Models/RehabBedSelection.php
 
 namespace App\Models;
 
@@ -10,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RehabBedSelection extends Model
 {
     use HasFactory;
-
-    protected $table = 'rehab_bed_selections';
 
     protected $fillable = [
         'rehab_encounter_id',
@@ -24,7 +21,7 @@ class RehabBedSelection extends Model
         'currency',
         'selected_by',
         'selected_at',
-        'status' // pending, selected, assigned
+        'status'
     ];
 
     protected $casts = [

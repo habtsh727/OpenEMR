@@ -24,8 +24,17 @@
             
             <div class="flex items-center gap-3">
                 <span class="px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400 text-sm font-medium rounded-full">
-                    {{ $rehabEncounter->status_label }}
+                    {{ $rehabEncounter->status_label ?? 'Doctor Review' }}
                 </span>
+                
+                @if($hasBedItems)
+                    <span class="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 text-sm font-medium rounded-full flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        Bed Required
+                    </span>
+                @endif
             </div>
         </div>
 
@@ -65,6 +74,37 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Destination Info -->
+        @if($draftOrder && $draftOrder->packages->isNotEmpty())
+            <div class="mt-4 p-4 {{ $hasBedItems ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' }} rounded-xl border">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 {{ $hasBedItems ? 'bg-purple-200 dark:bg-purple-800' : 'bg-blue-200 dark:bg-blue-800' }} rounded-lg">
+                        @if($hasBedItems)
+                            <svg class="w-5 h-5 text-purple-700 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                        @else
+                            <svg class="w-5 h-5 text-blue-700 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        @endif
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium {{ $hasBedItems ? 'text-purple-800 dark:text-purple-300' : 'text-blue-800 dark:text-blue-300' }}">
+                            Next: <span class="font-bold">{{ $destination }}</span>
+                        </p>
+                        <p class="text-xs {{ $hasBedItems ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400' }} mt-0.5">
+                            @if($hasBedItems)
+                                Bed manager will select bed class and specific bed before sending to cashier
+                            @else
+                                Order will go directly to cashier for payment
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 
     <!-- Available Packages -->
@@ -148,11 +188,6 @@
                                     class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 whitespace-nowrap shadow-sm hover:shadow">
                                     Add Package
                                 </button>
-                            {{-- @else
-                                <button wire:click="removePackage({{ $package->id }})" 
-                                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
-                                    Remove
-                                </button> --}}
                             @endif
                         </div>
                     </div>
@@ -195,6 +230,18 @@
                                         <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-full">
                                             Package
                                         </span>
+                                        
+                                        @php
+                                            $hasBedInPackage = $orderPackage->items->where('item_type', 'bed')->isNotEmpty();
+                                        @endphp
+                                        @if($hasBedInPackage)
+                                            <span class="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-400 text-xs font-medium rounded-full flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                                </svg>
+                                                Bed Included
+                                            </span>
+                                        @endif
                                     </div>
                                     <p class="text-lg font-bold text-indigo-600 dark:text-indigo-500">ETB {{ number_format($orderPackage->final_price, 2) }}</p>
                                 </div>
@@ -279,6 +326,15 @@
                         <span class="text-base font-medium text-gray-600 dark:text-gray-400">Total Amount</span>
                         <span class="text-2xl font-bold text-gray-900 dark:text-white">ETB {{ number_format($totalAmount, 2) }}</span>
                     </div>
+                    
+                    @if($hasBedItems)
+                        <p class="mt-2 text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg flex items-center gap-2">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Bed cost will be calculated by Bed Manager based on class selection and added to total</span>
+                        </p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -300,13 +356,22 @@
                 
                 <button wire:click="sendToCashier" wire:loading.attr="disabled" 
                     @if(!$draftOrder || $draftOrder->packages->isEmpty()) disabled @endif
-                    class="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all w-full sm:w-auto order-1 sm:order-2">
+                    class="px-8 py-3 {{ $hasBedItems ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700' : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' }} text-white font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all w-full sm:w-auto order-1 sm:order-2">
+                    
                     <span wire:loading.remove wire:target="sendToCashier" class="flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        Send to Cashier
+                        @if($hasBedItems)
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Send to Bed Manager
+                        @else
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            Send to Cashier
+                        @endif
                     </span>
+                    
                     <span wire:loading wire:target="sendToCashier" class="flex items-center justify-center gap-2">
                         <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -325,7 +390,37 @@
                     </svg>
                     Select at least one package to proceed
                 </p>
+            @else
+                <p class="mt-3 text-center text-sm {{ $hasBedItems ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400' }} border-t border-gray-100 dark:border-gray-700 pt-3">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    @if($hasBedItems)
+                        This order will be sent to Bed Manager for bed selection first
+                    @else
+                        This order will be sent directly to Cashier for payment
+                    @endif
+                </p>
             @endif
         </div>
     </div>
+    
+    <!-- Notification Script -->
+    @push('scripts')
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('notify', (event) => {
+                // You can replace this with your preferred notification library
+                if (event.type === 'success') {
+                    // Example using a simple alert - replace with toast
+                    console.log('Success:', event.message);
+                } else if (event.type === 'error') {
+                    console.error('Error:', event.message);
+                } else {
+                    console.log('Info:', event.message);
+                }
+            });
+        });
+    </script>
+    @endpush
 </div>

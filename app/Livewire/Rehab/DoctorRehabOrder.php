@@ -1,5 +1,4 @@
 <?php
-// app/Livewire/Rehab/DoctorRehabOrder.php
 
 namespace App\Livewire\Rehab;
 
@@ -10,6 +9,7 @@ use App\Models\RehabOrderPackage;
 use App\Models\RehabOrderItem;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DoctorRehabOrder extends Component
 {
@@ -61,64 +61,95 @@ class DoctorRehabOrder extends Component
     public function addPackage($packageId)
     {
         if (in_array($packageId, $this->selectedPackageIds)) {
+            $this->dispatch('notify', [
+                'message' => 'Package already added',
+                'type' => 'warning'
+            ]);
             return;
         }
 
-        DB::transaction(function () use ($packageId) {
-            $package = RehabPackage::with('items')->findOrFail($packageId);
+        try {
+            DB::transaction(function () use ($packageId) {
+                $package = RehabPackage::with('items')->findOrFail($packageId);
 
-            $orderPackage = RehabOrderPackage::create([
-                'rehab_order_id' => $this->draftOrder->id,
-                'rehab_package_id' => $package->id,
-                'package_name' => $package->name,
-                'base_price' => $package->base_price,
-                'discount_value' => $package->discount_value,
-                'discount_type' => $package->discount_type,
-                'final_price' => $package->final_price,
-                'notes' => null
+                $orderPackage = RehabOrderPackage::create([
+                    'rehab_order_id' => $this->draftOrder->id,
+                    'rehab_package_id' => $package->id,
+                    'package_name' => $package->name,
+                    'base_price' => $package->base_price,
+                    'discount_value' => $package->discount_value,
+                    'discount_type' => $package->discount_type,
+                    'final_price' => $package->final_price,
+                    'notes' => null
+                ]);
+
+                foreach ($package->items as $item) {
+                    RehabOrderItem::create([
+                        'rehab_order_package_id' => $orderPackage->id,
+                        'item_type' => $item->item_type,
+                        'item_name' => $item->item_name,
+                        'dosage' => $item->dosage,
+                        'frequency' => $item->frequency,
+                        'duration' => $item->duration,
+                        'quantity' => $item->quantity,
+                        'bed_duration_days' => $item->bed_duration_days,
+                        'unit_price' => 0,
+                        'total_price' => 0,
+                        'notes' => $item->notes
+                    ]);
+                }
+
+                $this->selectedPackageIds[] = $packageId;
+            });
+
+            $this->draftOrder->refresh();
+            $this->calculateTotal();
+            
+            $this->dispatch('notify', [
+                'message' => 'Package added successfully',
+                'type' => 'success'
             ]);
 
-            foreach ($package->items as $item) {
-                RehabOrderItem::create([
-                    'rehab_order_package_id' => $orderPackage->id,
-                    'item_type' => $item->item_type,
-                    'item_name' => $item->item_name,
-                    'dosage' => $item->dosage,
-                    'frequency' => $item->frequency,
-                    'duration' => $item->duration,
-                    'quantity' => $item->quantity,
-                    'bed_duration_days' => $item->bed_duration_days,
-                    'unit_price' => 0,
-                    'total_price' => 0,
-                    'notes' => $item->notes
-                ]);
-            }
-
-            $this->selectedPackageIds[] = $packageId;
-        });
-
-        $this->draftOrder->refresh();
-        $this->calculateTotal();
+        } catch (\Exception $e) {
+            Log::error('Failed to add package: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'message' => 'Failed to add package',
+                'type' => 'error'
+            ]);
+        }
     }
 
     public function removePackage($orderPackageId)
     {
-        DB::transaction(function () use ($orderPackageId) {
-            $orderPackage = RehabOrderPackage::findOrFail($orderPackageId);
+        try {
+            DB::transaction(function () use ($orderPackageId) {
+                $orderPackage = RehabOrderPackage::findOrFail($orderPackageId);
 
-            if (($key = array_search($orderPackage->rehab_package_id, $this->selectedPackageIds)) !== false) {
-                unset($this->selectedPackageIds[$key]);
-            }
+                if (($key = array_search($orderPackage->rehab_package_id, $this->selectedPackageIds)) !== false) {
+                    unset($this->selectedPackageIds[$key]);
+                }
 
-            $orderPackage->delete();
-        });
+                $orderPackage->delete();
+            });
 
-        $this->draftOrder->refresh();
-        $this->selectedPackageIds = array_values($this->selectedPackageIds);
-        $this->calculateTotal();
+            $this->draftOrder->refresh();
+            $this->selectedPackageIds = array_values($this->selectedPackageIds);
+            $this->calculateTotal();
+            
+            $this->dispatch('notify', [
+                'message' => 'Package removed successfully',
+                'type' => 'success'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to remove package: ' . $e->getMessage());
+            $this->dispatch('notify', [
+                'message' => 'Failed to remove package',
+                'type' => 'error'
+            ]);
+        }
     }
     
-
     private function calculateTotal()
     {
         if ($this->draftOrder) {
@@ -130,35 +161,113 @@ class DoctorRehabOrder extends Component
         }
     }
 
+    /**
+     * Check if order contains any bed items
+     */
+    private function orderHasBedItems(): bool
+    {
+        foreach ($this->draftOrder->packages as $package) {
+            foreach ($package->items as $item) {
+                if ($item->item_type === 'bed') {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get destination based on bed items
+     */
+    private function getDestination(): string
+    {
+        return $this->orderHasBedItems() ? 'Bed Manager' : 'Cashier';
+    }
+
+    /**
+     * Get status based on bed items
+     */
+    private function getNextStatus(): string
+    {
+        return 'sent_to_cashier'; // Both go to sent_to_cashier, but bed manager intercepts
+    }
+
+    /**
+     * Send order to appropriate queue (Bed Manager if has bed, otherwise Cashier)
+     */
     public function sendToCashier()
     {
         if ($this->draftOrder->packages->isEmpty()) {
+            $this->dispatch('notify', [
+                'message' => 'Please add at least one package',
+                'type' => 'error'
+            ]);
             return;
         }
 
-        DB::transaction(function () {
-            $this->draftOrder->update([
-                'status' => 'sent_to_cashier'
+        try {
+            DB::transaction(function () {
+                $hasBedItems = $this->orderHasBedItems();
+                $destination = $this->getDestination();
+                
+                // Update order status
+                $this->draftOrder->update([
+                    'status' => 'sent_to_cashier'
+                ]);
+
+                // Update encounter status
+                $this->rehabEncounter->update([
+                    'status' => 'sent_to_cashier'
+                ]);
+
+                // Log the action
+                Log::info('Order sent to ' . $destination, [
+                    'order_id' => $this->draftOrder->id,
+                    'encounter_id' => $this->rehabEncounter->id,
+                    'has_bed_items' => $hasBedItems,
+                    'doctor_id' => auth()->id()
+                ]);
+
+                // Set session message
+                if ($hasBedItems) {
+                    session()->flash('success', 'Order sent to Bed Manager for bed selection. They will assign a bed before sending to cashier.');
+                } else {
+                    session()->flash('success', 'Order sent directly to Cashier for payment.');
+                }
+            });
+
+            // Dispatch success notification
+            $this->dispatch('notify', [
+                'message' => session('success'),
+                'type' => 'success'
             ]);
 
-            // Update to an existing status value
-            $this->rehabEncounter->update([
-                'status' => 'doctor_review' // or keep as doctor_review since payment is handled separately
-            ]);
-        });
+            // Redirect back to review page
+            return $this->redirect(route('doctor.rehab.review', $this->rehabEncounter->id), navigate: true);
 
-        // return redirect()->route('doctor.dashboard');
-        return  $this->redirect(route('doctor.rehab.review', $this->rehabEncounter->id),navigate: true);
+        } catch (\Exception $e) {
+            Log::error('Failed to send order: ' . $e->getMessage());
+            
+            $this->dispatch('notify', [
+                'message' => 'Failed to send order. Please try again.',
+                'type' => 'error'
+            ]);
+        }
     }
 
     public function backToReview()
     {
-        // return redirect()->route('doctor.rehab.review', $this->rehabEncounter->id);
-         return  $this->redirect(route('doctor.rehab.review', $this->rehabEncounter->id),navigate: true);
+        return $this->redirect(route('doctor.rehab.review', $this->rehabEncounter->id), navigate: true);
     }
 
     public function render()
     {
-        return view('livewire.rehab.doctor-rehab-order');
+        $hasBedItems = $this->orderHasBedItems();
+        $destination = $this->getDestination();
+        
+        return view('livewire.rehab.doctor-rehab-order', [
+            'hasBedItems' => $hasBedItems,
+            'destination' => $destination
+        ]);
     }
 }

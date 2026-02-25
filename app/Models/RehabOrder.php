@@ -47,4 +47,12 @@ class RehabOrder extends Model
             RehabOrderPackage::class
         );
     }
+    public function bedSelections()
+    {
+        return $this->hasMany(RehabBedSelection::class);
+    }
+    public function orderPackages()
+    {
+        return $this->hasMany(RehabOrderPackage::class, 'rehab_order_id');
+    }
 }

@@ -88,8 +88,20 @@ class RehabEncounter extends Model
         return $this->hasOne(RehabOrder::class)
             ->where('status', 'draft');
     }
-     public function bedAssignments()
+    public function bedSelections()
     {
-        return $this->hasMany(RehabBedAssignment::class);
+        return $this->hasMany(RehabBedSelection::class);
+    }
+
+    public function activeBedSelection()
+    {
+        return $this->hasOne(RehabBedSelection::class)
+            ->where('status', 'selected')
+            ->latestOfMany();
+    }
+
+    public function rehabOrders()
+    {
+        return $this->hasMany(RehabOrder::class, 'rehab_encounter_id');
     }
 }

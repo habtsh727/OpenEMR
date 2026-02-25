@@ -59,6 +59,7 @@ use App\Livewire\Doctor\RehabQueue;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Forms\RehabPackageForm;
 use App\Livewire\Forms\RehabPackageList;
+use App\Livewire\Rehab\BedManager\BedSelectionQueue;
 use App\Livewire\Rehab\BedQueue;
 use App\Livewire\Rehab\Cashier\RehabPaymentProcess;
 use App\Livewire\Rehab\Cashier\RehabPaymentQueue;
@@ -311,8 +312,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('reports.pharmacy-payments');
     Route::get('/reports/rehab-payments', RehabPaymentReport::class)
         ->name('reports.rehab-payments');
-    Route::get('/bed-queue', BedQueue::class)
-        ->name('bed.queue');
+    Route::get('/bed-manager/queue', BedSelectionQueue::class)
+        ->name('bed-manager.queue');
+    
+    // Cashier routes
+    Route::get('/cashier/queue', RehabPaymentQueue::class)
+        ->name('cashier.queue');
 });
 
 require __DIR__ . '/auth.php';
