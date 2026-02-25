@@ -33,7 +33,7 @@ class BedSelectionQueue extends Component
     // Bed selection
     public $bedClasses = [];
     public $selectedBedClass = null;
-    public $availableBeds = [];
+    public $availableBeds; 
     public $selectedBedId = null;
     public $selectedBed = null;
     public $bedSearch = '';
@@ -75,43 +75,52 @@ class BedSelectionQueue extends Component
     }
 
     public function openSelectBedModal($encounterId)
-    {
-        $this->isLoading = true;
-        $this->showSelectBedModal = true;
+{
+    $this->isLoading = true;
+    $this->showSelectBedModal = true;
 
-        try {
-            $this->selectedEncounter = RehabEncounter::with([
-                'encounter.patient',
-                'encounter.doctor',
-                'rehabOrders.orderPackages.orderItems'
-            ])->findOrFail($encounterId);
+    try {
+        $this->selectedEncounter = RehabEncounter::with([
+            'encounter.patient',
+            'encounter.doctor',
+            'rehabOrders' => function ($q) {
+                $q->whereIn('status', ['sent_to_bed_manager', 'bed_selected']);
+            },
+            'rehabOrders.orderPackages.orderItems'
+        ])->findOrFail($encounterId);
 
-            // Get patient and doctor info
-            $this->patientName = $this->selectedEncounter->encounter->patient->name ?? 'N/A';
-            $this->doctorName = $this->selectedEncounter->encounter->doctor->name ?? 'N/A';
-            $this->mrn = $this->selectedEncounter->encounter->patient->medical_record_number ?? 'N/A';
+        // Get patient and doctor info
+        $this->patientName = $this->selectedEncounter->encounter->patient->name ?? 'N/A';
+        $this->doctorName = $this->selectedEncounter->encounter->doctor->name ?? 'N/A';
+        $this->mrn = $this->selectedEncounter->encounter->patient->medical_record_number ?? 'N/A';
 
-            // Get the first rehab order
-            $this->selectedOrder = $this->selectedEncounter->rehabOrders->first();
+        // Get the first rehab order that needs bed selection
+        $this->selectedOrder = $this->selectedEncounter->rehabOrders
+            ->whereIn('status', ['sent_to_bed_manager', 'bed_selected'])
+            ->first();
 
-            // Get bed duration from order items
-            $this->bedDuration = $this->extractBedDuration();
-            
-            if (!$this->bedDuration) {
-                $this->showAlertMessage('No bed duration found in order', 'warning');
-            }
-
-            $this->resetBedSelection();
-            $this->loadBedStatistics();
-
-        } catch (\Exception $e) {
-            Log::error('Failed to open bed modal', ['error' => $e->getMessage()]);
-            $this->showAlertMessage('Error loading encounter: ' . $e->getMessage(), 'error');
-            $this->closeModal();
-        } finally {
-            $this->isLoading = false;
+        if (!$this->selectedOrder) {
+            throw new \Exception('No order found needing bed selection');
         }
+
+        // Get bed duration from order items
+        $this->bedDuration = $this->extractBedDuration();
+        
+        if (!$this->bedDuration) {
+            $this->showAlertMessage('No bed duration found in order', 'warning');
+        }
+
+        $this->resetBedSelection();
+        $this->loadBedStatistics();
+
+    } catch (\Exception $e) {
+        Log::error('Failed to open bed modal', ['error' => $e->getMessage()]);
+        $this->showAlertMessage('Error loading encounter: ' . $e->getMessage(), 'error');
+        $this->closeModal();
+    } finally {
+        $this->isLoading = false;
     }
+}
 
     private function extractBedDuration()
     {
@@ -127,35 +136,35 @@ class BedSelectionQueue extends Component
         return 0;
     }
 
-    public function closeModal()
-    {
-        $this->showSelectBedModal = false;
-        $this->selectedEncounter = null;
-        $this->selectedOrder = null;
-        $this->bedDuration = 0;
-        $this->patientName = '';
-        $this->doctorName = '';
-        $this->mrn = '';
-        $this->selectedBedClass = null;
-        $this->selectedBedId = null;
-        $this->selectedBed = null;
-        $this->bedSearch = '';
-        $this->availableBeds = [];
-        $this->pricePerDay = 0;
-        $this->totalPrice = 0;
-        $this->resetValidation();
-    }
+   public function closeModal()
+{
+    $this->showSelectBedModal = false;
+    $this->selectedEncounter = null;
+    $this->selectedOrder = null;
+    $this->bedDuration = 0;
+    $this->patientName = '';
+    $this->doctorName = '';
+    $this->mrn = '';
+    $this->selectedBedClass = null;
+    $this->selectedBedId = null;
+    $this->selectedBed = null;
+    $this->bedSearch = '';
+    $this->availableBeds = collect(); // Use empty collection
+    $this->pricePerDay = 0;
+    $this->totalPrice = 0;
+    $this->resetValidation();
+}
 
     public function resetBedSelection()
-    {
-        $this->selectedBedClass = null;
-        $this->selectedBedId = null;
-        $this->selectedBed = null;
-        $this->bedSearch = '';
-        $this->availableBeds = [];
-        $this->pricePerDay = 0;
-        $this->totalPrice = 0;
-    }
+{
+    $this->selectedBedClass = null;
+    $this->selectedBedId = null;
+    $this->selectedBed = null;
+    $this->bedSearch = '';
+    $this->availableBeds = collect(); // Use empty collection
+    $this->pricePerDay = 0;
+    $this->totalPrice = 0;
+}
 
     public function updatedSelectedBedClass($value)
     {
@@ -191,33 +200,33 @@ class BedSelectionQueue extends Component
         }
     }
 
-    public function loadAvailableBeds()
-    {
-        if (!$this->selectedBedClass) {
-            $this->availableBeds = [];
-            return;
-        }
-
-        $query = Bed::with(['room.ward', 'room.bedClass', 'bedType'])
-            ->where('status', 'available')
-            ->whereHas('room', function ($q) {
-                $q->where('bed_class_id', $this->selectedBedClass);
-            });
-
-        if ($this->bedSearch) {
-            $query->where(function ($q) {
-                $q->where('bed_number', 'like', '%' . $this->bedSearch . '%')
-                    ->orWhereHas('room', function ($roomQuery) {
-                        $roomQuery->where('room_number', 'like', '%' . $this->bedSearch . '%')
-                            ->orWhereHas('ward', function ($wardQuery) {
-                                $wardQuery->where('name', 'like', '%' . $this->bedSearch . '%');
-                            });
-                    });
-            });
-        }
-
-        $this->availableBeds = $query->orderBy('bed_number')->get();
+   public function loadAvailableBeds()
+{
+    if (!$this->selectedBedClass) {
+        $this->availableBeds = collect(); // Use empty collection instead of []
+        return;
     }
+
+    $query = Bed::with(['room.ward', 'room.bedClass', 'bedType'])
+        ->where('status', 'available')
+        ->whereHas('room', function ($q) {
+            $q->where('bed_class_id', $this->selectedBedClass);
+        });
+
+    if ($this->bedSearch) {
+        $query->where(function ($q) {
+            $q->where('bed_number', 'like', '%' . $this->bedSearch . '%')
+                ->orWhereHas('room', function ($roomQuery) {
+                    $roomQuery->where('room_number', 'like', '%' . $this->bedSearch . '%')
+                        ->orWhereHas('ward', function ($wardQuery) {
+                            $wardQuery->where('name', 'like', '%' . $this->bedSearch . '%');
+                        });
+                });
+        });
+    }
+
+    $this->availableBeds = $query->orderBy('bed_number')->get(); // This returns a Collection
+}
 
     public function selectBed($bedId)
     {
@@ -229,91 +238,97 @@ class BedSelectionQueue extends Component
     }
 
     public function confirmBedSelection()
-    {
-        $this->validate([
-            'selectedBedClass' => 'required',
-            'selectedBedId' => 'required',
-            'bedDuration' => 'required|numeric|min:1'
-        ], [
-            'selectedBedClass.required' => 'Please select a bed class',
-            'selectedBedId.required' => 'Please select a specific bed',
-            'bedDuration.required' => 'Bed duration is required',
-            'bedDuration.min' => 'Bed duration must be at least 1 day'
-        ]);
+{
+    $this->validate([
+        'selectedBedClass' => 'required',
+        'selectedBedId' => 'required',
+        'bedDuration' => 'required|numeric|min:1'
+    ], [
+        'selectedBedClass.required' => 'Please select a bed class',
+        'selectedBedId.required' => 'Please select a specific bed',
+        'bedDuration.required' => 'Bed duration is required',
+        'bedDuration.min' => 'Bed duration must be at least 1 day'
+    ]);
 
-        $this->isConfirming = true;
+    $this->isConfirming = true;
 
-        try {
-            DB::transaction(function () {
-                $bedClass = BedClass::findOrFail($this->selectedBedClass);
-                $bed = Bed::where('id', $this->selectedBedId)
-                    ->where('status', 'available')
-                    ->lockForUpdate()
-                    ->first();
+    try {
+        DB::transaction(function () {
+            $bedClass = BedClass::findOrFail($this->selectedBedClass);
+            $bed = Bed::where('id', $this->selectedBedId)
+                ->where('status', 'available')
+                ->lockForUpdate()
+                ->first();
 
-                if (!$bed) {
-                    throw new \Exception('Selected bed is no longer available');
-                }
+            if (!$bed) {
+                throw new \Exception('Selected bed is no longer available');
+            }
 
-                // Create bed selection record
-                RehabBedSelection::create([
-                    'rehab_encounter_id' => $this->selectedEncounter->id,
-                    'rehab_order_id' => $this->selectedOrder->id,
-                    'bed_class_id' => $this->selectedBedClass,
-                    'bed_id' => $this->selectedBedId,
-                    'duration_days' => $this->bedDuration,
-                    'price_per_day' => $bedClass->price_per_day,
-                    'total_price' => $bedClass->price_per_day * $this->bedDuration,
-                    'currency' => $bedClass->currency,
-                    'selected_by' => auth()->id(),
-                    'selected_at' => now(),
-                    'status' => 'selected'
-                ]);
-
-                // Update bed status to reserved
-                $bed->update(['status' => 'reserved']);
-
-                // Update encounter status
-                $this->selectedEncounter->update([
-                    'status' => 'sent_to_cashier'
-                ]);
-
-                // Log the action
-                Log::info('Bed selected successfully', [
-                    'encounter_id' => $this->selectedEncounter->id,
-                    'bed_id' => $this->selectedBedId,
-                    'duration' => $this->bedDuration,
-                    'total_price' => $bedClass->price_per_day * $this->bedDuration,
-                    'selected_by' => auth()->id()
-                ]);
-
-                // Refresh statistics
-                $this->loadBedStatistics();
-            });
-
-            $this->closeModal();
-            $this->showAlertMessage(
-                'Bed selected successfully! Patient sent to cashier queue.',
-                'success'
-            );
-
-            // Dispatch refresh event
-            $this->dispatch('bed-selection-completed');
-
-        } catch (\Exception $e) {
-            Log::error('Bed selection failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            // Create bed selection record
+            RehabBedSelection::create([
+                'rehab_encounter_id' => $this->selectedEncounter->id,
+                'rehab_order_id' => $this->selectedOrder->id,
+                'bed_class_id' => $this->selectedBedClass,
+                'bed_id' => $this->selectedBedId,
+                'duration_days' => $this->bedDuration,
+                'price_per_day' => $bedClass->price_per_day,
+                'total_price' => $bedClass->price_per_day * $this->bedDuration,
+                'currency' => $bedClass->currency,
+                'selected_by' => auth()->id(),
+                'selected_at' => now(),
+                'status' => 'selected'
             ]);
-            
-            $this->showAlertMessage(
-                'Error selecting bed: ' . $e->getMessage(),
-                'error'
-            );
-        } finally {
-            $this->isConfirming = false;
-        }
+
+            // Update bed status to reserved
+            $bed->update(['status' => 'reserved']);
+
+            // Update order status to bed_selected
+            $this->selectedOrder->update([
+                'status' => 'bed_selected'
+            ]);
+
+            // Update encounter status to sent_to_cashier (ready for payment)
+            $this->selectedEncounter->update([
+                'status' => 'sent_to_cashier'
+            ]);
+
+            // Log the action
+            Log::info('Bed selected successfully', [
+                'encounter_id' => $this->selectedEncounter->id,
+                'order_id' => $this->selectedOrder->id,
+                'bed_id' => $this->selectedBedId,
+                'duration' => $this->bedDuration,
+                'total_price' => $bedClass->price_per_day * $this->bedDuration,
+                'selected_by' => auth()->id()
+            ]);
+
+            // Refresh statistics
+            $this->loadBedStatistics();
+        });
+
+        $this->closeModal();
+        $this->showAlertMessage(
+            'Bed selected successfully! Patient sent to cashier queue.',
+            'success'
+        );
+
+        // Dispatch refresh event
+        $this->dispatch('bed-selection-completed');
+
+    } catch (\Exception $e) {
+        Log::error('Bed selection failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        $this->showAlertMessage(
+            'Error selecting bed: ' . $e->getMessage(),
+            'error'
+        );
+    } finally {
+        $this->isConfirming = false;
     }
+}
 
     public function showAlertMessage($message, $type = 'success')
     {
@@ -339,47 +354,53 @@ class BedSelectionQueue extends Component
         return $bedClass ? $bedClass->price_per_day * $this->bedDuration : 0;
     }
 
-    public function render()
-    {
-        $query = RehabEncounter::query()
-            ->with([
-                'encounter.patient',
-                'encounter.doctor',
-                'rehabOrders.orderPackages.orderItems' => function ($query) {
-                    $query->where('item_type', 'bed');
-                }
-            ])
-            ->where('status', 'sent_to_cashier')
-            ->whereHas('rehabOrders.orderPackages.orderItems', function ($query) {
+   public function render()
+{
+    $query = RehabEncounter::query()
+        ->with([
+            'encounter.patient',
+            'encounter.doctor',
+            'rehabOrders' => function ($q) {
+                $q->whereIn('status', ['sent_to_bed_manager', 'bed_selected']);
+            },
+            'rehabOrders.orderPackages.orderItems' => function ($query) {
                 $query->where('item_type', 'bed');
-            });
-
-        // Apply search filter
-        if ($this->search) {
-            $query->whereHas('encounter.patient', function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
-            });
-        }
-
-        // Get encounters with calculated duration
-        $encounters = $query->latest()->paginate($this->perPage);
-        
-        // Enhance encounters with duration and bed info
-        $encounters->through(function ($encounter) {
-            $encounter->bed_duration = $this->extractBedDurationForEncounter($encounter);
-            $encounter->has_bed_item = true;
-            return $encounter;
+            }
+        ])
+        // Show encounters that need bed selection - status should be 'sent_to_bed_manager'
+        ->where('status', 'sent_to_bed_manager')
+        ->whereHas('rehabOrders', function ($q) {
+            $q->whereIn('status', ['sent_to_bed_manager', 'bed_selected'])
+              ->whereHas('orderPackages.orderItems', function ($query) {
+                  $query->where('item_type', 'bed');
+              });
         });
 
-        return view('livewire.rehab.bed-manager.bed-selection-queue', [
-            'encounters' => $encounters,
-            'totalAvailableBeds' => $this->totalAvailableBeds,
-            'totalReservedBeds' => $this->totalReservedBeds,
-            'totalOccupiedBeds' => $this->totalOccupiedBeds,
-            'estimatedTotal' => $this->estimatedTotal
-        ]);
+    // Apply search filter
+    if ($this->search) {
+        $query->whereHas('encounter.patient', function ($q) {
+            $q->where('name', 'like', '%' . $this->search . '%')
+              ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+        });
     }
+
+    // Get encounters with calculated duration
+    $encounters = $query->latest()->paginate($this->perPage);
+    
+    // Enhance encounters with duration and bed info
+    foreach ($encounters as $encounter) {
+        $encounter->bed_duration = $this->extractBedDurationForEncounter($encounter);
+        $encounter->has_bed_item = true;
+    }
+
+    return view('livewire.rehab.bed-manager.bed-selection-queue', [
+        'encounters' => $encounters,
+        'totalAvailableBeds' => $this->totalAvailableBeds,
+        'totalReservedBeds' => $this->totalReservedBeds,
+        'totalOccupiedBeds' => $this->totalOccupiedBeds,
+        'estimatedTotal' => $this->estimatedTotal
+    ]);
+}
 
     private function extractBedDurationForEncounter($encounter)
     {

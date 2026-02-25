@@ -90,6 +90,13 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
     Route::get('/templates/create', TemplateForm::class)->name('templates.create');
     Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
     Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
+
+      Route::get('/bed-manager/queue', BedSelectionQueue::class)
+        ->name('bed-manager.queue');
+
+    // Cashier routes
+    Route::get('/cashier/queue', RehabPaymentQueue::class)
+        ->name('cashier.queue');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -310,12 +317,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('reports.pharmacy-payments');
     Route::get('/reports/rehab-payments', RehabPaymentReport::class)
         ->name('reports.rehab-payments');
-    Route::get('/bed-manager/queue', BedSelectionQueue::class)
-        ->name('bed-manager.queue');
-
-    // Cashier routes
-    Route::get('/cashier/queue', RehabPaymentQueue::class)
-        ->name('cashier.queue');
+  
 });
 
 require __DIR__ . '/auth.php';
