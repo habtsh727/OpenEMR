@@ -25,6 +25,11 @@ class PatientProfile extends Component
         $this->getLastVisit();
         $this->getCurrentPriority();
     }
+    public function viewFinanceReport()
+    {
+        return $this->redirect(route('patients.finance', $this->patient->id), navigate: true);
+
+    }
 
     public function calculateFinancials()
     {
