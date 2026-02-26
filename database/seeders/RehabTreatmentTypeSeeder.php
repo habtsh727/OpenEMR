@@ -57,7 +57,7 @@ class RehabTreatmentTypeSeeder extends Seeder
                         ['value' => 'subcutaneous', 'label' => 'Subcutaneous'],
                         ['value' => 'topical', 'label' => 'Topical'],
                     ]],
-                    ['name' => 'administered_by', 'label' => 'Administered By', 'type' => 'text', 'value' => auth()->user()->name],
+                    // Removed the problematic line with auth()->user()->name
                 ],
             ],
             [
@@ -94,5 +94,7 @@ class RehabTreatmentTypeSeeder extends Seeder
         foreach ($types as $type) {
             RehabTreatmentType::create($type);
         }
+        
+        $this->command->info('Treatment types seeded successfully!');
     }
 }

@@ -10,7 +10,7 @@ return new class extends Migration
         Schema::create('rehab_treatment_types', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('icon')->nullable();
+            $table->text('icon')->nullable();
             $table->text('description')->nullable();
             $table->json('fields')->nullable(); // Store dynamic field definitions
             $table->boolean('is_active')->default(true);
