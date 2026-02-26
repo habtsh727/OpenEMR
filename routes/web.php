@@ -6,6 +6,7 @@ use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
 use App\Livewire\Referral\ReferralQueue;
+use App\Livewire\Rehab\RehabTreatmentPage;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -97,6 +98,7 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
     // Cashier routes
     Route::get('/cashier/queue', RehabPaymentQueue::class)
         ->name('cashier.queue');
+        Route::get('/treatment/{id}', RehabTreatmentPage::class)->name('treatment');
 });
 
 Route::middleware(['auth'])->group(function () {

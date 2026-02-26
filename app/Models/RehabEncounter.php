@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RehabEncounter extends Model
 {
     protected $guarded = [];
-    
+
     protected $casts = [
+        'treatment_started_at' => 'datetime',
+        'completed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
