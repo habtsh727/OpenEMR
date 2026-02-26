@@ -431,8 +431,8 @@
                 <!-- Hospital Letterhead - Compact -->
                 <div
                     style="text-align: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-                    <h1 style="font-size: 20px; font-weight: bold; margin: 0;">YOUR HOSPITAL NAME</h1>
-                    <p style="font-size: 11px; margin: 2px 0;">123 Healthcare Avenue, City, Country</p>
+                    <h1 style="font-size: 20px; font-weight: bold; margin: 0;">Firdos Cultural Medical Center</h1>
+                    <p style="font-size: 11px; margin: 2px 0;">123 Healthcare Avenue, Addis Ababa, Ethiopia</p>
                     <p style="font-size: 10px; margin: 2px 0;">Tel: +251-XXX-XXXXXX | Email: info@hospital.com</p>
                     <h2 style="font-size: 16px; font-weight: bold; margin-top: 8px;">PATIENT FINANCIAL STATEMENT</h2>
                 </div>
