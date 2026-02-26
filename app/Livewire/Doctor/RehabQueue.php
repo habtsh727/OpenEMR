@@ -44,7 +44,9 @@ class RehabQueue extends Component
             }
 
             // Redirect to review page
-            return redirect()->route('doctor.rehab.review', $encounterId);
+            // return redirect()->route('doctor.rehab.review', $encounterId);
+            return $this->redirect(route('doctor.rehab.review', $encounterId), navigate: true);
+
             
         } catch (\Exception $e) {
             Log::error('Failed to start review: ' . $e->getMessage());
