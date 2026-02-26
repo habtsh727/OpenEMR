@@ -9,6 +9,7 @@ use App\Livewire\Referral\ReferralQueue;
 use App\Livewire\Rehab\RehabTreatmentPage;
 use App\Livewire\Rehab\RehabTreatmentQueue;
 use App\Livewire\Rehab\RehabTreatmentTypeManager;
+use App\Livewire\Report\BedPaymentReport;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -97,7 +98,7 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
 
     // Cashier routes
     Route::get('/cashier/queue', RehabPaymentQueue::class)->name('cashier.queue');
-    
+
     Route::get('/treatment-queue', RehabTreatmentQueue::class)->name('treatment.queue');
     Route::get('/treatment/{id}', RehabTreatmentPage::class)->name('treatment');
     Route::get('/treatment-types', RehabTreatmentTypeManager::class)->name('treatment-types');
@@ -320,6 +321,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('reports.pharmacy-payments');
     Route::get('/reports/rehab-payments', RehabPaymentReport::class)
         ->name('reports.rehab-payments');
+    Route::get('/reports/bed-payments', BedPaymentReport::class)
+        ->name('reports.bed-payments');
+    Route::get('/patients/{patientId}/finance', App\Livewire\Patient\PatientFinanceReport::class)
+        ->name('patients.finance');
 });
 
 require __DIR__ . '/auth.php';
