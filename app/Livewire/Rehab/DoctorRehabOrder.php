@@ -280,11 +280,11 @@ public function sendOrder()
         ]);
 
         // Redirect based on destination
-        if ($this->orderHasBedItems()) {
-            return redirect()->route('rehab.bed-manager.queue');
-        } else {
-            return redirect()->route('rehab.cashier.queue');
-        }
+        // if ($this->orderHasBedItems()) {
+        //     return redirect()->route('rehab.bed-manager.queue');
+        // } else {
+        //     return redirect()->route('rehab.cashier.queue');
+        // }
 
     } catch (\Exception $e) {
         // Log the full error details
