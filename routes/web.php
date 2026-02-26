@@ -84,7 +84,6 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
     Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
 });
 
-
 Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () {
     Route::get('/queue', Queue::class)->name('queue');
     Route::get('/questionnaire/{id}', QuestionnaireForm::class)->name('questionnaire');
@@ -94,28 +93,25 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
     Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
     Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
 
-    Route::get('/bed-manager/queue', BedSelectionQueue::class)
-        ->name('bed-manager.queue');
+    Route::get('/bed-manager/queue', BedSelectionQueue::class)->name('bed-manager.queue');
 
     // Cashier routes
-    Route::get('/cashier/queue', RehabPaymentQueue::class)
-        ->name('cashier.queue');
+    Route::get('/cashier/queue', RehabPaymentQueue::class)->name('cashier.queue');
+    
     Route::get('/treatment-queue', RehabTreatmentQueue::class)->name('treatment.queue');
     Route::get('/treatment/{id}', RehabTreatmentPage::class)->name('treatment');
-
-        Route::get('/treatment-types', RehabTreatmentTypeManager::class)->name('treatment-types');
+    Route::get('/treatment-types', RehabTreatmentTypeManager::class)->name('treatment-types');
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/rehab-packages', action: RehabPackageList::class)->name('rehab.packages.index');
+    Route::get('/rehab-packages', RehabPackageList::class)->name('rehab.packages.index');
     Route::get('/rehab-packages/create', RehabPackageForm::class)->name('rehab.packages.create');
     Route::get('/rehab-packages/{id}/edit', RehabPackageForm::class)->name('rehab.packages.edit');
 
     // Cashier routes
-    Route::get('/cashier/rehab/payments', action: RehabPaymentQueue::class)->name('cashier.rehab.payments');
+    Route::get('/cashier/rehab/payments', RehabPaymentQueue::class)->name('cashier.rehab.payments');
     Route::get('/cashier/rehab/payment/{rehabOrder}', RehabPaymentProcess::class)->name('cashier.rehab.payment');
 });
-
 
 Route::get('/', function () {
     return redirect()->route('dashboard');

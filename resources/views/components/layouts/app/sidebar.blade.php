@@ -64,9 +64,6 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
                     Pharmacy Payment
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.rehab.payments')" wire:navigate>
-                    Rehab Payment
-                </flux:sidebar.item>
             </flux:sidebar.group>
 
             @endcanany
@@ -79,9 +76,6 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="home-modern" :href="route('vital-types.index')" wire:navigate>Vital Types
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="archive-box" :href="route('rehab.packages.index')" wire:navigate>
-                    Rehab Packages
-                </flux:sidebar.item>
                 @endif
 
                 @if(auth()->user()->hasRole(['doctor', 'clinician']))
@@ -90,30 +84,77 @@
                 <flux:sidebar.item icon="paper-airplane" :href="route('referrals.queue')" wire:navigate>
                     Referral
                 </flux:sidebar.item>
+                @endif
+            </flux:sidebar.group>
+            @endif
+           
 
-                <!-- Doctor Rehab Queue -->
+            {{-- rehab sidebar-start--}}
+            @if(auth()->user()->hasRole(['doctor', 'nurse', 'clinician', 'rehab', 'bed_manager', 'cashier',
+            'super-admin']))
+            <flux:sidebar.group expandable heading="Rehabilitation" class="grid">
+
+                <!-- Doctor Routes -->
+                @if(auth()->user()->hasRole(['doctor', 'clinician', 'super-admin']))
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.rehab.queue')" wire:navigate>
                     Rehab Reviews
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="archive-box" :href="route('rehab.packages.index')" wire:navigate>
                     Rehab Packages
                 </flux:sidebar.item>
-
+                <flux:sidebar.item icon="clock" :href="route('rehab.treatment.queue')" wire:navigate>
+                    Treatment Queue
+                </flux:sidebar.item>
                 @endif
 
                 <!-- Rehab Staff Routes -->
                 @if(auth()->user()->hasRole(['rehab', 'super-admin']))
                 <flux:sidebar.item icon="clipboard-document-check" :href="route('rehab.queue')" wire:navigate>
-                    Rehab Queue
+                    Patient Queue
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="rectangle-group" :href="route('rehab.templates.index')" wire:navigate>
                     Question Templates
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="beaker" :href="route('rehab.treatment-types')" wire:navigate>
+                    Treatment Types
+                </flux:sidebar.item>
+                
+                @endif
+
+                <!-- Bed Manager Routes -->
+                @if(auth()->user()->hasRole(['bed_manager', 'super-admin']))
+                <flux:sidebar.item icon="home-modern" :href="route('rehab.bed-manager.queue')" wire:navigate>
+                    Bed Selection Queue
+                </flux:sidebar.item>
+                @endif
+
+                <!-- Cashier Routes -->
+                @if(auth()->user()->hasRole(['cashier', 'super-admin']))
+                <flux:sidebar.item icon="currency-dollar" :href="route('rehab.cashier.queue')" wire:navigate>
+                    Payment Queue
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="document-text" :href="route('cashier.rehab.payments')" wire:navigate>
+                    Payment History
+                </flux:sidebar.item>
+                @endif
+
+                <!-- Admin/Manager Routes (only super-admin) -->
+                @if(auth()->user()->hasRole(['super-admin']))
+                <flux:sidebar.item icon="cube" :href="route('rehab.packages.create')" wire:navigate>
+                    Create Package
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="pencil-square" :href="route('rehab.templates.create')" wire:navigate>
+                    Create Template
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="document-chart-bar" :href="route('reports.rehab-payments')" wire:navigate>
+                    Rehab Reports
                 </flux:sidebar.item>
                 @endif
 
             </flux:sidebar.group>
             @endif
-            {{-- ========================= LABORATORY ========================= --}}
+{{-- rehabitation end --}}
+ {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_result','view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Labratory" class="grid">
                 @can('enter_lab_result')
@@ -215,9 +256,11 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="cog" :href="route('card-fee')" wire:navigate>Card Fee</flux:sidebar.item>
                 @endcanany
-
             </flux:sidebar.group>
+
+          
             @endcanany
+
             <flux:sidebar.group expandable heading="Financial Management" class="grid">
 
                 <flux:sidebar.item icon="currency-dollar" :href="route('reports.registration-payments')" wire:navigate>
@@ -241,6 +284,7 @@
                     Rehabilitation Payments
                 </flux:sidebar.item>
             </flux:sidebar.group>
+
         </flux:sidebar.nav>
 
         <flux:spacer />
