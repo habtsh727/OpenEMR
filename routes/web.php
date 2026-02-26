@@ -7,6 +7,7 @@ use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
 use App\Livewire\Referral\ReferralQueue;
 use App\Livewire\Rehab\RehabTreatmentPage;
+use App\Livewire\Rehab\RehabTreatmentQueue;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -92,13 +93,14 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
     Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
     Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
 
-      Route::get('/bed-manager/queue', BedSelectionQueue::class)
+    Route::get('/bed-manager/queue', BedSelectionQueue::class)
         ->name('bed-manager.queue');
 
     // Cashier routes
     Route::get('/cashier/queue', RehabPaymentQueue::class)
         ->name('cashier.queue');
-        Route::get('/treatment/{id}', RehabTreatmentPage::class)->name('treatment');
+    Route::get('/treatment-queue', RehabTreatmentQueue::class)->name('treatment.queue');
+    Route::get('/treatment/{id}', RehabTreatmentPage::class)->name('treatment');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -319,7 +321,6 @@ Route::middleware(['auth'])->group(function () {
         ->name('reports.pharmacy-payments');
     Route::get('/reports/rehab-payments', RehabPaymentReport::class)
         ->name('reports.rehab-payments');
-  
 });
 
 require __DIR__ . '/auth.php';
