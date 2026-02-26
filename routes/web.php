@@ -9,6 +9,7 @@ use App\Livewire\Referral\ReferralQueue;
 use App\Livewire\Rehab\RehabTreatmentPage;
 use App\Livewire\Rehab\RehabTreatmentQueue;
 use App\Livewire\Rehab\RehabTreatmentTypeManager;
+use App\Livewire\Report\BedPaymentReport;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -320,6 +321,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('reports.pharmacy-payments');
     Route::get('/reports/rehab-payments', RehabPaymentReport::class)
         ->name('reports.rehab-payments');
+      Route::get('/reports/bed-payments', BedPaymentReport::class)
+        ->name('reports.bed-payments');
 });
 
 require __DIR__ . '/auth.php';

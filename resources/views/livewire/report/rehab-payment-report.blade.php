@@ -2,7 +2,7 @@
     <!-- Header -->
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-6">
         <h1 class="text-2xl font-bold text-white">Rehabilitation Payment Report</h1>
-        <p class="text-indigo-100 mt-1">Track payments for rehab packages, therapies, and services</p>
+        <p class="text-indigo-100 mt-1">Track payments for rehab packages, bed assignments, and services</p>
     </div>
 
     <!-- Summary Cards -->
@@ -38,12 +38,12 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">ETB {{ number_format($totalAmount, 2) }}</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Package Revenue</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">ETB {{ number_format($totalPackageRevenue, 2) }}</p>
                 </div>
                 <div class="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
                     <svg class="w-6 h-6 text-purple-600 dark:text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                     </svg>
                 </div>
             </div>
@@ -52,12 +52,12 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. per Order</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">ETB {{ $totalPaidOrders > 0 ? number_format($totalAmount / $totalPaidOrders, 2) : '0.00' }}</p>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Bed Revenue</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-2">ETB {{ number_format($totalBedRevenue, 2) }}</p>
                 </div>
                 <div class="p-3 bg-amber-100 dark:bg-amber-900/20 rounded-lg">
                     <svg class="w-6 h-6 text-amber-600 dark:text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                     </svg>
                 </div>
             </div>
@@ -86,88 +86,113 @@
     </div>
     @endif
 
-    <!-- Item Type Breakdown -->
-    <!-- Item Type Breakdown -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    @foreach(['standard_medication', 'custom_medication', 'service', 'bed'] as $type)
-        @php
-            $stats = $itemTypeStats[$type] ?? null;
-            $icon = $this->getItemTypeIcon($type);
-            $color = $this->getItemTypeColor($type);
-            $label = str_replace('_', ' ', ucfirst($type));
-            
-            // Handle both object and array cases
-            $itemCount = 0;
-            $totalAmount = 0;
-            
-            if ($stats) {
-                if (is_object($stats)) {
-                    $itemCount = $stats->item_count ?? 0;
-                    $totalAmount = $stats->total_amount ?? 0;
-                } elseif (is_array($stats)) {
-                    $itemCount = $stats['item_count'] ?? 0;
-                    $totalAmount = $stats['total_amount'] ?? 0;
-                }
-            }
-        @endphp
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 {{ explode(' ', $color)[0] }} rounded-lg">
-                    <span class="text-xl">{{ $icon }}</span>
+    <!-- Bed Class Breakdown -->
+    @if($bedClassStats->count() > 0)
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Revenue by Bed Class</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($bedClassStats as $stat)
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <p class="font-medium text-gray-900 dark:text-white">{{ $stat->bed_class_name }}</p>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Selections:</span>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $stat->selection_count }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Total Days:</span>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $stat->total_days }}</p>
+                    </div>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $label }}</h3>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Items</p>
-                    <p class="text-xl font-bold text-gray-900 dark:text-white">{{ number_format($itemCount) }}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Revenue</p>
-                    <p class="text-xl font-bold text-emerald-600 dark:text-emerald-500">ETB {{ number_format($totalAmount, 2) }}</p>
+                <div class="flex justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Revenue:</span>
+                    <span class="text-sm font-bold text-amber-600 dark:text-amber-400">ETB {{ number_format($stat->total_amount, 2) }}</span>
                 </div>
             </div>
+            @endforeach
         </div>
-    @endforeach
-</div>
+    </div>
+    @endif
 
-    <!-- Payment Method Breakdown -->
- <!-- Payment Method Breakdown -->
-@if(count($paymentMethodStats) > 0)
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payment Method Breakdown</h3>
+    <!-- Item Type Breakdown -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        @foreach(['cash', 'card', 'insurance'] as $method)
+        @foreach(['standard_medication', 'custom_medication', 'service'] as $type)
             @php
-                $stats = $paymentMethodStats[$method] ?? null;
-                $count = 0;
-                $total = 0;
+                $stats = $itemTypeStats[$type] ?? null;
+                $icon = $this->getItemTypeIcon($type);
+                $color = $this->getItemTypeColor($type);
+                $label = str_replace('_', ' ', ucfirst($type));
+                
+                $itemCount = 0;
+                $totalAmount = 0;
                 
                 if ($stats) {
                     if (is_object($stats)) {
-                        $count = $stats->count ?? 0;
-                        $total = $stats->total ?? 0;
+                        $itemCount = $stats->item_count ?? 0;
+                        $totalAmount = $stats->total_amount ?? 0;
                     } elseif (is_array($stats)) {
-                        $count = $stats['count'] ?? 0;
-                        $total = $stats['total'] ?? 0;
+                        $itemCount = $stats['item_count'] ?? 0;
+                        $totalAmount = $stats['total_amount'] ?? 0;
                     }
                 }
             @endphp
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <p class="font-medium text-gray-900 dark:text-white capitalize">{{ $method ?: 'Not Specified' }}</p>
-                <div class="flex justify-between mt-2">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Transactions:</span>
-                    <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $count }}</span>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 {{ explode(' ', $color)[0] }} rounded-lg">
+                        <span class="text-xl">{{ $icon }}</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $label }}</h3>
                 </div>
-                <div class="flex justify-between mt-1">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Amount:</span>
-                    <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($total, 2) }}</span>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Items</p>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white">{{ number_format($itemCount) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Revenue</p>
+                        <p class="text-xl font-bold text-emerald-600 dark:text-emerald-500">ETB {{ number_format($totalAmount, 2) }}</p>
+                    </div>
                 </div>
             </div>
         @endforeach
     </div>
-</div>
-@endif
+
+    <!-- Payment Method Breakdown -->
+    @if(count($paymentMethodStats) > 0)
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Payment Method Breakdown</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            @foreach(['cash', 'card', 'insurance'] as $method)
+                @php
+                    $stats = $paymentMethodStats[$method] ?? null;
+                    $count = 0;
+                    $total = 0;
+                    
+                    if ($stats) {
+                        if (is_object($stats)) {
+                            $count = $stats->count ?? 0;
+                            $total = $stats->total ?? 0;
+                        } elseif (is_array($stats)) {
+                            $count = $stats['count'] ?? 0;
+                            $total = $stats['total'] ?? 0;
+                        }
+                    }
+                @endphp
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <p class="font-medium text-gray-900 dark:text-white capitalize">{{ $method ?: 'Not Specified' }}</p>
+                    <div class="flex justify-between mt-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Transactions:</span>
+                        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $count }}</span>
+                    </div>
+                    <div class="flex justify-between mt-1">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Amount:</span>
+                        <span class="text-sm font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($total, 2) }}</span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     <!-- Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
@@ -180,7 +205,7 @@
         
         @if($showFilters)
         <div class="p-4 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Date Range -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Date</label>
@@ -198,6 +223,17 @@
                         <option value="">All Packages</option>
                         @foreach($packages as $package)
                             <option value="{{ $package->id }}">{{ $package->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Bed Class -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bed Class</label>
+                    <select wire:model.live="bedClassId" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Bed Classes</option>
+                        @foreach($bedClasses as $class)
+                            <option value="{{ $class->id }}">{{ $class->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -221,7 +257,6 @@
                         <option value="draft">Draft</option>
                         <option value="sent_to_cashier">Sent to Cashier</option>
                         <option value="paid">Paid</option>
-                        <option value="in_progress">In Progress</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
@@ -259,7 +294,10 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Patient</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Doctor</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Packages</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Bed Details</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Package Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Bed Cost</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Grand Total</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Payment</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
                     </tr>
@@ -283,7 +321,21 @@
                                 @endforeach
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-sm font-bold text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->total_amount, 2) }}</td>
+                        <td class="px-6 py-4">
+                            @if($order->bedSelections->count() > 0)
+                                @foreach($order->bedSelections as $bed)
+                                    <div class="text-sm">
+                                        <span class="font-medium text-amber-600 dark:text-amber-400">{{ $bed->bedClass->name ?? 'N/A' }}</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ $bed->duration_days }} days</span>
+                                    </div>
+                                @endforeach
+                            @else
+                                <span class="text-xs text-gray-400 dark:text-gray-500">No bed</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-indigo-600 dark:text-indigo-400">ETB {{ number_format($order->total_amount, 2) }}</td>
+                        <td class="px-6 py-4 text-sm font-medium text-amber-600 dark:text-amber-400">ETB {{ number_format($order->bed_total ?? 0, 2) }}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-purple-600 dark:text-purple-400">ETB {{ number_format($order->grand_total ?? $order->total_amount, 2) }}</td>
                         <td class="px-6 py-4">
                             @if($order->payment_method)
                                 <span class="px-2 py-1 text-xs rounded-full 
@@ -304,7 +356,6 @@
                         <td class="px-6 py-4">
                             <span class="px-2 py-1 text-xs rounded-full 
                                 @if($order->status === 'paid') bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
-                                @elseif($order->status === 'in_progress') bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
                                 @elseif($order->status === 'completed') bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400
                                 @elseif($order->status === 'cancelled') bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
                                 @elseif($order->status === 'sent_to_cashier') bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
@@ -315,7 +366,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="11" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                             No rehabilitation orders found
                         </td>
                     </tr>

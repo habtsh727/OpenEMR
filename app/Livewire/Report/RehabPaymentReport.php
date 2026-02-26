@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\RehabOrder;
 use App\Models\RehabPackage;
+use App\Models\RehabBedSelection;
 use App\Models\User;
 use App\Models\RehabEncounter;
 use Illuminate\Support\Facades\DB;
@@ -20,13 +21,17 @@ class RehabPaymentReport extends Component
     public $paymentMethod = '';
     public $status = '';
     public $doctorId = '';
+    public $bedClassId = '';
     
     public $showFilters = false;
     public $totalAmount = 0;
     public $totalOrders = 0;
     public $totalPaidOrders = 0;
+    public $totalPackageRevenue = 0;
+    public $totalBedRevenue = 0;
     
     public $packageStats = [];
+    public $bedClassStats = [];
     public $itemTypeStats = [];
     public $paymentMethodStats = [];
     
@@ -37,6 +42,7 @@ class RehabPaymentReport extends Component
         'paymentMethod' => ['except' => ''],
         'status' => ['except' => ''],
         'doctorId' => ['except' => ''],
+        'bedClassId' => ['except' => ''],
     ];
 
     public function mount()
@@ -58,7 +64,24 @@ class RehabPaymentReport extends Component
         
         $this->totalOrders = (clone $query)->count();
         $this->totalPaidOrders = (clone $query)->where('status', 'paid')->count();
-        $this->totalAmount = (clone $query)->where('status', 'paid')->sum('total_amount') ?? 0;
+        
+        // Calculate package revenue (from rehab_orders)
+        $this->totalPackageRevenue = (clone $query)
+            ->where('status', 'paid')
+            ->sum('total_amount') ?? 0;
+        
+        // Calculate bed revenue (from rehab_bed_selections)
+        $this->totalBedRevenue = RehabBedSelection::query()
+            ->whereHas('rehabOrder', function($q) {
+                $q->whereBetween('created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
+                    ->where('status', 'paid')
+                    ->when($this->paymentMethod, fn($q) => $q->where('payment_method', $this->paymentMethod))
+                    ->when($this->doctorId, fn($q) => $q->where('doctor_id', $this->doctorId));
+            })
+            ->when($this->bedClassId, fn($q) => $q->where('bed_class_id', $this->bedClassId))
+            ->sum('total_price') ?? 0;
+        
+        $this->totalAmount = $this->totalPackageRevenue + $this->totalBedRevenue;
         
         // Package statistics
         $this->packageStats = DB::table('rehab_order_packages')
@@ -69,14 +92,32 @@ class RehabPaymentReport extends Component
             )
             ->join('rehab_orders', 'rehab_orders.id', '=', 'rehab_order_packages.rehab_order_id')
             ->whereBetween('rehab_orders.created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
+            ->where('rehab_orders.status', 'paid')
             ->when($this->packageId, fn($q) => $q->where('rehab_order_packages.rehab_package_id', $this->packageId))
             ->when($this->paymentMethod, fn($q) => $q->where('rehab_orders.payment_method', $this->paymentMethod))
-            ->when($this->status, fn($q) => $q->where('rehab_orders.status', $this->status))
             ->when($this->doctorId, fn($q) => $q->where('rehab_orders.doctor_id', $this->doctorId))
             ->groupBy('rehab_order_packages.package_name')
             ->get();
         
-        // Item type statistics
+        // Bed Class statistics
+        $this->bedClassStats = DB::table('rehab_bed_selections')
+            ->select(
+                'bed_classes.name as bed_class_name',
+                DB::raw('COUNT(*) as selection_count'),
+                DB::raw('SUM(rehab_bed_selections.total_price) as total_amount'),
+                DB::raw('SUM(rehab_bed_selections.duration_days) as total_days')
+            )
+            ->join('rehab_orders', 'rehab_orders.id', '=', 'rehab_bed_selections.rehab_order_id')
+            ->join('bed_classes', 'bed_classes.id', '=', 'rehab_bed_selections.bed_class_id')
+            ->whereBetween('rehab_orders.created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
+            ->where('rehab_orders.status', 'paid')
+            ->when($this->bedClassId, fn($q) => $q->where('rehab_bed_selections.bed_class_id', $this->bedClassId))
+            ->when($this->paymentMethod, fn($q) => $q->where('rehab_orders.payment_method', $this->paymentMethod))
+            ->when($this->doctorId, fn($q) => $q->where('rehab_orders.doctor_id', $this->doctorId))
+            ->groupBy('bed_classes.name')
+            ->get();
+        
+        // Item type statistics (medications, services)
         $this->itemTypeStats = DB::table('rehab_order_items')
             ->select(
                 'rehab_order_items.item_type',
@@ -86,8 +127,9 @@ class RehabPaymentReport extends Component
             ->join('rehab_order_packages', 'rehab_order_packages.id', '=', 'rehab_order_items.rehab_order_package_id')
             ->join('rehab_orders', 'rehab_orders.id', '=', 'rehab_order_packages.rehab_order_id')
             ->whereBetween('rehab_orders.created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
+            ->where('rehab_orders.status', 'paid')
+            ->whereIn('rehab_order_items.item_type', ['standard_medication', 'custom_medication', 'service'])
             ->when($this->paymentMethod, fn($q) => $q->where('rehab_orders.payment_method', $this->paymentMethod))
-            ->when($this->status, fn($q) => $q->where('rehab_orders.status', $this->status))
             ->when($this->doctorId, fn($q) => $q->where('rehab_orders.doctor_id', $this->doctorId))
             ->groupBy('rehab_order_items.item_type')
             ->get()
@@ -109,12 +151,18 @@ class RehabPaymentReport extends Component
         return RehabOrder::with([
                 'rehabEncounter.encounter.patient',
                 'doctor',
-                'packages.items'
+                'packages.items',
+                'bedSelections.bedClass'
             ])
             ->whereBetween('created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
             ->when($this->packageId, function($q) {
                 $q->whereHas('packages', function($packageQuery) {
                     $packageQuery->where('rehab_package_id', $this->packageId);
+                });
+            })
+            ->when($this->bedClassId, function($q) {
+                $q->whereHas('bedSelections', function($bedQuery) {
+                    $bedQuery->where('bed_class_id', $this->bedClassId);
                 });
             })
             ->when($this->paymentMethod, fn($q) => $q->where('payment_method', $this->paymentMethod))
@@ -125,6 +173,11 @@ class RehabPaymentReport extends Component
     public function getPackagesProperty()
     {
         return RehabPackage::where('is_active', true)->orderBy('name')->get();
+    }
+
+    public function getBedClassesProperty()
+    {
+        return DB::table('bed_classes')->orderBy('name')->get();
     }
 
     public function getDoctorsProperty()
@@ -139,7 +192,7 @@ class RehabPaymentReport extends Component
 
     public function resetFilters()
     {
-        $this->reset(['packageId', 'paymentMethod', 'status', 'doctorId']);
+        $this->reset(['packageId', 'paymentMethod', 'status', 'doctorId', 'bedClassId']);
         $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = now()->format('Y-m-d');
         $this->calculateTotals();
@@ -173,11 +226,18 @@ class RehabPaymentReport extends Component
             ->orderBy('created_at', 'desc')
             ->paginate(15);
             
+        // Calculate bed cost for each order
+        foreach ($orders as $order) {
+            $order->bed_total = $order->bedSelections->sum('total_price') ?? 0;
+            $order->grand_total = $order->total_amount + $order->bed_total;
+        }
+            
         $this->calculateTotals();
 
         return view('livewire.report.rehab-payment-report', [
             'orders' => $orders,
             'packages' => $this->packages,
+            'bedClasses' => $this->bedClasses,
             'doctors' => $this->doctors,
         ]);
     }
