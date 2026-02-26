@@ -8,6 +8,7 @@ use App\Livewire\OrderLab\LabDashboard;
 use App\Livewire\Referral\ReferralQueue;
 use App\Livewire\Rehab\RehabTreatmentPage;
 use App\Livewire\Rehab\RehabTreatmentQueue;
+use App\Livewire\Rehab\RehabTreatmentTypeManager;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -101,6 +102,8 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
         ->name('cashier.queue');
     Route::get('/treatment-queue', RehabTreatmentQueue::class)->name('treatment.queue');
     Route::get('/treatment/{id}', RehabTreatmentPage::class)->name('treatment');
+
+        Route::get('/treatment-types', RehabTreatmentTypeManager::class)->name('treatment-types');
 });
 
 Route::middleware(['auth'])->group(function () {

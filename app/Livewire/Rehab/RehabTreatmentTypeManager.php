@@ -43,7 +43,8 @@ class RehabTreatmentTypeManager extends Component
     public $isEditing = false;
     
     // Field editor
-    public $editingField = null;
+    public $showFieldModal = false;
+    public $editingFieldIndex = null;
     public $fieldName = '';
     public $fieldLabel = '';
     public $fieldType = 'text';
@@ -67,6 +68,8 @@ class RehabTreatmentTypeManager extends Component
     public $alertType = 'success';
 
     protected $queryString = ['search'];
+
+    protected $listeners = ['closeFieldModal', 'closeOptionModal'];
 
     public function updatedSearch()
     {
@@ -117,7 +120,7 @@ class RehabTreatmentTypeManager extends Component
 
     public function resetFieldForm()
     {
-        $this->editingField = null;
+        $this->editingFieldIndex = null;
         $this->fieldName = '';
         $this->fieldLabel = '';
         $this->fieldType = 'text';
@@ -128,6 +131,7 @@ class RehabTreatmentTypeManager extends Component
         $this->fieldMax = '';
         $this->fieldStep = '';
         $this->fieldHelp = '';
+        $this->showFieldModal = false;
     }
 
     public function openFieldEditor($index = null)
@@ -135,7 +139,7 @@ class RehabTreatmentTypeManager extends Component
         if ($index !== null) {
             // Edit existing field
             $field = $this->fields[$index];
-            $this->editingField = $index;
+            $this->editingFieldIndex = $index;
             $this->fieldName = $field['name'];
             $this->fieldLabel = $field['label'];
             $this->fieldType = $field['type'];
@@ -149,8 +153,9 @@ class RehabTreatmentTypeManager extends Component
         } else {
             // New field
             $this->resetFieldForm();
-            $this->editingField = null;
+            $this->editingFieldIndex = null;
         }
+        $this->showFieldModal = true;
     }
 
     public function saveField()
@@ -189,14 +194,15 @@ class RehabTreatmentTypeManager extends Component
             $field['help'] = $this->fieldHelp;
         }
 
-        if ($this->editingField !== null) {
+        if ($this->editingFieldIndex !== null) {
             // Update existing field
-            $this->fields[$this->editingField] = $field;
+            $this->fields[$this->editingFieldIndex] = $field;
         } else {
             // Add new field
             $this->fields[] = $field;
         }
 
+        $this->showFieldModal = false;
         $this->resetFieldForm();
     }
 
@@ -280,10 +286,6 @@ class RehabTreatmentTypeManager extends Component
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'icon' => 'nullable|string',
-            'order' => 'integer',
-            'fields' => 'array',
         ]);
 
         try {
@@ -293,7 +295,7 @@ class RehabTreatmentTypeManager extends Component
                 'description' => $this->description,
                 'fields' => $this->fields,
                 'is_active' => $this->isActive,
-                'order' => $this->order,
+                'order' => $this->order ?: 0,
             ];
 
             if ($this->isEditing) {
