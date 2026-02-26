@@ -1,5 +1,4 @@
 <?php
-// app/Livewire/Doctor/RehabReview.php
 
 namespace App\Livewire\Doctor;
 
@@ -87,7 +86,7 @@ class RehabReview extends Component
             $this->showConfirmModal = false;
 
             $this->dispatch('notify', [
-                'message' => '✅ Questionnaire marked as reviewed!',
+                'message' => '✅ Questionnaire marked as reviewed! You can now proceed to order packages.',
                 'type' => 'success'
             ]);
 
@@ -109,7 +108,7 @@ class RehabReview extends Component
 
     public function proceedToOrder()
     {
-       return  $this->redirect(route('doctor.rehab.order', $this->rehabEncounter->id),navigate: true);
+       return $this->redirect(route('doctor.rehab.order', $this->rehabEncounter->id), navigate: true);
     }
 
     public function getAnswersGroupedByTemplateProperty()

@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
+use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
 use App\Livewire\Referral\ReferralQueue;
+use App\Livewire\Rehab\RehabTreatmentPage;
+use App\Livewire\Rehab\RehabTreatmentQueue;
+use App\Livewire\Rehab\RehabTreatmentTypeManager;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use App\Livewire\ServiceCategory;
@@ -49,16 +53,16 @@ use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
+use App\Livewire\Doctor\RehabQueue;
 use App\Livewire\Pharmacy\PharmacyQueueComponent;
 use App\Livewire\Referral\CreateReferral;
 use App\Livewire\Referral\PrintReferral;
 use App\Livewire\Referral\SubmitResultModal;
 use App\Livewire\VitalTypes\Index;
-
-use App\Livewire\Doctor\RehabQueue;
-use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Forms\RehabPackageForm;
 use App\Livewire\Forms\RehabPackageList;
+use App\Livewire\Rehab\BedManager\BedSelectionQueue;
+use App\Livewire\Rehab\BedQueue;
 use App\Livewire\Rehab\Cashier\RehabPaymentProcess;
 use App\Livewire\Rehab\Cashier\RehabPaymentQueue;
 use App\Livewire\Rehab\DoctorRehabOrder;
@@ -75,10 +79,9 @@ use App\Livewire\Report\RegistrationPaymentReport;
 use App\Livewire\Report\RehabPaymentReport;
 
 Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
-    Route::get('/rehab/queue', RehabQueue::class)->name('rehab.queue');
-    Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
     Route::get('/rehab/order/{rehabEncounter}', DoctorRehabOrder::class)->name('rehab.order');
-    
+    Route::get('/rehab-queue', RehabQueue::class)->name('rehab.queue');
+    Route::get('/rehab/review/{id}', RehabReview::class)->name('rehab.review');
 });
 
 Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () {
@@ -90,18 +93,25 @@ Route::middleware(['auth'])->prefix('rehab')->name('rehab.')->group(function () 
     Route::get('/templates/edit/{id}', TemplateForm::class)->name('templates.edit');
     Route::get('/templates/{id}/questions', TemplateQuestions::class)->name('templates.questions');
 
+    Route::get('/bed-manager/queue', BedSelectionQueue::class)->name('bed-manager.queue');
+
+    // Cashier routes
+    Route::get('/cashier/queue', RehabPaymentQueue::class)->name('cashier.queue');
+    
+    Route::get('/treatment-queue', RehabTreatmentQueue::class)->name('treatment.queue');
+    Route::get('/treatment/{id}', RehabTreatmentPage::class)->name('treatment');
+    Route::get('/treatment-types', RehabTreatmentTypeManager::class)->name('treatment-types');
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/rehab-packages', action: RehabPackageList::class)->name('rehab.packages.index');
+    Route::get('/rehab-packages', RehabPackageList::class)->name('rehab.packages.index');
     Route::get('/rehab-packages/create', RehabPackageForm::class)->name('rehab.packages.create');
     Route::get('/rehab-packages/{id}/edit', RehabPackageForm::class)->name('rehab.packages.edit');
 
     // Cashier routes
-    Route::get('/cashier/rehab/payments', action: RehabPaymentQueue::class)->name('cashier.rehab.payments');
+    Route::get('/cashier/rehab/payments', RehabPaymentQueue::class)->name('cashier.rehab.payments');
     Route::get('/cashier/rehab/payment/{rehabOrder}', RehabPaymentProcess::class)->name('cashier.rehab.payment');
 });
-
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -297,11 +307,11 @@ Route::middleware(['auth'])->group(function () {
     // Registration Payment Reports
     Route::get('/reports/registration-payments', RegistrationPaymentReport::class)
         ->name('reports.registration-payments');
-    
+
     // Lab Payment Reports
     Route::get('/reports/lab-payments', LabPaymentReport::class)
         ->name('reports.lab-payments');
-    
+
     // Imaging Payment Reports
     Route::get('/reports/imaging-payments', ImagingPaymentReport::class)
         ->name('reports.imaging-payments');

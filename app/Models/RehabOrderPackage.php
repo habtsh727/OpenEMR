@@ -27,4 +27,8 @@ class RehabOrderPackage extends Model
     {
         return $this->hasMany(RehabOrderItem::class);
     }
+    public function orderItems()
+    {
+        return $this->hasMany(RehabOrderItem::class, 'rehab_order_package_id');
+    }
 }

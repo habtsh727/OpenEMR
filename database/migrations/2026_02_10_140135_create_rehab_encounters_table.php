@@ -1,4 +1,5 @@
 <?php
+// database/migrations/[timestamp]_create_rehab_encounters_table.php
 
 use App\Models\Encounter;
 use App\Models\User;
@@ -30,8 +31,11 @@ return new class extends Migration
                 'questionnaire_in_progress',
                 'submitted_to_doctor',
                 'doctor_review',
+                'sent_to_bed_manager',
+                'bed_selected',
                 'sent_to_cashier',
                 'paid',
+                'sent_to_rehab',
                 'treatment_in_progress',
                 'completed',
                 'cancelled'
