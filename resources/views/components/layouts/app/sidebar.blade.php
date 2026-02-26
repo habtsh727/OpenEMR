@@ -283,6 +283,9 @@
                 <flux:sidebar.item icon="heart" :href="route('reports.rehab-payments')" wire:navigate>
                     Rehabilitation Payments
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('reports.bed-payments')" wire:navigate>
+                   Bed Payments Report
+                </flux:sidebar.item>
             </flux:sidebar.group>
 
         </flux:sidebar.nav>
