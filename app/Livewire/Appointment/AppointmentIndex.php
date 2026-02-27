@@ -81,6 +81,18 @@ class AppointmentIndex extends Component
         $this->dateTo = now()->endOfMonth()->format('Y-m-d');
     }
 
+    public function getStatsProperty()
+    {
+        return [
+            'total' => Appointment::count(),
+            'scheduled' => Appointment::where('status', 'scheduled')->count(),
+            'completed' => Appointment::where('status', 'completed')->count(),
+            'missed' => Appointment::where('status', 'missed')->count(),
+            'today' => Appointment::forToday()->count(),
+            'upcoming' => Appointment::upcoming()->count(),
+            'requests' => Appointment::where('status', 'requested')->count(),
+        ];
+    }
     public function render()
     {
         $query = Appointment::with(['patient', 'doctor', 'encounter'])
@@ -89,9 +101,9 @@ class AppointmentIndex extends Component
         if ($this->search) {
             $query->whereHas('patient', function ($q) {
                 $q->where('first_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('middle_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('card_number', 'like', '%' . $this->search . '%');
+                    ->orWhere('middle_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('card_number', 'like', '%' . $this->search . '%');
             });
         }
 
