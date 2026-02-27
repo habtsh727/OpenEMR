@@ -7,6 +7,7 @@ use App\Livewire\Appointment\AppointmentRequests;
 use App\Livewire\Appointment\CalendarView;
 use App\Livewire\Appointment\CreateAppointment;
 use App\Livewire\Appointment\TodayAppointments;
+use App\Livewire\Appointment\UpcomingAppointments;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;

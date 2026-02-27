@@ -3,13 +3,17 @@
 namespace App\Livewire\Appointment;
 
 use App\Models\Appointment;
-use App\Models\Encounter;
+use App\Models\User;
 use App\Services\AppointmentService;
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class TodayAppointments extends Component
 {
+    public $search = '';
+    public $doctorId = '';
+    public $status = '';
+    public $viewMode = 'timeline'; // timeline, list, grid
     public $selectedAppointment = null;
     public $showCheckInModal = false;
     public $showRescheduleModal = false;
@@ -29,6 +33,88 @@ class TodayAppointments extends Component
         $this->appointmentService = $appointmentService;
     }
 
+    public function mount()
+    {
+        $this->newDate = now()->format('Y-m-d');
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function getTodayAppointmentsProperty()
+    {
+        $query = Appointment::with(['patient', 'doctor'])
+            ->forToday()
+            ->orderBy('appointment_time');
+
+        if ($this->search) {
+            $query->whereHas('patient', function ($q) {
+                $q->where('first_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('middle_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('card_number', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        if ($this->doctorId) {
+            $query->where('doctor_id', $this->doctorId);
+        }
+
+        if ($this->status) {
+            $query->where('status', $this->status);
+        }
+
+        return $query->get();
+    }
+
+    public function getStatsProperty()
+    {
+        $appointments = $this->todayAppointments;
+
+        return [
+            'total' => $appointments->count(),
+            'scheduled' => $appointments->where('status', 'scheduled')->count(),
+            'completed' => $appointments->where('status', 'completed')->count(),
+            'missed' => $appointments->where('status', 'missed')->count(),
+            'cancelled' => $appointments->where('status', 'cancelled')->count(),
+            'rescheduled' => $appointments->where('status', 'rescheduled')->count(),
+            'checked_in' => $appointments->whereNotNull('checked_in_at')->count(),
+            'pending_checkin' => $appointments->where('status', 'scheduled')->whereNull('checked_in_at')->count(),
+        ];
+    }
+
+    public function getTimelineSlotsProperty()
+    {
+        $appointments = $this->todayAppointments;
+        $slots = [];
+        
+        $startTime = Carbon::parse('08:00');
+        $endTime = Carbon::parse('17:00');
+        
+        while ($startTime <= $endTime) {
+            $slotTime = $startTime->format('H:i');
+            $slotAppointments = $appointments->filter(function ($appointment) use ($slotTime) {
+                return $appointment->appointment_time->format('H:i') === $slotTime;
+            });
+            
+            $slots[] = [
+                'time' => $startTime->format('h:i A'),
+                'time_value' => $slotTime,
+                'appointments' => $slotAppointments,
+                'count' => $slotAppointments->count(),
+                'has_appointments' => $slotAppointments->isNotEmpty(),
+                'is_past' => $startTime->isPast(),
+                'is_current' => $startTime->format('H:i') === now()->format('H:i'),
+            ];
+            
+            $startTime->addMinutes(30);
+        }
+        
+        return $slots;
+    }
+
     public function checkIn($appointmentId)
     {
         $appointment = Appointment::findOrFail($appointmentId);
@@ -39,7 +125,7 @@ class TodayAppointments extends Component
         }
 
         try {
-            $encounter = $this->appointmentService->checkIn($appointment, Auth::id());
+            $encounter = $this->appointmentService->checkIn($appointment, auth()->id());
             
             $this->dispatch('notify', 'Patient checked in successfully! Encounter #' . $encounter->id, 'success');
             
@@ -97,7 +183,7 @@ class TodayAppointments extends Component
                     'doctor_id' => $this->newDoctorId,
                 ],
                 $this->rescheduleReason,
-                Auth::id()
+                auth()->id()
             );
 
             $this->reset(['showRescheduleModal', 'selectedAppointment', 'newDate', 'newTime', 'newDoctorId', 'rescheduleReason']);
@@ -117,7 +203,7 @@ class TodayAppointments extends Component
     public function cancel($reason)
     {
         try {
-            $this->appointmentService->cancel($this->selectedAppointment, $reason, Auth::id());
+            $this->appointmentService->cancel($this->selectedAppointment, $reason, auth()->id());
             
             $this->reset(['showCancelModal', 'selectedAppointment']);
             $this->dispatch('notify', 'Appointment cancelled successfully!', 'success');
@@ -132,7 +218,7 @@ class TodayAppointments extends Component
         $appointment = Appointment::findOrFail($appointmentId);
 
         try {
-            $this->appointmentService->markAsMissed($appointment, Auth::id());
+            $this->appointmentService->markAsMissed($appointment, auth()->id());
             $this->dispatch('notify', 'Appointment marked as missed', 'success');
 
         } catch (\Exception $e) {
@@ -142,13 +228,12 @@ class TodayAppointments extends Component
 
     public function render()
     {
-        $appointments = Appointment::with(['patient', 'doctor'])
-            ->forToday()
-            ->orderBy('appointment_time')
-            ->get();
-
         return view('livewire.appointment.today-appointments', [
-            'appointments' => $appointments,
+            'appointments' => $this->todayAppointments,
+            'stats' => $this->stats,
+            'timelineSlots' => $this->timelineSlots,
+            'doctors' => User::whereHas('roles', fn($q) => $q->where('name', 'doctor'))->get(),
+            'statuses' => ['scheduled', 'completed', 'missed', 'cancelled', 'rescheduled'],
         ]);
     }
 }
