@@ -267,89 +267,81 @@
         @endif
 
         <!-- Day View -->
-        @if($view === 'day')
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <!-- Day Header -->
-                <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h2 class="text-xl font-bold text-white">{{ $currentDate->format('l, F j, Y') }}</h2>
-                            <p class="text-emerald-100 mt-1">Schedule for the day</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button wire:click="selectDate('{{ $currentDate->copy()->subDay()->format('Y-m-d') }}')"
-                                    class="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
-                                ← Previous
-                            </button>
-                            <button wire:click="selectDate('{{ $currentDate->copy()->addDay()->format('Y-m-d') }}')"
-                                    class="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
-                                Next →
-                            </button>
-                        </div>
-                    </div>
+@if($view === 'day')
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <!-- Day Header -->
+        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold text-white">{{ $currentDate->format('l, F j, Y') }}</h2>
+                    <p class="text-emerald-100 mt-1">Schedule for the day</p>
                 </div>
-
-                <!-- Timeline -->
-                <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @php
-                        $dayAppointments = Appointment::with(['patient', 'doctor'])
-                            ->whereDate('appointment_date', $currentDate->toDateString())
-                            ->when($selectedDoctor, fn($q) => $q->where('doctor_id', $selectedDoctor))
-                            ->orderBy('appointment_time')
-                            ->get();
-                    @endphp
-
-                    @forelse($dayAppointments as $appointment)
-                        <div wire:click="selectAppointment({{ $appointment->id }})"
-                             class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
-                            <div class="flex items-center gap-4">
-                                <!-- Time -->
-                                <div class="w-24 text-center">
-                                    <div class="text-lg font-semibold text-gray-900 dark:text-white">
-                                        {{ $appointment->appointment_time->format('h:i A') }}
-                                    </div>
-                                </div>
-
-                                <!-- Patient Avatar -->
-                                <div class="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
-                                    {{ substr($appointment->patient->first_name ?? 'N', 0, 1) }}{{ substr($appointment->patient->last_name ?? 'A', 0, 1) }}
-                                </div>
-
-                                <!-- Details -->
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3">
-                                        <span class="font-semibold text-gray-900 dark:text-white">
-                                            {{ $appointment->patient->first_name }} {{ $appointment->patient->last_name }}
-                                        </span>
-                                        <span class="px-2 py-1 text-xs rounded-full {{ $this->getStatusBadgeColor($appointment->status) }}">
-                                            {{ ucfirst($appointment->status) }}
-                                        </span>
-                                    </div>
-                                    <div class="flex items-center gap-3 mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                        <span>Dr. {{ $appointment->doctor->name }}</span>
-                                        <span>•</span>
-                                        <span class="capitalize">{{ str_replace('-', ' ', $appointment->visit_type) }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- View Button -->
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="p-12 text-center">
-                            <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No appointments scheduled</h3>
-                            <p class="text-gray-500 dark:text-gray-400">There are no appointments for this day.</p>
-                        </div>
-                    @endforelse
+                <div class="flex gap-2">
+                    <button wire:click="selectDate('{{ $currentDate->copy()->subDay()->format('Y-m-d') }}')"
+                            class="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
+                        ← Previous
+                    </button>
+                    <button wire:click="selectDate('{{ $currentDate->copy()->addDay()->format('Y-m-d') }}')"
+                            class="px-3 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors">
+                        Next →
+                    </button>
                 </div>
             </div>
-        @endif
+        </div>
+
+        <!-- Timeline -->
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            @forelse($this->dayAppointments as $appointment)
+                <div wire:click="selectAppointment({{ $appointment->id }})"
+                     class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+                    <div class="flex items-center gap-4">
+                        <!-- Time -->
+                        <div class="w-24 text-center">
+                            <div class="text-lg font-semibold text-gray-900 dark:text-white">
+                                {{ $appointment->appointment_time->format('h:i A') }}
+                            </div>
+                        </div>
+
+                        <!-- Patient Avatar -->
+                        <div class="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
+                            {{ substr($appointment->patient->first_name ?? 'N', 0, 1) }}{{ substr($appointment->patient->last_name ?? 'A', 0, 1) }}
+                        </div>
+
+                        <!-- Details -->
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3">
+                                <span class="font-semibold text-gray-900 dark:text-white">
+                                    {{ $appointment->patient->first_name }} {{ $appointment->patient->last_name }}
+                                </span>
+                                <span class="px-2 py-1 text-xs rounded-full {{ $this->getStatusBadgeColor($appointment->status) }}">
+                                    {{ ucfirst($appointment->status) }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-3 mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                <span>Dr. {{ $appointment->doctor->name }}</span>
+                                <span>•</span>
+                                <span class="capitalize">{{ str_replace('-', ' ', $appointment->visit_type) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- View Button -->
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                </div>
+            @empty
+                <div class="p-12 text-center">
+                    <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No appointments scheduled</h3>
+                    <p class="text-gray-500 dark:text-gray-400">There are no appointments for this day.</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+@endif
 
         <!-- Day Details Modal -->
         @if($showDayDetails && $selectedDate)
