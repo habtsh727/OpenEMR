@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
+use App\Livewire\Appointment\AppointmentIndex;
+use App\Livewire\Appointment\AppointmentRequests;
+use App\Livewire\Appointment\CalendarView;
+use App\Livewire\Appointment\CreateAppointment;
+use App\Livewire\Appointment\TodayAppointments;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
@@ -325,6 +330,14 @@ Route::middleware(['auth'])->group(function () {
         ->name('reports.bed-payments');
     Route::get('/patients/{patientId}/finance', App\Livewire\Patient\PatientFinanceReport::class)
         ->name('patients.finance');
+});
+Route::middleware(['auth'])->prefix('appointments')->name('appointments.')->group(function () {
+    Route::get('/', action: AppointmentIndex::class)->name('index');
+    Route::get('/today', TodayAppointments::class)->name('today');
+    Route::get('/upcoming', UpcomingAppointments::class)->name('upcoming');
+    Route::get('/calendar', CalendarView::class)->name('calendar');
+    Route::get('/requests', AppointmentRequests::class)->name('requests');
+    Route::get('/create', CreateAppointment::class)->name('create');
 });
 
 require __DIR__ . '/auth.php';
