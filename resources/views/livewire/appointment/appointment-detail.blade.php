@@ -99,9 +99,9 @@
                 </div>
                 <div class="p-4 text-center">
                     <p class="text-sm text-gray-500 dark:text-gray-400">Time Until</p>
-                    <p class="text-lg font-semibold {{ $timeUntil === 'Past' ? 'text-red-600' : 'text-green-600' }}">
-                        {{ $timeUntil }}
-                    </p>
+                   <p class="text-lg font-semibold {{ $timeUntil === 'Past' ? 'text-red-600' : 'text-green-600' }}">
+    {{ $timeUntil }}
+</p>
                 </div>
                 <div class="p-4 text-center">
                     <p class="text-sm text-gray-500 dark:text-gray-400">Created By</p>
@@ -244,7 +244,7 @@
                                                 </span>
                                             </p>
                                         </div>
-                                        <a href="{{ route('encounters.show', $appointment->encounter->id) }}" 
+                                        <a href="" 
                                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
                                             View Encounter
                                         </a>
@@ -287,7 +287,7 @@
                                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ ucfirst($appointment->patient->gender) }}</span>
                                 </div>
                                 <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <a href="{{ route('patients.show', $appointment->patient->id) }}" 
+                                    <a href="" 
                                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm font-medium flex items-center gap-1">
                                         View Full Profile
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
