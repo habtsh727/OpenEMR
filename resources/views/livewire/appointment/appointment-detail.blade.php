@@ -125,7 +125,7 @@
                         Overview
                     </div>
                 </button>
-                <button wire:click="setActiveTab('history')"
+                {{-- <button wire:click="setActiveTab('history')"
                         class="py-4 px-1 border-b-2 font-medium text-sm transition-colors
                             {{ $activeTab === 'history' 
                                 ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
@@ -136,8 +136,8 @@
                         </svg>
                         History
                     </div>
-                </button>
-                <button wire:click="setActiveTab('documents')"
+                </button> --}}
+                {{-- <button wire:click="setActiveTab('documents')"
                         class="py-4 px-1 border-b-2 font-medium text-sm transition-colors
                             {{ $activeTab === 'documents' 
                                 ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' 
@@ -148,7 +148,7 @@
                         </svg>
                         Documents
                     </div>
-                </button>
+                </button> --}}
             </nav>
         </div>
 
@@ -334,147 +334,67 @@
                     </div>
                 </div>
             @endif
-
-            <!-- History Tab -->
-            @if($activeTab === 'history')
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Appointment History</h3>
-                    </div>
-                    <div class="p-6">
-                        @if($histories->isEmpty())
-                            <div class="text-center py-8">
-                                <svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p class="text-gray-500 dark:text-gray-400">No history records found</p>
-                            </div>
-                        @else
-                            <div class="flow-root">
-                                <ul class="-mb-8">
-                                    @foreach($histories as $index => $history)
-                                        <li>
-                                            <div class="relative pb-8">
-                                                @if(!$loop->last)
-                                                    <span class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden="true"></span>
-                                                @endif
-                                                <div class="relative flex items-start space-x-3">
-                                                    <div class="relative">
-                                                        <div class="h-10 w-10 rounded-full bg-{{ $history->action === 'created' ? 'green' : ($history->action === 'cancelled' ? 'red' : 'blue') }}-100 dark:bg-{{ $history->action === 'created' ? 'green' : ($history->action === 'cancelled' ? 'red' : 'blue') }}-900/30 flex items-center justify-center ring-8 ring-white dark:ring-gray-800">
-                                                            @if($history->action === 'created')
-                                                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                                </svg>
-                                                            @elseif($history->action === 'cancelled')
-                                                                <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                                </svg>
-                                                            @elseif($history->action === 'rescheduled')
-                                                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                                </svg>
-                                                            @elseif($history->action === 'checked_in')
-                                                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                            @else
-                                                                <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                    <div class="min-w-0 flex-1">
-                                                        <div>
-                                                            <div class="text-sm">
-                                                                <span class="font-medium text-gray-900 dark:text-white">{{ $history->user->name }}</span>
-                                                                <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">{{ ucfirst($history->action) }}</span>
-                                                            </div>
-                                                            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                                                                {{ $history->created_at->format('M d, Y · h:i A') }}
-                                                            </p>
-                                                        </div>
-                                                        @if($history->reason)
-                                                            <div class="mt-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                                                                <span class="font-medium">Reason:</span> {{ $history->reason }}
-                                                            </div>
-                                                        @endif
-                                                        @if($history->old_values || $history->new_values)
-                                                            <div class="mt-2 text-xs">
-                                                                @if($history->old_values)
-                                                                    <span class="text-gray-500 dark:text-gray-400">Old: {{ json_encode($history->old_values) }}</span>
-                                                                @endif
-                                                                @if($history->new_values)
-                                                                    <span class="text-gray-500 dark:text-gray-400 ml-2">New: {{ json_encode($history->new_values) }}</span>
-                                                                @endif
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            <!-- Documents Tab -->
-            @if($activeTab === 'documents')
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Documents & Attachments</h3>
-                    </div>
-                    <div class="p-12 text-center">
-                        <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Documents</h3>
-                        <p class="text-gray-500 dark:text-gray-400">No documents attached to this appointment.</p>
-                    </div>
-                </div>
-            @endif
         </div>
 
-        <!-- Check In Modal -->
-        @if($showCheckInModal)
-            <div class="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
-                    <div class="p-6">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
-                                <svg class="w-6 h-6 text-green-600 dark:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Check In Patient</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $appointment->patient->first_name }} {{ $appointment->patient->last_name }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <p class="text-gray-600 dark:text-gray-400 mb-6">
-                            This will create a new encounter and mark the appointment as completed. Continue?
+       <!-- Check In Modal -->
+@if($showCheckInModal)
+    <div class="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Check In Patient</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ $appointment->patient->first_name }} {{ $appointment->patient->last_name }}
                         </p>
-
-                        <div class="flex justify-end gap-3">
-                            <button wire:click="$set('showCheckInModal', false)"
-                                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                Cancel
-                            </button>
-                            <button wire:click="confirmCheckIn"
-                                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
-                                Confirm Check In
-                            </button>
-                        </div>
                     </div>
                 </div>
+
+                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Appointment Time</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">
+                            {{ $appointment->appointment_time->format('h:i A') }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Doctor</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">
+                            Dr. {{ $appointment->doctor->name }}
+                        </span>
+                    </div>
+                </div>
+
+                <p class="text-gray-600 dark:text-gray-400 mb-6">
+                    Mark this appointment as completed? This will update the status and record check-in time.
+                </p>
+
+                <div class="flex justify-end gap-3">
+                    <button wire:click="$set('showCheckInModal', false)"
+                            class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        Cancel
+                    </button>
+                    <button wire:click="confirmCheckIn" 
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 min-w-[120px] justify-center">
+                        <span wire:loading.remove wire:target="confirmCheckIn">Confirm Check In</span>
+                        <span wire:loading wire:target="confirmCheckIn">
+                            <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
             </div>
-        @endif
+        </div>
+    </div>
+@endif
 
         <!-- Reschedule Modal -->
         @if($showRescheduleModal)

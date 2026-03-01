@@ -7,11 +7,48 @@ use App\Models\AppointmentHistory;
 use App\Models\Encounter;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AppointmentService
 {
     /**
-     * Generate available time slots for a doctor on a given date
+     * Check-in patient and create encounter
+     */
+    public function checkIn(Appointment $appointment, int $userId): Encounter
+    {
+        return DB::transaction(function () use ($appointment, $userId) {
+            // Verify appointment can be checked in
+            if (!$appointment->isCheckInAvailable()) {
+                throw new \Exception('This appointment cannot be checked in at this time.');
+            }
+
+            // Create encounter
+            $encounter = Encounter::create([
+                'patient_id' => $appointment->patient_id,
+                'doctor_id' => $appointment->doctor_id,
+                'appointment_id' => $appointment->id,
+                'status' => 'pending',
+                'priority' => $appointment->visit_type === 'emergency' ? 'high' : 'normal',
+                'visit_type' => $appointment->visit_type,
+                'created_at' => now(),
+            ]);
+
+            // Update appointment
+            $appointment->markAsCheckedIn($userId, $encounter->id);
+
+            // Log the action
+            Log::info('Patient checked in', [
+                'appointment_id' => $appointment->id,
+                'encounter_id' => $encounter->id,
+                'user_id' => $userId,
+            ]);
+
+            return $encounter;
+        });
+    }
+
+    /**
+     * Generate available time slots for a doctor
      */
     public function generateTimeSlots(int $doctorId, string $date, int $durationMinutes = 30): array
     {
@@ -41,38 +78,6 @@ class AppointmentService
         }
 
         return $slots;
-    }
-
-    /**
-     * Check-in patient and create encounter
-     */
-    public function checkIn(Appointment $appointment, int $userId): Encounter
-    {
-        return DB::transaction(function () use ($appointment, $userId) {
-            // Create encounter
-            $encounter = Encounter::create([
-                'patient_id' => $appointment->patient_id,
-                'doctor_id' => $appointment->doctor_id,
-                'appointment_id' => $appointment->id,
-                'status' => 'pending',
-                'priority' => $appointment->visit_type === 'emergency' ? 'high' : 'normal',
-                'visit_type' => $appointment->visit_type,
-            ]);
-
-            // Update appointment
-            $appointment->update([
-                'status' => 'completed',
-                'encounter_id' => $encounter->id,
-                'checked_in_at' => now(),
-            ]);
-
-            // Log history
-            $this->logHistory($appointment, $userId, 'checked_in', [
-                'encounter_id' => $encounter->id,
-            ]);
-
-            return $encounter;
-        });
     }
 
     /**
@@ -132,17 +137,18 @@ class AppointmentService
     }
 
     /**
-     * Approve requested appointment
+     * Log appointment history
      */
-    public function approveRequest(Appointment $appointment, int $userId): Appointment
+    public function logHistory(Appointment $appointment, int $userId, string $action, array $data = []): void
     {
-        return DB::transaction(function () use ($appointment, $userId) {
-            $appointment->update(['status' => 'scheduled']);
-
-            $this->logHistory($appointment, $userId, 'approved');
-
-            return $appointment;
-        });
+        AppointmentHistory::create([
+            'appointment_id' => $appointment->id,
+            'user_id' => $userId,
+            'action' => $action,
+            'old_values' => $data['old'] ?? null,
+            'new_values' => $data['new'] ?? null,
+            'reason' => $data['reason'] ?? null,
+        ]);
     }
 
     /**
@@ -157,10 +163,8 @@ class AppointmentService
             ->whereNull('reminder_sent_at')
             ->chunk(100, function ($appointments) {
                 foreach ($appointments as $appointment) {
-                    // TODO: Implement SMS/Email sending logic
-                    // For now, just mark reminder as sent
+                    // TODO: Implement SMS/Email sending
                     $appointment->update(['reminder_sent_at' => now()]);
-                    
                     $this->logHistory($appointment, 1, 'reminder_sent');
                 }
             });
@@ -184,20 +188,5 @@ class AppointmentService
                     $this->logHistory($appointment, 1, 'auto_missed');
                 }
             });
-    }
-
-    /**
-     * Log appointment history
-     */
-    protected function logHistory(Appointment $appointment, int $userId, string $action, array $data = []): void
-    {
-        AppointmentHistory::create([
-            'appointment_id' => $appointment->id,
-            'user_id' => $userId,
-            'action' => $action,
-            'old_values' => $data['old'] ?? null,
-            'new_values' => $data['new'] ?? null,
-            'reason' => $data['reason'] ?? null,
-        ]);
     }
 }

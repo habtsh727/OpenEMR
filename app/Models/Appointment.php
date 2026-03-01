@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
 
 class Appointment extends Model
 {
@@ -84,15 +85,33 @@ class Appointment extends Model
         };
     }
 
-    public function getPaymentStatusColorAttribute(): string
+    // Check-In Methods
+    public function isCheckInAvailable(): bool
     {
-        return match($this->payment_status) {
-            'paid' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-            'partially_paid' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-            'unpaid' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-            'waived' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-            default => 'bg-gray-100 text-gray-800'
-        };
+        return $this->status === 'scheduled' && 
+               $this->appointment_date->isToday() && 
+               !$this->checked_in_at;
+    }
+
+    public function canBeCheckedIn(): bool
+    {
+        return $this->isCheckInAvailable();
+    }
+
+    public function markAsCheckedIn(int $userId, ?int $encounterId = null): void
+    {
+        $this->update([
+            'status' => 'completed',
+            'checked_in_at' => now(),
+            'encounter_id' => $encounterId,
+        ]);
+
+        // Log the action
+        $this->histories()->create([
+            'user_id' => $userId,
+            'action' => 'checked_in',
+            'new_values' => ['encounter_id' => $encounterId],
+        ]);
     }
 
     // Scopes
@@ -107,39 +126,15 @@ class Appointment extends Model
             ->whereIn('status', ['scheduled', 'rescheduled']);
     }
 
-    public function scopeByDoctor($query, $doctorId)
+    public function scopePendingCheckIn($query)
     {
-        return $query->where('doctor_id', $doctorId);
+        return $query->whereDate('appointment_date', now()->toDateString())
+            ->where('status', 'scheduled')
+            ->whereNull('checked_in_at');
     }
 
-    public function scopeByStatus($query, $status)
+    public function scopeCompleted($query)
     {
-        return $query->where('status', $status);
-    }
-
-    public function scopeRequested($query)
-    {
-        return $query->where('status', 'requested');
-    }
-
-    // Methods
-    public function canBeModified(): bool
-    {
-        return !in_array($this->status, ['completed', 'missed']);
-    }
-
-    public function isCheckInAvailable(): bool
-    {
-        return $this->status === 'scheduled' && 
-               $this->appointment_date->isToday() && 
-               !$this->checked_in_at;
-    }
-
-    public function markAsCheckedIn(): void
-    {
-        $this->update([
-            'status' => 'completed',
-            'checked_in_at' => now(),
-        ]);
+        return $query->where('status', 'completed');
     }
 }

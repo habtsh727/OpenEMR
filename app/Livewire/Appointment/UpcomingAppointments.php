@@ -20,6 +20,19 @@ class UpcomingAppointments extends Component
     public $highlightNext48 = true;
     public $perPage = 20;
 
+    // Modal properties
+    public $showRescheduleModal = false;
+    public $showCancelModal = false;
+    public $selectedAppointment = null;
+
+    // Reschedule form
+    public $newDate;
+    public $newTime;
+    public $newDoctorId;
+    public $rescheduleReason;
+    public $cancellationReason;
+    public $availableSlots = [];
+
     protected $appointmentService;
 
     public function boot(AppointmentService $appointmentService)
@@ -50,7 +63,7 @@ class UpcomingAppointments extends Component
     public function getUpcomingAppointmentsProperty()
     {
         $query = Appointment::with(['patient', 'doctor'])
-            ->upcoming() // Using scope from Appointment model
+            ->upcoming()
             ->whereDate('appointment_date', '>=', now()->toDateString())
             ->orderBy('appointment_date')
             ->orderBy('appointment_time');
@@ -58,9 +71,9 @@ class UpcomingAppointments extends Component
         if ($this->search) {
             $query->whereHas('patient', function ($q) {
                 $q->where('first_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('middle_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('card_number', 'like', '%' . $this->search . '%');
+                    ->orWhere('middle_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('card_number', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -150,19 +163,130 @@ class UpcomingAppointments extends Component
         ];
     }
 
-    public function reschedule($appointmentId)
-    {
-        $this->dispatch('openRescheduleModal', appointmentId: $appointmentId);
-    }
-
-    public function cancel($appointmentId)
-    {
-        $this->dispatch('openCancelModal', appointmentId: $appointmentId);
-    }
-
+    // SIMPLE CHECK-IN - No Modal, No Encounter
     public function checkIn($appointmentId)
     {
-        $this->dispatch('openCheckInModal', appointmentId: $appointmentId);
+        $appointment = Appointment::findOrFail($appointmentId);
+
+        if (!$appointment->isCheckInAvailable()) {
+            $this->dispatch('notify', 'This appointment cannot be checked in.', 'error');
+            return;
+        }
+
+        try {
+            // Simple update - just change status to completed
+            $appointment->update([
+                'status' => 'completed',
+                'checked_in_at' => now(),
+            ]);
+
+            // Optional: Log the action
+            activity()
+                ->performedOn($appointment)
+                ->causedBy(auth()->user())
+                ->log('Appointment checked in');
+
+            // Refresh the page data
+            $this->resetPage();
+
+            $this->dispatch('notify', 'Patient checked in successfully!', 'success');
+
+        } catch (\Exception $e) {
+            $this->dispatch('notify', 'Check-in failed: ' . $e->getMessage(), 'error');
+        }
+    }
+
+    // Reschedule Methods
+    public function openRescheduleModal($appointmentId)
+    {
+        $this->selectedAppointment = Appointment::findOrFail($appointmentId);
+        $this->newDate = $this->selectedAppointment->appointment_date->format('Y-m-d');
+        $this->newTime = $this->selectedAppointment->appointment_time->format('H:i');
+        $this->newDoctorId = $this->selectedAppointment->doctor_id;
+        $this->showRescheduleModal = true;
+        $this->loadAvailableSlots();
+    }
+
+    public function updatedNewDate()
+    {
+        $this->loadAvailableSlots();
+    }
+
+    public function updatedNewDoctorId()
+    {
+        $this->loadAvailableSlots();
+    }
+
+    protected function loadAvailableSlots()
+    {
+        if ($this->newDoctorId && $this->newDate) {
+            $this->availableSlots = $this->appointmentService->generateTimeSlots(
+                $this->newDoctorId,
+                $this->newDate
+            );
+        }
+    }
+
+    public function selectSlot($slotTime)
+    {
+        $this->newTime = $slotTime;
+    }
+
+    public function reschedule()
+    {
+        $this->validate([
+            'newDate' => 'required|date|after_or_equal:today',
+            'newTime' => 'required',
+            'newDoctorId' => 'required|exists:users,id',
+            'rescheduleReason' => 'required|min:5',
+        ]);
+
+        try {
+            $this->appointmentService->reschedule(
+                $this->selectedAppointment,
+                [
+                    'appointment_date' => $this->newDate,
+                    'appointment_time' => $this->newTime,
+                    'doctor_id' => $this->newDoctorId,
+                ],
+                $this->rescheduleReason,
+                auth()->id()
+            );
+
+            $this->reset(['showRescheduleModal', 'selectedAppointment', 'newDate', 'newTime', 'newDoctorId', 'rescheduleReason', 'availableSlots']);
+            $this->resetPage();
+            $this->dispatch('notify', 'Appointment rescheduled successfully!', 'success');
+        } catch (\Exception $e) {
+            $this->dispatch('notify', 'Reschedule failed: ' . $e->getMessage(), 'error');
+        }
+    }
+
+    // Cancel Methods
+    public function openCancelModal($appointmentId)
+    {
+        $this->selectedAppointment = Appointment::findOrFail($appointmentId);
+        $this->showCancelModal = true;
+    }
+
+    public function cancel()
+    {
+        $this->validate([
+            'cancellationReason' => 'required|min:5',
+        ]);
+
+        try {
+            $this->appointmentService->cancel(
+                $this->selectedAppointment,
+                $this->cancellationReason,
+                auth()->id()
+            );
+
+            $this->reset(['showCancelModal', 'selectedAppointment', 'cancellationReason']);
+            $this->resetPage();
+            $this->dispatch('notify', 'Appointment cancelled successfully!', 'success');
+        } catch (\Exception $e) {
+            $this->dispatch('notify', 'Cancellation failed: ' . $e->getMessage(), 'error');
+        }
     }
 
     public function render()
@@ -179,7 +303,7 @@ class UpcomingAppointments extends Component
             ],
             'stats' => $this->stats,
             'groupedAppointments' => $this->groupedAppointments,
-            'appointments' => $this->upcomingAppointments, // For non-grouped view
+            'appointments' => $this->upcomingAppointments,
         ]);
     }
 }

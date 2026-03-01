@@ -309,7 +309,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
-                                        @if($appointment->isCheckInAvailable())
+                                        {{-- @if($appointment->isCheckInAvailable())
                                             <button wire:click="checkIn({{ $appointment->id }})" 
                                                     class="inline-flex items-center p-2 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                                                     title="Check In">
@@ -317,25 +317,10 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                                 </svg>
                                             </button>
-                                        @endif
+                                        @endif --}}
                                         
-                                        <button wire:click="$dispatch('openReschedule', { id: {{ $appointment->id }} })"
-                                                class="inline-flex items-center p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                title="Reschedule">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                            </svg>
-                                        </button>
 
-                                        <button wire:click="openCancelModal({{ $appointment->id }})"
-                                                class="inline-flex items-center p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                title="Cancel">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-
-                                        <a href="" 
+                                        <a href="{{ route('appointments.details', $appointment->id) }}" 
                                            class="inline-flex items-center p-2 text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                            title="View Details">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

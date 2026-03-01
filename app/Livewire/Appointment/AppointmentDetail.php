@@ -14,8 +14,9 @@ class AppointmentDetail extends Component
     public $activeTab = 'overview';
     public $showCancelModal = false;
     public $showRescheduleModal = false;
-    public $showCheckInModal = false;
+    public $showCheckInModal = false; // ADD THIS - was commented out
     public $cancellationReason = '';
+    public $confirmingCheckIn = false; // ADD THIS for loading state
 
     // Reschedule form
     public $newDate;
@@ -31,55 +32,55 @@ class AppointmentDetail extends Component
         $this->appointmentService = $appointmentService;
     }
 
-public $timeUntil;
+    public $timeUntil;
 
-public function mount($id)
-{
-    $this->appointment = Appointment::with([
-        'patient',
-        'doctor',
-        'creator',
-        'encounter',
-        'histories.user'
-    ])->findOrFail($id);
+    public function mount($id)
+    {
+        $this->appointment = Appointment::with([
+            'patient',
+            'doctor',
+            'creator',
+            'encounter',
+            'histories.user'
+        ])->findOrFail($id);
 
-    $this->newDate = $this->appointment->appointment_date->format('Y-m-d');
-    $this->newTime = $this->appointment->appointment_time->format('H:i');
-    $this->newDoctorId = $this->appointment->doctor_id;
-    
-    $this->timeUntil = $this->getTimeUntil();
-}
-
-public function getTimeUntil()
-{
-    $appointmentDateTime = Carbon::parse(
-        $this->appointment->appointment_date->format('Y-m-d') . ' ' . 
-        $this->appointment->appointment_time->format('H:i:s')
-    );
-
-    if ($appointmentDateTime->isPast()) {
-        return 'Past';
+        $this->newDate = $this->appointment->appointment_date->format('Y-m-d');
+        $this->newTime = $this->appointment->appointment_time->format('H:i');
+        $this->newDoctorId = $this->appointment->doctor_id;
+        
+        $this->timeUntil = $this->getTimeUntil();
     }
 
-    $diff = now()->diff($appointmentDateTime);
+    public function getTimeUntil()
+    {
+        $appointmentDateTime = Carbon::parse(
+            $this->appointment->appointment_date->format('Y-m-d') . ' ' . 
+            $this->appointment->appointment_time->format('H:i:s')
+        );
 
-    if ($diff->days > 0) {
-        return $diff->days . ' day' . ($diff->days > 1 ? 's' : '') . ' from now';
-    } elseif ($diff->h > 0) {
-        return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' from now';
-    } elseif ($diff->i > 0) {
-        return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' from now';
+        if ($appointmentDateTime->isPast()) {
+            return 'Past';
+        }
+
+        $diff = now()->diff($appointmentDateTime);
+
+        if ($diff->days > 0) {
+            return $diff->days . ' day' . ($diff->days > 1 ? 's' : '') . ' from now';
+        } elseif ($diff->h > 0) {
+            return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' from now';
+        } elseif ($diff->i > 0) {
+            return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' from now';
+        }
+
+        return 'Soon';
     }
-
-    return 'Soon';
-}
 
     public function setActiveTab($tab)
     {
         $this->activeTab = $tab;
     }
 
-    // Check In Methods
+    // SIMPLE CHECK-IN METHODS - FIXED like TodayAppointments
     public function openCheckInModal()
     {
         if (!$this->appointment->isCheckInAvailable()) {
@@ -91,22 +92,31 @@ public function getTimeUntil()
 
     public function confirmCheckIn()
     {
+        $this->confirmingCheckIn = true;
+
         try {
-            $encounter = $this->appointmentService->checkIn(
-                $this->appointment,
-                auth()->id()
-            );
+            // SIMPLE UPDATE - just change status to completed, no encounter
+            $this->appointment->update([
+                'status' => 'completed',
+                'checked_in_at' => now(),
+            ]);
+
+            // Log to history (optional)
+            $this->appointment->histories()->create([
+                'user_id' => auth()->id(),
+                'action' => 'checked_in',
+                'new_values' => ['status' => 'completed'],
+            ]);
 
             $this->appointment->refresh();
             $this->showCheckInModal = false;
 
-            $this->dispatch(
-                'notify',
-                'Patient checked in successfully! Encounter #' . $encounter->id,
-                'success'
-            );
+            $this->dispatch('notify', 'Patient checked in successfully!', 'success');
+            
         } catch (\Exception $e) {
             $this->dispatch('notify', 'Check-in failed: ' . $e->getMessage(), 'error');
+        } finally {
+            $this->confirmingCheckIn = false;
         }
     }
 

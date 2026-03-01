@@ -200,7 +200,7 @@
         @endif
 
         @if(auth()->user()->hasRole('doctor'))
-            <flux:sidebar.item icon="user-circle" :href="route('appointments.my')" wire:navigate>
+            {{-- <flux:sidebar.item icon="user-circle" :href="" wire:navigate>
                 My
                 @php
                     $myCount = App\Models\Appointment::where('doctor_id', auth()->id())
@@ -210,7 +210,7 @@
                 @if($myCount > 0)
                     <flux:badge size="sm" color="emerald" class="ml-auto">{{ $myCount }}</flux:badge>
                 @endif
-            </flux:sidebar.item>
+            </flux:sidebar.item> --}}
         @endif
 
         {{-- @if(auth()->user()->hasAnyRole(['admin', 'super-admin']))

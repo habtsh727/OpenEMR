@@ -10,6 +10,8 @@ use App\Rules\AvailableTimeSlot;
 use App\Services\AppointmentService;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class CreateAppointment extends Component
@@ -29,12 +31,16 @@ class CreateAppointment extends Component
     public $related_order_id;
     public $is_request = false;
 
-    // Patient search
+    // Patient search - OPTIMIZED
     public $patientSearch = '';
     public $searchResults = [];
     public $showPatientSearch = false;
     public $selectedPatient = null;
     public $quickPatientMode = false;
+    
+    // Search performance tracking
+    public $searchTime = 0;
+    public $totalResults = 0;
     
     // Quick patient creation
     public $first_name = '';
@@ -52,6 +58,10 @@ class CreateAppointment extends Component
     public $region_woreda = '';
     public $date_of_birth = '';
 
+    // Cached data
+    public $recentPatients = [];
+    public $popularPatients = [];
+
     // Time slots
     public $availableSlots = [];
     public $selectedSlot = null;
@@ -66,6 +76,9 @@ class CreateAppointment extends Component
     public $alertType = 'success';
 
     protected $appointmentService;
+    
+    // Debounce time in milliseconds
+    protected $debounceTime = 300;
 
     public function boot(AppointmentService $appointmentService)
     {
@@ -75,18 +88,19 @@ class CreateAppointment extends Component
     public function mount()
     {
         $this->appointment_date = now()->format('Y-m-d');
+        $this->loadRecentPatients();
+        $this->loadPopularPatients();
     }
 
-    // Patient Search Methods
-    public function updatedPatientSearch()
+    /**
+     * Load recent patients from cache or database
+     */
+    protected function loadRecentPatients()
     {
-        if (strlen($this->patientSearch) > 2) {
-            $this->searchResults = Patient::where('first_name', 'like', '%' . $this->patientSearch . '%')
-                ->orWhere('middle_name', 'like', '%' . $this->patientSearch . '%')
-                ->orWhere('last_name', 'like', '%' . $this->patientSearch . '%')
-                ->orWhere('card_number', 'like', '%' . $this->patientSearch . '%')
-                ->orWhere('phone_number1', 'like', '%' . $this->patientSearch . '%')
-                ->limit(10)
+        $this->recentPatients = Cache::remember('recent_patients', 3600, function () {
+            return Patient::select('id', 'first_name', 'middle_name', 'last_name', 'card_number', 'phone_number1', 'gender', 'date_of_birth')
+                ->orderBy('updated_at', 'desc')
+                ->limit(5)
                 ->get()
                 ->map(function ($patient) {
                     return [
@@ -98,11 +112,240 @@ class CreateAppointment extends Component
                         'age' => $patient->date_of_birth ? Carbon::parse($patient->date_of_birth)->age : 'N/A',
                     ];
                 });
-            $this->showPatientSearch = true;
-        } else {
+        });
+    }
+
+    /**
+     * Load most frequently booked patients
+     */
+    protected function loadPopularPatients()
+    {
+        $this->popularPatients = Cache::remember('popular_patients', 3600, function () {
+            return Patient::select('patients.id', 'patients.first_name', 'patients.middle_name', 'patients.last_name', 
+                                   'patients.card_number', 'patients.phone_number1', 'patients.gender', 'patients.date_of_birth')
+                ->join('appointments', 'patients.id', '=', 'appointments.patient_id')
+                ->groupBy('patients.id', 'patients.first_name', 'patients.middle_name', 'patients.last_name', 
+                          'patients.card_number', 'patients.phone_number1', 'patients.gender', 'patients.date_of_birth')
+                ->orderByRaw('COUNT(appointments.id) DESC')
+                ->limit(5)
+                ->get()
+                ->map(function ($patient) {
+                    return [
+                        'id' => $patient->id,
+                        'name' => $patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name,
+                        'card_number' => $patient->card_number,
+                        'phone' => $patient->phone_number1,
+                        'gender' => $patient->gender,
+                        'age' => $patient->date_of_birth ? Carbon::parse($patient->date_of_birth)->age : 'N/A',
+                    ];
+                });
+        });
+    }
+
+    /**
+     * OPTIMIZED Patient Search Method
+     * Uses multiple strategies for fast results:
+     * 1. Exact matches first
+     * 2. Prefix matching with indexes
+     * 3. Full-text search as fallback
+     * 4. Caching for frequent searches
+     */
+    public function updatedPatientSearch()
+    {
+        $searchTerm = trim($this->patientSearch);
+        
+        if (strlen($searchTerm) < 2) {
             $this->searchResults = [];
             $this->showPatientSearch = false;
+            return;
         }
+
+        $startTime = microtime(true);
+
+        // Try to get from cache first (for repeated searches)
+        $cacheKey = 'patient_search_' . md5($searchTerm);
+        $this->searchResults = Cache::remember($cacheKey, 60, function () use ($searchTerm) {
+            return $this->performOptimizedSearch($searchTerm);
+        });
+
+        $this->totalResults = count($this->searchResults);
+        $this->searchTime = round((microtime(true) - $startTime) * 1000, 2);
+        $this->showPatientSearch = true;
+    }
+
+    /**
+     * Perform optimized search using multiple strategies
+     */
+    protected function performOptimizedSearch($searchTerm)
+    {
+        $results = collect();
+
+        // Strategy 1: Exact matches (fastest)
+        $exactMatches = $this->searchExactMatches($searchTerm);
+        $results = $results->merge($exactMatches);
+
+        // If we have enough results, return early
+        if ($results->count() >= 10) {
+            return $results->take(10)->values();
+        }
+
+        // Strategy 2: Prefix matches (fast)
+        $prefixMatches = $this->searchPrefixMatches($searchTerm);
+        $results = $results->merge($prefixMatches)->unique('id');
+
+        if ($results->count() >= 10) {
+            return $results->take(10)->values();
+        }
+
+        // Strategy 3: Full-text search (slower but comprehensive)
+        $fullTextMatches = $this->searchFullText($searchTerm);
+        $results = $results->merge($fullTextMatches)->unique('id');
+
+        return $results->take(10)->values();
+    }
+
+    /**
+     * Search for exact matches on card number or phone
+     */
+    protected function searchExactMatches($searchTerm)
+    {
+        return Patient::select('id', 'first_name', 'middle_name', 'last_name', 'card_number', 'phone_number1', 'gender', 'date_of_birth')
+            ->where('card_number', $searchTerm)
+            ->orWhere('phone_number1', $searchTerm)
+            ->limit(5)
+            ->get()
+            ->map(function ($patient) {
+                return [
+                    'id' => $patient->id,
+                    'name' => $patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name,
+                    'card_number' => $patient->card_number,
+                    'phone' => $patient->phone_number1,
+                    'gender' => $patient->gender,
+                    'age' => $patient->date_of_birth ? Carbon::parse($patient->date_of_birth)->age : 'N/A',
+                    'match_type' => 'exact',
+                ];
+            });
+    }
+
+    /**
+     * Search for prefix matches on name fields (uses indexes)
+     */
+    protected function searchPrefixMatches($searchTerm)
+    {
+        // Use LIKE with prefix only (starts with) for better index usage
+        return Patient::select('id', 'first_name', 'middle_name', 'last_name', 'card_number', 'phone_number1', 'gender', 'date_of_birth')
+            ->where('first_name', 'like', $searchTerm . '%')
+            ->orWhere('middle_name', 'like', $searchTerm . '%')
+            ->orWhere('last_name', 'like', $searchTerm . '%')
+            ->orWhere('card_number', 'like', $searchTerm . '%')
+            ->orWhere('phone_number1', 'like', $searchTerm . '%')
+            ->limit(10)
+            ->get()
+            ->map(function ($patient) use ($searchTerm) {
+                return [
+                    'id' => $patient->id,
+                    'name' => $patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name,
+                    'card_number' => $patient->card_number,
+                    'phone' => $patient->phone_number1,
+                    'gender' => $patient->gender,
+                    'age' => $patient->date_of_birth ? Carbon::parse($patient->date_of_birth)->age : 'N/A',
+                    'match_type' => 'prefix',
+                    'highlight' => $this->getHighlightedName($patient, $searchTerm),
+                ];
+            });
+    }
+
+    /**
+     * Full-text search for comprehensive results
+     */
+    protected function searchFullText($searchTerm)
+    {
+        // Using raw SQL for FULLTEXT search if available
+        if ($this->hasFullTextIndex()) {
+            return DB::select("
+                SELECT id, first_name, middle_name, last_name, card_number, phone_number1, gender, date_of_birth,
+                       MATCH(first_name, middle_name, last_name) AGAINST(? IN BOOLEAN MODE) as relevance
+                FROM patients
+                WHERE MATCH(first_name, middle_name, last_name) AGAINST(? IN BOOLEAN MODE)
+                ORDER BY relevance DESC
+                LIMIT 10
+            ", [$searchTerm . '*', $searchTerm . '*']);
+        }
+
+        // Fallback to comprehensive LIKE search
+        return Patient::select('id', 'first_name', 'middle_name', 'last_name', 'card_number', 'phone_number1', 'gender', 'date_of_birth')
+            ->where(function ($q) use ($searchTerm) {
+                $q->where('first_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('middle_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('card_number', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('phone_number1', 'like', '%' . $searchTerm . '%');
+            })
+            ->limit(10)
+            ->get()
+            ->map(function ($patient) {
+                return [
+                    'id' => $patient->id,
+                    'name' => $patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name,
+                    'card_number' => $patient->card_number,
+                    'phone' => $patient->phone_number1,
+                    'gender' => $patient->gender,
+                    'age' => $patient->date_of_birth ? Carbon::parse($patient->date_of_birth)->age : 'N/A',
+                    'match_type' => 'full',
+                ];
+            });
+    }
+
+    /**
+     * Check if fulltext index exists
+     */
+    protected function hasFullTextIndex()
+    {
+        return Cache::remember('has_fulltext_index', 3600, function () {
+            $result = DB::select("
+                SELECT COUNT(*) as count
+                FROM information_schema.statistics
+                WHERE table_schema = DATABASE()
+                AND table_name = 'patients'
+                AND index_type = 'FULLTEXT'
+            ");
+            return !empty($result) && $result[0]->count > 0;
+        });
+    }
+
+    /**
+     * Highlight matching parts in name
+     */
+    protected function getHighlightedName($patient, $searchTerm)
+    {
+        $fullName = $patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name;
+        $pattern = '/(' . preg_quote($searchTerm, '/') . ')/i';
+        return preg_replace($pattern, '<mark>$1</mark>', $fullName);
+    }
+
+    /**
+     * Search with type-ahead optimization (for instant results)
+     */
+    public function searchTypeAhead($searchTerm)
+    {
+        if (strlen($searchTerm) < 1) {
+            return [];
+        }
+
+        return Cache::remember('typeahead_' . $searchTerm, 5, function () use ($searchTerm) {
+            return Patient::select('id', 'first_name', 'last_name', 'card_number')
+                ->where('first_name', 'like', $searchTerm . '%')
+                ->orWhere('last_name', 'like', $searchTerm . '%')
+                ->orWhere('card_number', 'like', $searchTerm . '%')
+                ->limit(5)
+                ->get()
+                ->map(function ($patient) {
+                    return [
+                        'id' => $patient->id,
+                        'display' => $patient->first_name . ' ' . $patient->last_name . ' (' . $patient->card_number . ')',
+                    ];
+                });
+        });
     }
 
     public function selectPatient($patientId)
@@ -111,6 +354,9 @@ class CreateAppointment extends Component
         $this->patient_id = $patientId;
         $this->patientSearch = $this->selectedPatient->first_name . ' ' . $this->selectedPatient->last_name;
         $this->showPatientSearch = false;
+        
+        // Clear search cache for this term
+        Cache::forget('patient_search_' . md5($this->patientSearch));
     }
 
     public function clearPatient()
@@ -118,6 +364,7 @@ class CreateAppointment extends Component
         $this->selectedPatient = null;
         $this->patient_id = null;
         $this->patientSearch = '';
+        $this->searchResults = [];
     }
 
     public function toggleQuickPatient()
@@ -146,28 +393,35 @@ class CreateAppointment extends Component
         ]);
 
         try {
-            $patient = Patient::create([
-                'card_number' => 'PAT-' . time(),
-                'first_name' => $this->first_name,
-                'middle_name' => $this->middle_name,
-                'last_name' => $this->last_name,
-                'mother_name' => $this->mother_name,
-                'gender' => $this->gender,
-                'phone_number1' => $this->phone_number1,
-                'phone_number2' => $this->phone_number2,
-                'emergency_person' => $this->emergency_person,
-                'emergency_contact' => $this->emergency_contact,
-                'emergency_person_relationship' => $this->emergency_person_relationship,
-                'region' => $this->region,
-                'region_zone' => $this->region_zone,
-                'region_woreda' => $this->region_woreda,
-                'date_of_birth' => $this->date_of_birth,
-                'created_by' => Auth::id(),
-            ]);
+            DB::transaction(function () {
+                $patient = Patient::create([
+                    'card_number' => $this->generateCardNumber(),
+                    'first_name' => $this->first_name,
+                    'middle_name' => $this->middle_name,
+                    'last_name' => $this->last_name,
+                    'mother_name' => $this->mother_name,
+                    'gender' => $this->gender,
+                    'phone_number1' => $this->phone_number1,
+                    'phone_number2' => $this->phone_number2,
+                    'emergency_person' => $this->emergency_person,
+                    'emergency_contact' => $this->emergency_contact,
+                    'emergency_person_relationship' => $this->emergency_person_relationship,
+                    'region' => $this->region,
+                    'region_zone' => $this->region_zone,
+                    'region_woreda' => $this->region_woreda,
+                    'date_of_birth' => $this->date_of_birth,
+                    'created_by' => Auth::id(),
+                ]);
 
-            $this->selectedPatient = $patient;
-            $this->patient_id = $patient->id;
-            $this->patientSearch = $patient->first_name . ' ' . $patient->last_name;
+                $this->selectedPatient = $patient;
+                $this->patient_id = $patient->id;
+                $this->patientSearch = $patient->first_name . ' ' . $patient->last_name;
+                
+                // Clear relevant caches
+                Cache::forget('recent_patients');
+                Cache::forget('popular_patients');
+            });
+
             $this->quickPatientMode = false;
             $this->resetQuickPatientForm();
             
@@ -176,6 +430,18 @@ class CreateAppointment extends Component
         } catch (\Exception $e) {
             $this->showAlertMessage('Error creating patient: ' . $e->getMessage(), 'error');
         }
+    }
+
+    /**
+     * Generate unique card number
+     */
+    protected function generateCardNumber()
+    {
+        $prefix = 'PAT';
+        $timestamp = now()->format('ymd');
+        $random = strtoupper(substr(uniqid(), -4));
+        
+        return $prefix . '-' . $timestamp . '-' . $random;
     }
 
     // Doctor and Time Slot Methods
@@ -226,15 +492,20 @@ class CreateAppointment extends Component
 
     protected function loadRelatedOrders()
     {
-        // This would depend on your order types
-        // Example for lab orders:
-        if ($this->related_order_type === 'lab') {
-            $this->relatedOrders = []; // Fetch lab orders
-        } elseif ($this->related_order_type === 'medication') {
-            $this->relatedOrders = []; // Fetch medication orders
-        } elseif ($this->related_order_type === 'rehab') {
-            $this->relatedOrders = []; // Fetch rehab orders
-        }
+        // Cache order lookups
+        $cacheKey = 'orders_' . $this->related_order_type;
+        
+        $this->relatedOrders = Cache::remember($cacheKey, 300, function () {
+            // This would depend on your order types
+            if ($this->related_order_type === 'lab') {
+                return []; // Fetch lab orders
+            } elseif ($this->related_order_type === 'medication') {
+                return []; // Fetch medication orders
+            } elseif ($this->related_order_type === 'rehab') {
+                return []; // Fetch rehab orders
+            }
+            return [];
+        });
     }
 
     // Validation Rules
@@ -270,21 +541,27 @@ class CreateAppointment extends Component
         $this->validate();
 
         try {
-            $appointment = Appointment::create([
-                'patient_id' => $this->patient_id,
-                'doctor_id' => $this->doctor_id,
-                'visit_type' => $this->visit_type,
-                'appointment_date' => $this->appointment_date,
-                'appointment_time' => $this->appointment_time,
-                'time_slot' => $this->time_slot,
-                'status' => $this->is_request ? 'requested' : 'scheduled',
-                'additional_notes' => $this->additional_notes,
-                'payment_status' => $this->payment_status,
-                'payment_amount' => $this->payment_amount,
-                'related_order_type' => $this->related_order_type,
-                'related_order_id' => $this->related_order_id,
-                'created_by' => Auth::id(),
-            ]);
+            DB::transaction(function () {
+                $appointment = Appointment::create([
+                    'patient_id' => $this->patient_id,
+                    'doctor_id' => $this->doctor_id,
+                    'visit_type' => $this->visit_type,
+                    'appointment_date' => $this->appointment_date,
+                    'appointment_time' => $this->appointment_time,
+                    'time_slot' => $this->time_slot,
+                    'status' => $this->is_request ? 'requested' : 'scheduled',
+                    'additional_notes' => $this->additional_notes,
+                    'payment_status' => $this->payment_status,
+                    'payment_amount' => $this->payment_amount,
+                    'related_order_type' => $this->related_order_type,
+                    'related_order_id' => $this->related_order_id,
+                    'created_by' => Auth::id(),
+                ]);
+
+                // Clear relevant caches
+                Cache::forget('recent_patients');
+                Cache::forget('popular_patients');
+            });
 
             session()->flash('success', 'Appointment created successfully!');
             
