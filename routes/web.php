@@ -346,12 +346,12 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
     Route::get('/appointments/upcoming', UpcomingAppointments::class)
         ->name('appointments.upcoming');
     Route::get('/appointments/all', AllAppointments::class)
-        ->name('all');
+        ->name('appointments.all');
     Route::get('/appointments/calendar', CalendarView::class)
-        ->name('calendar');
+        ->name('appointments.calendar');
     Route::get('/appointments/reports', AppointmentReports::class)
-        ->name('reports');
+        ->name('appointments.reports');
     Route::get('/appointments/{id}', AppointmentDetail::class)
-        ->name('detail');
+        ->name('appointments.detail');
 });
 require __DIR__ . '/auth.php';
