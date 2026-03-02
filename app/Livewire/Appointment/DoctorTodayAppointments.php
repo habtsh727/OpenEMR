@@ -18,6 +18,7 @@ class DoctorTodayAppointments extends Component
     public $status = '';
     public $viewMode = 'list';
     public $selectedAppointment = null;
+    public $timeSlots = [];
     
     // Modals
     public $showCheckInModal = false;
@@ -25,6 +26,7 @@ class DoctorTodayAppointments extends Component
     public $showNotesModal = false;
     public $showRescheduleModal = false;
     public $showCancelModal = false;
+    public $showTimelineModal = false;
     
     // Forms
     public $doctorNotes = '';
@@ -33,9 +35,11 @@ class DoctorTodayAppointments extends Component
     public $rescheduleReason;
     public $cancellationReason;
     public $availableSlots = [];
+    public $selectedSlot = null;
     
     // Loading states
     public $confirmingAction = false;
+    public $isLoading = false;
 
     protected $appointmentService;
 
@@ -47,6 +51,7 @@ class DoctorTodayAppointments extends Component
     public function mount()
     {
         $this->newDate = Carbon::now('Africa/Addis_Ababa')->format('Y-m-d');
+        $this->generateTimeSlots();
     }
 
     public function updatedSearch()
@@ -57,6 +62,21 @@ class DoctorTodayAppointments extends Component
     public function updatedStatus()
     {
         $this->resetPage();
+    }
+
+    public function generateTimeSlots()
+    {
+        $startTime = Carbon::parse('08:00', 'Africa/Addis_Ababa');
+        $endTime = Carbon::parse('17:00', 'Africa/Addis_Ababa');
+        
+        while ($startTime <= $endTime) {
+            $this->timeSlots[] = [
+                'time' => $startTime->format('H:i'),
+                'display' => $startTime->format('h:i A'),
+                'is_past' => $startTime->isPast(),
+            ];
+            $startTime->addMinutes(30);
+        }
     }
 
     public function getTodayAppointmentsProperty()
@@ -86,13 +106,39 @@ class DoctorTodayAppointments extends Component
     {
         $today = Carbon::today('Africa/Addis_Ababa')->format('Y-m-d');
         
+        $total = Appointment::forToday()->count();
+        $scheduled = Appointment::forToday()->where('status', 'scheduled')->count();
+        $checkedIn = Appointment::forToday()->whereNotNull('checked_in_at')->count();
+        $completed = Appointment::forToday()->where('status', 'completed')->count();
+        
         return [
-            'total' => Appointment::forToday()->count(),
-            'scheduled' => Appointment::forToday()->where('status', 'scheduled')->count(),
-            'completed' => Appointment::forToday()->where('status', 'completed')->count(),
-            'missed' => Appointment::forToday()->where('status', 'missed')->count(),
-            'checked_in' => Appointment::forToday()->whereNotNull('checked_in_at')->count(),
+            'total' => $total,
+            'scheduled' => $scheduled,
+            'checked_in' => $checkedIn,
+            'completed' => $completed,
+            'progress_percentage' => $total > 0 ? round(($checkedIn / $total) * 100, 1) : 0,
+            'completion_rate' => $total > 0 ? round(($completed / $total) * 100, 1) : 0,
         ];
+    }
+
+    public function getAppointmentsByTimeSlotProperty()
+    {
+        $appointments = $this->todayAppointments;
+        $grouped = [];
+        
+        foreach ($this->timeSlots as $slot) {
+            $slotAppointments = $appointments->filter(function ($appointment) use ($slot) {
+                return $appointment->appointment_time->format('H:i') === $slot['time'];
+            });
+            
+            $grouped[] = [
+                'slot' => $slot,
+                'appointments' => $slotAppointments,
+                'count' => $slotAppointments->count(),
+            ];
+        }
+        
+        return collect($grouped);
     }
 
     // Check In
@@ -121,10 +167,16 @@ class DoctorTodayAppointments extends Component
             $this->showCheckInModal = false;
             $this->selectedAppointment = null;
             
-            $this->dispatch('notify', 'Patient checked in successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Patient checked in successfully!',
+                'type' => 'success'
+            ]);
             
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Check-in failed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Check-in failed: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         } finally {
             $this->confirmingAction = false;
         }
@@ -153,10 +205,16 @@ class DoctorTodayAppointments extends Component
             $this->selectedAppointment = null;
             $this->doctorNotes = '';
             
-            $this->dispatch('notify', 'Appointment completed successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Appointment completed successfully!',
+                'type' => 'success'
+            ]);
             
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Failed to complete: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Failed to complete: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         } finally {
             $this->confirmingAction = false;
         }
@@ -187,10 +245,16 @@ class DoctorTodayAppointments extends Component
             $this->selectedAppointment = null;
             $this->doctorNotes = '';
             
-            $this->dispatch('notify', 'Notes saved successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Notes saved successfully!',
+                'type' => 'success'
+            ]);
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Failed to save notes: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Failed to save notes: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         }
     }
 
@@ -200,28 +264,37 @@ class DoctorTodayAppointments extends Component
         $this->selectedAppointment = Appointment::findOrFail($appointmentId);
         $this->newDate = $this->selectedAppointment->appointment_date->format('Y-m-d');
         $this->newTime = $this->selectedAppointment->appointment_time->format('H:i');
+        $this->selectedSlot = $this->newTime;
+        $this->rescheduleReason = '';
         $this->showRescheduleModal = true;
         $this->loadAvailableSlots();
     }
 
     public function updatedNewDate()
     {
+        $this->selectedSlot = null;
+        $this->newTime = null;
         $this->loadAvailableSlots();
     }
 
     protected function loadAvailableSlots()
     {
+        $this->isLoading = true;
+        
         if ($this->newDate) {
             $this->availableSlots = $this->appointmentService->generateTimeSlots(
                 auth()->id(),
                 $this->newDate
             );
         }
+        
+        $this->isLoading = false;
     }
 
     public function selectSlot($slotTime)
     {
         $this->newTime = $slotTime;
+        $this->selectedSlot = $slotTime;
     }
 
     public function reschedule()
@@ -243,11 +316,17 @@ class DoctorTodayAppointments extends Component
                 $this->rescheduleReason
             );
 
-            $this->reset(['showRescheduleModal', 'selectedAppointment', 'rescheduleReason', 'availableSlots']);
-            $this->dispatch('notify', 'Appointment rescheduled successfully!', 'success');
+            $this->reset(['showRescheduleModal', 'selectedAppointment', 'rescheduleReason', 'availableSlots', 'newDate', 'newTime', 'selectedSlot']);
+            $this->dispatch('notify', [
+                'message' => 'Appointment rescheduled successfully!',
+                'type' => 'success'
+            ]);
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Reschedule failed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Reschedule failed: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         } finally {
             $this->confirmingAction = false;
         }
@@ -257,6 +336,7 @@ class DoctorTodayAppointments extends Component
     public function openCancelModal($appointmentId)
     {
         $this->selectedAppointment = Appointment::findOrFail($appointmentId);
+        $this->cancellationReason = '';
         $this->showCancelModal = true;
     }
 
@@ -276,10 +356,16 @@ class DoctorTodayAppointments extends Component
             );
 
             $this->reset(['showCancelModal', 'selectedAppointment', 'cancellationReason']);
-            $this->dispatch('notify', 'Appointment cancelled successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Appointment cancelled successfully!',
+                'type' => 'success'
+            ]);
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Cancellation failed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Cancellation failed: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         } finally {
             $this->confirmingAction = false;
         }
@@ -292,9 +378,15 @@ class DoctorTodayAppointments extends Component
 
         try {
             $this->appointmentService->markAsMissed($appointment, auth()->id());
-            $this->dispatch('notify', 'Appointment marked as missed', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Appointment marked as missed',
+                'type' => 'success'
+            ]);
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Failed to mark as missed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Failed to mark as missed: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         }
     }
 
@@ -303,6 +395,8 @@ class DoctorTodayAppointments extends Component
         return view('livewire.appointment.doctor-today-appointments', [
             'appointments' => $this->todayAppointments,
             'stats' => $this->stats,
+            'appointmentsBySlot' => $this->appointmentsByTimeSlot,
+            'timeSlots' => $this->timeSlots,
         ]);
     }
 }
