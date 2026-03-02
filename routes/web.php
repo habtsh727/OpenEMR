@@ -333,14 +333,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/patients/{patientId}/finance', App\Livewire\Patient\PatientFinanceReport::class)
         ->name('patients.finance');
 });
-Route::middleware(['auth'])->prefix('appointments')->name('appointments.')->group(function () {
-    Route::get('/', action: AppointmentIndex::class)->name('index');
-    Route::get('/today', TodayAppointments::class)->name('today');
-    Route::get('/upcoming', UpcomingAppointments::class)->name('upcoming');
-    Route::get('/calendar', CalendarView::class)->name('calendar');
-    Route::get('/requests', AppointmentRequests::class)->name('requests');
-    Route::get('/create', CreateAppointment::class)->name('create');
-    Route::get('/{id}', AppointmentDetail::class)->name('details');
-});
+
 
 require __DIR__ . '/auth.php';
