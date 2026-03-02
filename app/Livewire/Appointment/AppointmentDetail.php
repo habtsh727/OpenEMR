@@ -14,7 +14,7 @@ class AppointmentDetail extends Component
     public $activeTab = 'overview';
     public $doctorNotes = '';
     public $showEditNotes = false;
-    public $timeUntil = ''; // ADD THIS PROPERTY
+    public $timeUntil = '';
 
     // Modals
     public $showCheckInModal = false;
@@ -26,8 +26,11 @@ class AppointmentDetail extends Component
     // Reschedule form
     public $newDate;
     public $newTime;
+    public $selectedSlot = null;
     public $rescheduleReason;
+    public $cancellationReason;
     public $availableSlots = [];
+    public $loadingSlots = false;
 
     protected $appointmentService;
 
@@ -48,7 +51,8 @@ class AppointmentDetail extends Component
         $this->doctorNotes = $this->appointment->doctor_notes ?? '';
         $this->newDate = $this->appointment->appointment_date->format('Y-m-d');
         $this->newTime = $this->appointment->appointment_time->format('H:i');
-        $this->calculateTimeUntil(); // CALL THIS METHOD
+        $this->selectedSlot = $this->newTime;
+        $this->calculateTimeUntil();
     }
 
     public function calculateTimeUntil()
@@ -77,8 +81,6 @@ class AppointmentDetail extends Component
         }
     }
 
-    // Remove the old getTimeUntilAttribute method and use the property above
-
     public function setActiveTab($tab)
     {
         $this->activeTab = $tab;
@@ -106,10 +108,16 @@ class AppointmentDetail extends Component
 
             $this->appointment->refresh();
             $this->showEditNotes = false;
-            $this->dispatch('notify', 'Notes saved successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Notes saved successfully!',
+                'type' => 'success'
+            ]);
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Failed to save notes: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Failed to save notes: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         }
     }
 
@@ -117,7 +125,10 @@ class AppointmentDetail extends Component
     public function openCheckInModal()
     {
         if (!$this->appointment->isCheckInAvailable()) {
-            $this->dispatch('notify', 'This appointment cannot be checked in.', 'error');
+            $this->dispatch('notify', [
+                'message' => 'This appointment cannot be checked in.',
+                'type' => 'error'
+            ]);
             return;
         }
         $this->showCheckInModal = true;
@@ -134,12 +145,18 @@ class AppointmentDetail extends Component
             );
 
             $this->appointment->refresh();
-            $this->calculateTimeUntil(); // UPDATE TIME AFTER CHECK-IN
+            $this->calculateTimeUntil();
             $this->showCheckInModal = false;
-            $this->dispatch('notify', 'Patient checked in successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Patient checked in successfully!',
+                'type' => 'success'
+            ]);
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Check-in failed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Check-in failed: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         } finally {
             $this->confirmingAction = false;
         }
@@ -163,12 +180,18 @@ class AppointmentDetail extends Component
             );
 
             $this->appointment->refresh();
-            $this->calculateTimeUntil(); // UPDATE TIME AFTER COMPLETE
+            $this->calculateTimeUntil();
             $this->showCompleteModal = false;
-            $this->dispatch('notify', 'Appointment completed successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Appointment completed successfully!',
+                'type' => 'success'
+            ]);
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Failed to complete: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Failed to complete: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         } finally {
             $this->confirmingAction = false;
         }
@@ -178,27 +201,35 @@ class AppointmentDetail extends Component
     public function openRescheduleModal()
     {
         $this->showRescheduleModal = true;
+        $this->rescheduleReason = '';
         $this->loadAvailableSlots();
     }
 
     public function updatedNewDate()
     {
+        $this->selectedSlot = null;
+        $this->newTime = null;
         $this->loadAvailableSlots();
     }
 
     protected function loadAvailableSlots()
     {
+        $this->loadingSlots = true;
+        
         if ($this->newDate) {
             $this->availableSlots = $this->appointmentService->generateTimeSlots(
                 $this->appointment->doctor_id,
                 $this->newDate
             );
         }
+        
+        $this->loadingSlots = false;
     }
 
     public function selectSlot($slotTime)
     {
         $this->newTime = $slotTime;
+        $this->selectedSlot = $slotTime;
     }
 
     public function reschedule()
@@ -221,12 +252,18 @@ class AppointmentDetail extends Component
             );
 
             $this->appointment->refresh();
-            $this->calculateTimeUntil(); // UPDATE TIME AFTER RESCHEDULE
+            $this->calculateTimeUntil();
             $this->showRescheduleModal = false;
-            $this->dispatch('notify', 'Appointment rescheduled successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Appointment rescheduled successfully!',
+                'type' => 'success'
+            ]);
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Reschedule failed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Reschedule failed: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         } finally {
             $this->confirmingAction = false;
         }
@@ -236,12 +273,13 @@ class AppointmentDetail extends Component
     public function openCancelModal()
     {
         $this->showCancelModal = true;
+        $this->cancellationReason = '';
     }
 
     public function cancel()
     {
         $this->validate([
-            'rescheduleReason' => 'required|min:5',
+            'cancellationReason' => 'required|min:5',
         ]);
 
         $this->confirmingAction = true;
@@ -250,16 +288,22 @@ class AppointmentDetail extends Component
             $this->appointmentService->cancel(
                 $this->appointment,
                 auth()->id(),
-                $this->rescheduleReason
+                $this->cancellationReason
             );
 
             $this->appointment->refresh();
-            $this->calculateTimeUntil(); // UPDATE TIME AFTER CANCEL
+            $this->calculateTimeUntil();
             $this->showCancelModal = false;
-            $this->dispatch('notify', 'Appointment cancelled successfully!', 'success');
+            $this->dispatch('notify', [
+                'message' => 'Appointment cancelled successfully!',
+                'type' => 'success'
+            ]);
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Cancellation failed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Cancellation failed: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         } finally {
             $this->confirmingAction = false;
         }
@@ -271,10 +315,16 @@ class AppointmentDetail extends Component
         try {
             $this->appointmentService->markAsMissed($this->appointment, auth()->id());
             $this->appointment->refresh();
-            $this->calculateTimeUntil(); // UPDATE TIME AFTER MISSED
-            $this->dispatch('notify', 'Appointment marked as missed', 'success');
+            $this->calculateTimeUntil();
+            $this->dispatch('notify', [
+                'message' => 'Appointment marked as missed',
+                'type' => 'success'
+            ]);
         } catch (\Exception $e) {
-            $this->dispatch('notify', 'Failed to mark as missed: ' . $e->getMessage(), 'error');
+            $this->dispatch('notify', [
+                'message' => 'Failed to mark as missed: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         }
     }
 
