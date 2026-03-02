@@ -14,6 +14,7 @@ class AppointmentDetail extends Component
     public $activeTab = 'overview';
     public $doctorNotes = '';
     public $showEditNotes = false;
+    public $timeUntil = ''; // ADD THIS PROPERTY
 
     // Modals
     public $showCheckInModal = false;
@@ -47,9 +48,10 @@ class AppointmentDetail extends Component
         $this->doctorNotes = $this->appointment->doctor_notes ?? '';
         $this->newDate = $this->appointment->appointment_date->format('Y-m-d');
         $this->newTime = $this->appointment->appointment_time->format('H:i');
+        $this->calculateTimeUntil(); // CALL THIS METHOD
     }
 
-    public function getTimeUntilAttribute()
+    public function calculateTimeUntil()
     {
         $appointmentDateTime = Carbon::parse(
             $this->appointment->appointment_date->format('Y-m-d') . ' ' . 
@@ -58,21 +60,24 @@ class AppointmentDetail extends Component
         );
 
         if ($appointmentDateTime->isPast()) {
-            return 'Past';
+            $this->timeUntil = 'Past';
+            return;
         }
 
         $diff = now()->diff($appointmentDateTime);
 
         if ($diff->days > 0) {
-            return $diff->days . ' day' . ($diff->days > 1 ? 's' : '') . ' from now';
+            $this->timeUntil = $diff->days . ' day' . ($diff->days > 1 ? 's' : '') . ' from now';
         } elseif ($diff->h > 0) {
-            return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' from now';
+            $this->timeUntil = $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' from now';
         } elseif ($diff->i > 0) {
-            return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' from now';
+            $this->timeUntil = $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' from now';
+        } else {
+            $this->timeUntil = 'Soon';
         }
-
-        return 'Soon';
     }
+
+    // Remove the old getTimeUntilAttribute method and use the property above
 
     public function setActiveTab($tab)
     {
@@ -129,6 +134,7 @@ class AppointmentDetail extends Component
             );
 
             $this->appointment->refresh();
+            $this->calculateTimeUntil(); // UPDATE TIME AFTER CHECK-IN
             $this->showCheckInModal = false;
             $this->dispatch('notify', 'Patient checked in successfully!', 'success');
 
@@ -157,6 +163,7 @@ class AppointmentDetail extends Component
             );
 
             $this->appointment->refresh();
+            $this->calculateTimeUntil(); // UPDATE TIME AFTER COMPLETE
             $this->showCompleteModal = false;
             $this->dispatch('notify', 'Appointment completed successfully!', 'success');
 
@@ -214,6 +221,7 @@ class AppointmentDetail extends Component
             );
 
             $this->appointment->refresh();
+            $this->calculateTimeUntil(); // UPDATE TIME AFTER RESCHEDULE
             $this->showRescheduleModal = false;
             $this->dispatch('notify', 'Appointment rescheduled successfully!', 'success');
 
@@ -246,6 +254,7 @@ class AppointmentDetail extends Component
             );
 
             $this->appointment->refresh();
+            $this->calculateTimeUntil(); // UPDATE TIME AFTER CANCEL
             $this->showCancelModal = false;
             $this->dispatch('notify', 'Appointment cancelled successfully!', 'success');
 
@@ -262,6 +271,7 @@ class AppointmentDetail extends Component
         try {
             $this->appointmentService->markAsMissed($this->appointment, auth()->id());
             $this->appointment->refresh();
+            $this->calculateTimeUntil(); // UPDATE TIME AFTER MISSED
             $this->dispatch('notify', 'Appointment marked as missed', 'success');
         } catch (\Exception $e) {
             $this->dispatch('notify', 'Failed to mark as missed: ' . $e->getMessage(), 'error');

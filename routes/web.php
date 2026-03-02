@@ -55,7 +55,9 @@ use App\Livewire\Cashier\ImagingPayments;
 use App\Livewire\Radiology\RadiologyDashboard;
 use App\Livewire\Admin\ManageImagingTypes;
 use App\Livewire\Admin\ManageBodyParts;
+use App\Livewire\Appointment\AllAppointments;
 use App\Livewire\Appointment\AppointmentDetail;
+use App\Livewire\Appointment\AppointmentReports;
 use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
@@ -341,5 +343,15 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
         ->name('appointments.today');
     Route::get('/appointments/create', CreateAppointment::class)
         ->name('appointments.create');
+    Route::get('/appointments/upcoming', UpcomingAppointments::class)
+        ->name('appointments.upcoming');
+    Route::get('/appointments/all', AllAppointments::class)
+        ->name('all');
+    Route::get('/appointments/calendar', CalendarView::class)
+        ->name('calendar');
+    Route::get('/appointments/reports', AppointmentReports::class)
+        ->name('reports');
+    Route::get('/appointments/{id}', AppointmentDetail::class)
+        ->name('detail');
 });
 require __DIR__ . '/auth.php';
