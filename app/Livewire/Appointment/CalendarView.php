@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\User;
 use Livewire\Component;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class CalendarView extends Component
 {
@@ -84,17 +85,33 @@ class CalendarView extends Component
         $this->dayAppointments = $query->orderBy('appointment_time')->get();
     }
 
+    // COMPUTED PROPERTIES - These will be accessible as $this->property in blade
     public function getMonthAppointmentsProperty()
     {
         $startOfMonth = $this->currentDate->copy()->startOfMonth();
         $endOfMonth = $this->currentDate->copy()->endOfMonth();
 
-        return Appointment::whereBetween('appointment_date', [$startOfMonth, $endOfMonth])
+        $appointments = Appointment::with(['patient', 'doctor'])
+            ->whereBetween('appointment_date', [$startOfMonth, $endOfMonth])
             ->when($this->selectedDoctor, fn($q) => $q->where('doctor_id', $this->selectedDoctor))
-            ->get()
-            ->groupBy(function ($appointment) {
-                return $appointment->appointment_date->format('Y-m-d');
-            });
+            ->get();
+
+        // Group by date manually to avoid collection issues
+        $grouped = [];
+        foreach ($appointments as $appointment) {
+            $dateKey = $appointment->appointment_date->format('Y-m-d');
+            if (!isset($grouped[$dateKey])) {
+                $grouped[$dateKey] = [];
+            }
+            $grouped[$dateKey][] = $appointment;
+        }
+
+        // Convert arrays to collections
+        foreach ($grouped as $key => $value) {
+            $grouped[$key] = collect($value);
+        }
+
+        return $grouped;
     }
 
     public function getCalendarDaysProperty()
@@ -106,21 +123,33 @@ class CalendarView extends Component
         
         $days = [];
         $today = Carbon::now('Africa/Addis_Ababa')->startOfDay();
+        $monthAppointments = $this->monthAppointments; // This calls the computed property
         
         $current = $startOfWeek->copy();
         
         while ($current <= $endOfWeek) {
             $dateStr = $current->format('Y-m-d');
             $isCurrentMonth = $current->month === $this->currentDate->month;
-            $dayAppointments = $this->monthAppointments->get($dateStr, collect());
+            
+            // Safely get appointments for this date
+            $dayAppointments = isset($monthAppointments[$dateStr]) 
+                ? $monthAppointments[$dateStr] 
+                : collect();
             
             $statusCounts = [
-                'scheduled' => $dayAppointments->where('status', 'scheduled')->count(),
-                'completed' => $dayAppointments->where('status', 'completed')->count(),
-                'missed' => $dayAppointments->where('status', 'missed')->count(),
-                'cancelled' => $dayAppointments->where('status', 'cancelled')->count(),
-                'rescheduled' => $dayAppointments->where('status', 'rescheduled')->count(),
+                'scheduled' => 0,
+                'completed' => 0,
+                'missed' => 0,
+                'cancelled' => 0,
+                'rescheduled' => 0,
             ];
+            
+            // Count appointments by status
+            foreach ($dayAppointments as $appointment) {
+                if (isset($statusCounts[$appointment->status])) {
+                    $statusCounts[$appointment->status]++;
+                }
+            }
             
             $days[] = [
                 'date' => $current->copy(),
@@ -193,6 +222,8 @@ class CalendarView extends Component
     {
         return view('livewire.appointment.calendar-view', [
             'doctors' => User::whereHas('roles', fn($q) => $q->where('name', 'doctor'))->get(),
+            'calendarDays' => $this->calendarDays, // Pass as regular variable
+            'weekDays' => $this->weekDays,
         ]);
     }
 }
