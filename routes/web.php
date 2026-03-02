@@ -6,6 +6,7 @@ use App\Livewire\Appointment\AppointmentIndex;
 use App\Livewire\Appointment\AppointmentRequests;
 use App\Livewire\Appointment\CalendarView;
 use App\Livewire\Appointment\CreateAppointment;
+use App\Livewire\Appointment\DoctorTodayAppointments;
 use App\Livewire\Appointment\TodayAppointments;
 use App\Livewire\Appointment\UpcomingAppointments;
 use App\Livewire\Doctor\RehabReview;
@@ -334,5 +335,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('patients.finance');
 });
 
-
+Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
+    // Appointment Routes
+    Route::get('/appointments/today', DoctorTodayAppointments::class)
+        ->name('appointments.today');
+    Route::get('/appointments/create', CreateAppointment::class)
+        ->name('appointments.create');
+});
 require __DIR__ . '/auth.php';
