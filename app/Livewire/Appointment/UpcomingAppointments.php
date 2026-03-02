@@ -27,12 +27,13 @@ class UpcomingAppointments extends Component
     public $showCancelModal = false;
     public $selectedAppointment = null;
 
-    // Forms
+    // Reschedule form
     public $newDate;
     public $newTime;
     public $rescheduleReason;
     public $cancellationReason;
     public $availableSlots = [];
+    public $selectedSlot = null;
 
     protected $appointmentService;
 
@@ -135,18 +136,22 @@ class UpcomingAppointments extends Component
         $this->selectedAppointment = Appointment::findOrFail($appointmentId);
         $this->newDate = $this->selectedAppointment->appointment_date->format('Y-m-d');
         $this->newTime = $this->selectedAppointment->appointment_time->format('H:i');
+        $this->selectedSlot = $this->newTime;
+        $this->rescheduleReason = '';
         $this->showRescheduleModal = true;
         $this->loadAvailableSlots();
     }
 
     public function updatedNewDate()
     {
+        $this->selectedSlot = null;
+        $this->newTime = null;
         $this->loadAvailableSlots();
     }
 
     protected function loadAvailableSlots()
     {
-        if ($this->newDate) {
+        if ($this->newDate && $this->selectedAppointment) {
             $this->availableSlots = $this->appointmentService->generateTimeSlots(
                 $this->selectedAppointment->doctor_id,
                 $this->newDate
@@ -157,6 +162,7 @@ class UpcomingAppointments extends Component
     public function selectSlot($slotTime)
     {
         $this->newTime = $slotTime;
+        $this->selectedSlot = $slotTime;
     }
 
     public function reschedule()
@@ -176,7 +182,7 @@ class UpcomingAppointments extends Component
                 $this->rescheduleReason
             );
 
-            $this->reset(['showRescheduleModal', 'selectedAppointment', 'rescheduleReason', 'availableSlots']);
+            $this->reset(['showRescheduleModal', 'selectedAppointment', 'rescheduleReason', 'availableSlots', 'newDate', 'newTime', 'selectedSlot']);
             $this->dispatch('notify', 'Appointment rescheduled successfully!', 'success');
 
         } catch (\Exception $e) {
@@ -188,6 +194,7 @@ class UpcomingAppointments extends Component
     public function openCancelModal($appointmentId)
     {
         $this->selectedAppointment = Appointment::findOrFail($appointmentId);
+        $this->cancellationReason = '';
         $this->showCancelModal = true;
     }
 
