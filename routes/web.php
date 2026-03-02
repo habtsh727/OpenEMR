@@ -2,6 +2,13 @@
 
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
+use App\Livewire\Appointment\AppointmentIndex;
+use App\Livewire\Appointment\AppointmentRequests;
+use App\Livewire\Appointment\CalendarView;
+use App\Livewire\Appointment\CreateAppointment;
+use App\Livewire\Appointment\DoctorTodayAppointments;
+use App\Livewire\Appointment\TodayAppointments;
+use App\Livewire\Appointment\UpcomingAppointments;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
@@ -48,6 +55,9 @@ use App\Livewire\Cashier\ImagingPayments;
 use App\Livewire\Radiology\RadiologyDashboard;
 use App\Livewire\Admin\ManageImagingTypes;
 use App\Livewire\Admin\ManageBodyParts;
+use App\Livewire\Appointment\AllAppointments;
+use App\Livewire\Appointment\AppointmentDetail;
+use App\Livewire\Appointment\AppointmentReports;
 use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
@@ -327,4 +337,21 @@ Route::middleware(['auth'])->group(function () {
         ->name('patients.finance');
 });
 
+Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function () {
+    // Appointment Routes
+    Route::get('/appointments/today', DoctorTodayAppointments::class)
+        ->name('appointments.today');
+    Route::get('/appointments/create', CreateAppointment::class)
+        ->name('appointments.create');
+    Route::get('/appointments/upcoming', UpcomingAppointments::class)
+        ->name('appointments.upcoming');
+    Route::get('/appointments/all', AllAppointments::class)
+        ->name('appointments.all');
+    Route::get('/appointments/calendar', CalendarView::class)
+        ->name('appointments.calendar');
+    Route::get('/appointments/reports', AppointmentReports::class)
+        ->name('appointments.reports');
+    Route::get('/appointments/{id}', AppointmentDetail::class)
+        ->name('appointments.detail');
+});
 require __DIR__ . '/auth.php';

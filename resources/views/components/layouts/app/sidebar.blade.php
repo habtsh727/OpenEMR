@@ -153,7 +153,86 @@
 
             </flux:sidebar.group>
             @endif
-{{-- rehabitation end --}}
+            {{-- rehabitation end --}}
+
+            
+{{-- Appointment Sidebar Group --}}
+@if(auth()->user()->hasAnyRole(['doctor', 'clinician', 'admin', 'reception', 'super-admin']))
+    <flux:sidebar.group expandable heading="Appointments" icon="calendar" class="grid">
+        
+        <!-- Doctor & Clinician Routes -->
+        @if(auth()->user()->hasAnyRole(['doctor', 'clinician', 'super-admin']))
+            <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.today')" wire:navigate>
+                Today's Schedule
+                @php
+                    $todayCount = App\Models\Appointment::forToday()
+                        ->where('doctor_id', auth()->id())
+                        ->where('status', 'scheduled')
+                        ->count();
+                @endphp
+                @if($todayCount > 0)
+                    <flux:badge size="sm" color="emerald" class="ml-auto">{{ $todayCount }}</flux:badge>
+                @endif
+            </flux:sidebar.item>
+
+            <flux:sidebar.item icon="calendar-days" :href="route('doctor.appointments.upcoming')" wire:navigate>
+                Upcoming
+                @php
+                    $upcomingCount = App\Models\Appointment::where('doctor_id', auth()->id())
+                        ->whereIn('status', ['scheduled', 'rescheduled'])
+                        ->whereDate('appointment_date', '>=', now())
+                        ->count();
+                @endphp
+                @if($upcomingCount > 0)
+                    <flux:badge size="sm" color="blue" class="ml-auto">{{ $upcomingCount }}</flux:badge>
+                @endif
+            </flux:sidebar.item>
+
+            <flux:sidebar.item icon="plus-circle" :href="route('doctor.appointments.create')" wire:navigate>
+                New Appointment
+            </flux:sidebar.item>
+        @endif
+
+        <!-- Reception & Admin Routes (Full Access) -->
+        @if(auth()->user()->hasAnyRole(['admin', 'reception', 'super-admin']))
+            <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.appointments.all')" wire:navigate>
+                All Appointments
+                @php
+                    $allCount = App\Models\Appointment::count();
+                @endphp
+                @if($allCount > 0)
+                    <flux:badge size="sm" color="gray" class="ml-auto">{{ $allCount }}</flux:badge>
+                @endif
+            </flux:sidebar.item>
+
+            <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.calendar')" wire:navigate>
+                Calendar View
+            </flux:sidebar.item>
+
+            <flux:sidebar.item icon="chart-bar" :href="route('doctor.appointments.reports')" wire:navigate>
+                Reports & Analytics
+            </flux:sidebar.item>
+        @endif
+
+        <!-- Doctor's Personal View (Even without admin) -->
+        @if(auth()->user()->hasRole('doctor') && !auth()->user()->hasAnyRole(['admin', 'super-admin']))
+            <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.appointments.all', ['doctor_id' => auth()->id()])" wire:navigate>
+                My History
+                @php
+                    $myHistoryCount = App\Models\Appointment::where('doctor_id', auth()->id())->count();
+                @endphp
+                @if($myHistoryCount > 0)
+                    <flux:badge size="sm" color="gray" class="ml-auto">{{ $myHistoryCount }}</flux:badge>
+                @endif
+            </flux:sidebar.item>
+        @endif
+
+        <!-- Admin Only Routes -->
+        
+
+    </flux:sidebar.group>
+@endif
+
  {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_result','view_lab_order','enter_lab_result','verify_lab_result'])
             <flux:sidebar.group expandable heading="Labratory" class="grid">
