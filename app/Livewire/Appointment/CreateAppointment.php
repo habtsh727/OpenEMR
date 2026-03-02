@@ -8,16 +8,18 @@ use App\Models\User;
 use App\Services\AppointmentService;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; // Add this import
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class CreateAppointment extends Component
 {
+    // Form fields
     public $patient_id;
     public $visit_type = 'consultation';
     public $appointment_date;
     public $appointment_time;
     public $additional_notes;
+    public $doctor_notes;
     public $payment_status = 'unpaid';
     public $payment_amount;
     public $related_order_type = 'none';
@@ -28,16 +30,18 @@ class CreateAppointment extends Component
     public $searchResults = [];
     public $showPatientSearch = false;
     public $selectedPatient = null;
+    public $searchLoading = false;
 
     // Time slots
     public $availableSlots = [];
     public $selectedSlot = null;
-    public $loadingSlots = false; // Add loading state
+    public $loadingSlots = false;
 
     // UI states
     public $showAlert = false;
     public $alertMessage = '';
     public $alertType = 'success';
+    public $formStep = 1; // For multi-step form (optional)
 
     protected $appointmentService;
 
@@ -50,15 +54,17 @@ class CreateAppointment extends Component
     {
         $this->appointment_date = Carbon::now('Africa/Addis_Ababa')->format('Y-m-d');
         Log::info('Mounting CreateAppointment', [
-            'date' => $this->appointment_date, 
+            'date' => $this->appointment_date,
             'doctor_id' => Auth::id()
         ]);
         $this->loadAvailableSlots();
     }
 
-    // Patient Search
+    // Patient Search with debounce and loading state
     public function updatedPatientSearch()
     {
+        $this->searchLoading = true;
+        
         if (strlen($this->patientSearch) > 2) {
             $this->searchResults = Patient::where('first_name', 'like', '%' . $this->patientSearch . '%')
                 ->orWhere('middle_name', 'like', '%' . $this->patientSearch . '%')
@@ -75,6 +81,7 @@ class CreateAppointment extends Component
                         'phone' => $patient->phone_number1,
                         'gender' => $patient->gender,
                         'age' => $patient->date_of_birth ? Carbon::parse($patient->date_of_birth)->age : 'N/A',
+                        'avatar' => strtoupper(substr($patient->first_name, 0, 1) . substr($patient->last_name, 0, 1)),
                     ];
                 });
             $this->showPatientSearch = true;
@@ -82,6 +89,8 @@ class CreateAppointment extends Component
             $this->searchResults = [];
             $this->showPatientSearch = false;
         }
+        
+        $this->searchLoading = false;
     }
 
     public function selectPatient($patientId)
@@ -90,6 +99,7 @@ class CreateAppointment extends Component
         $this->patient_id = $patientId;
         $this->patientSearch = $this->selectedPatient->first_name . ' ' . $this->selectedPatient->last_name;
         $this->showPatientSearch = false;
+        $this->formStep = 2; // Move to next step automatically
     }
 
     public function clearPatient()
@@ -97,6 +107,7 @@ class CreateAppointment extends Component
         $this->selectedPatient = null;
         $this->patient_id = null;
         $this->patientSearch = '';
+        $this->formStep = 1;
     }
 
     // Time Slot Methods
@@ -113,7 +124,7 @@ class CreateAppointment extends Component
         
         if ($this->appointment_date) {
             Log::info('Loading slots', [
-                'date' => $this->appointment_date, 
+                'date' => $this->appointment_date,
                 'doctor_id' => Auth::id()
             ]);
             
@@ -136,7 +147,7 @@ class CreateAppointment extends Component
         $this->selectedSlot = $slotTime;
     }
 
-    // Validation
+    // Validation Rules
     protected function rules()
     {
         return [
@@ -146,6 +157,7 @@ class CreateAppointment extends Component
             'appointment_time' => 'required',
             'payment_amount' => 'nullable|numeric|min:0',
             'additional_notes' => 'nullable|string|max:1000',
+            'doctor_notes' => 'nullable|string|max:5000',
         ];
     }
 
@@ -166,8 +178,8 @@ class CreateAppointment extends Component
         try {
             // Double-check slot is still available
             if (!$this->appointmentService->isSlotAvailable(
-                Auth::id(), 
-                $this->appointment_date, 
+                Auth::id(),
+                $this->appointment_date,
                 $this->appointment_time
             )) {
                 $this->alertMessage = 'This time slot is no longer available. Please select another.';
@@ -186,6 +198,7 @@ class CreateAppointment extends Component
                 'appointment_date' => $this->appointment_date,
                 'appointment_time' => $this->appointment_time,
                 'additional_notes' => $this->additional_notes,
+                'doctor_notes' => $this->doctor_notes,
                 'payment_status' => $this->payment_status,
                 'payment_amount' => $this->payment_amount,
                 'related_order_type' => $this->related_order_type === 'none' ? null : $this->related_order_type,
@@ -194,19 +207,18 @@ class CreateAppointment extends Component
 
             $appointment = $this->appointmentService->createAppointment($data, Auth::id());
 
-            session()->flash('success', 'Appointment created successfully for ' . 
-                $appointment->appointment_time->format('h:i A') . ' on ' . 
+            session()->flash('success', 'Appointment created successfully for ' .
+                $appointment->appointment_time->format('h:i A') . ' on ' .
                 $appointment->appointment_date->format('M d, Y'));
-            
-            return redirect()->route('doctor.appointments.today');
 
+            return redirect()->route('doctor.appointments.today');
         } catch (\Exception $e) {
             Log::error('Appointment creation failed', ['error' => $e->getMessage()]);
-            
+
             $this->alertMessage = 'Failed to create appointment: ' . $e->getMessage();
             $this->alertType = 'error';
             $this->showAlert = true;
-            
+
             // Reload slots in case of error
             $this->loadAvailableSlots();
         }
@@ -228,6 +240,7 @@ class CreateAppointment extends Component
                 'paid' => 'Paid',
                 'waived' => 'Waived',
             ],
+            'doctors' => User::whereHas('roles', fn($q) => $q->where('name', 'doctor'))->get(),
         ]);
     }
 }
