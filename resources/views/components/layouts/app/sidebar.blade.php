@@ -109,7 +109,7 @@
 
                 <!-- Rehab Staff Routes -->
                 @if(auth()->user()->hasRole(['rehab', 'super-admin','nurse']))
-                @if(auth()->user()->hasRole(['rehab', 'super-admin','cashier']))
+                @if(auth()->user()->hasRole(['rehab', 'super-admin','cashier','nurse']))
                 <flux:sidebar.item icon="clipboard-document-check" :href="route('rehab.queue')" wire:navigate>
                     Patient Queue
                 </flux:sidebar.item>
@@ -124,7 +124,7 @@
                 @endif
 
                 <!-- Bed Manager Routes -->
-                @if(auth()->user()->hasRole(['bed_manager', 'super-admin']))
+                @if(auth()->user()->hasRole(['bed_manager', 'super-admin','nurse']))
                 <flux:sidebar.item icon="home-modern" :href="route('rehab.bed-manager.queue')" wire:navigate>
                     Bed Selection Queue
                 </flux:sidebar.item>
@@ -176,7 +176,9 @@
                     <flux:badge size="sm" color="emerald" class="ml-auto">{{ $todayCount }}</flux:badge>
                     @endif
                 </flux:sidebar.item>
-
+                <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.calendar')" wire:navigate>
+                    Calendar View
+                </flux:sidebar.item>    
                 <flux:sidebar.item icon="calendar-days" :href="route('doctor.appointments.upcoming')" wire:navigate>
                     Upcoming
                     @php
@@ -196,7 +198,7 @@
                 @endif
 
                 <!-- Reception & Admin Routes (Full Access) -->
-                @if(auth()->user()->hasAnyRole(['admin', 'reception', 'super-admin']))
+                @if(auth()->user()->hasAnyRole(['admin','super-admin']))
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.appointments.all')"
                     wire:navigate>
                     All Appointments
@@ -208,9 +210,7 @@
                     @endif
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.calendar')" wire:navigate>
-                    Calendar View
-                </flux:sidebar.item>
+
 
                 <flux:sidebar.item icon="chart-bar" :href="route('doctor.appointments.reports')" wire:navigate>
                     Reports & Analytics
