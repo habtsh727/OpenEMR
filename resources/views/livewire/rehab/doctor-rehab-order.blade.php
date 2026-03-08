@@ -423,85 +423,270 @@
     </div>
     @endif
 
-    <!-- Action Buttons -->
-    <div class="sticky bottom-6 z-10">
-        <div
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
-            <div class="flex flex-col sm:flex-row items-center justify-end gap-3">
-                <button wire:click="backToReview"
-                    class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all w-full sm:w-auto order-2 sm:order-1">
-                    <span class="flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Back to Review
-                    </span>
-                </button>
+<!-- Action Buttons - Simplified -->
+<div class="sticky bottom-6 z-10">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
+        <div class="flex flex-col sm:flex-row items-center justify-end gap-3">
+            <button wire:click="backToReview"
+                class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all w-full sm:w-auto order-2 sm:order-1">
+                <span class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Review
+                </span>
+            </button>
 
-                <button wire:click="sendOrder" wire:loading.attr="disabled" @if(!$draftOrder ||
-                    $draftOrder->packages->isEmpty()) disabled @endif
-                    class="px-8 py-3 {{ $buttonClasses }} text-white font-medium rounded-xl focus:outline-none
-                    focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50
-                    disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all w-full sm:w-auto order-1
-                    sm:order-2">
+            <button wire:click="sendOrder" wire:loading.attr="disabled" @if(!$draftOrder || $draftOrder->packages->isEmpty()) disabled @endif
+                class="px-8 py-3 {{ $buttonClasses }} text-white font-medium rounded-xl focus:outline-none
+                focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50
+                disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all w-full sm:w-auto order-1
+                sm:order-2">
 
-                    <span wire:loading.remove wire:target="sendOrder" class="flex items-center justify-center gap-2">
-                        @if($hasBedItems)
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                            </path>
-                        </svg>
-                        {{-- @else
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span wire:loading.remove wire:target="sendOrder" class="flex items-center justify-center gap-2">
+                    @if($hasBedItems)
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                    @endif
+                    {{ $buttonText }}
+                </span>
+
+                <span wire:loading wire:target="sendOrder" class="flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    Processing...
+                </span>
+            </button>
+        </div>
+
+        <!-- Helper Text -->
+        @if(!$draftOrder || $draftOrder->packages->isEmpty())
+        <p class="mt-3 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3">
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Select at least one package to proceed
+        </p>
+        @else
+        <p class="mt-3 text-center text-sm {{ $hasBedItems ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400' }} border-t border-gray-100 dark:border-gray-700 pt-3">
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            @if($hasBedItems)
+            This order will be sent to Bed Manager for bed selection first
+            @else
+            This order will be sent directly to Cashier for payment
+            @endif
+        </p>
+        @endif
+    </div>
+</div>
+
+{{-- @if($showPaymentPlanModal)
+<div class="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Set Payment Plan</h2>
+            <button wire:click="$set('showPaymentPlanModal', false)" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 space-y-6">
+            <!-- Order Summary -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4">
+                <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Order Summary</h3>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600 dark:text-gray-400">Total Package Amount:</span>
+                    <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">ETB {{
+                        number_format($totalAmount, 2) }}</span>
+                </div>
+                @if($totalDurationDays > 0)
+                <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Total Duration: {{ $totalDurationDays }} days
+                </div>
+                @endif
+            </div>
+
+            <!-- Payment Type Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Payment Type</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" wire:click="$set('paymentType', 'full')"
+                        class="p-4 border-2 rounded-xl text-center transition-all duration-200
+                            {{ $paymentType === 'full' 
+                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800' 
+                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700' }}">
+                        <svg class="w-8 h-8 mx-auto mb-2 {{ $paymentType === 'full' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
                             </path>
-                        </svg> --}}
-                        @endif
-                        {{ $buttonText }}
-                    </span>
-
-                    <span wire:loading wire:target="sendOrder" class="flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
                         </svg>
-                        Processing...
-                    </span>
-                </button>
+                        <span
+                            class="block font-medium {{ $paymentType === 'full' ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300' }}">Full
+                            Payment</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Pay entire amount now</span>
+                    </button>
+
+                    <button type="button" wire:click="$set('paymentType', 'installment')"
+                        class="p-4 border-2 rounded-xl text-center transition-all duration-200
+                            {{ $paymentType === 'installment' 
+                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800' 
+                                : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700' }}">
+                        <svg class="w-8 h-8 mx-auto mb-2 {{ $paymentType === 'installment' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                        <span
+                            class="block font-medium {{ $paymentType === 'installment' ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300' }}">Installment
+                            Plan</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Split into multiple payments</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Helper Text -->
-            @if(!$draftOrder || $draftOrder->packages->isEmpty())
-            <p
-                class="mt-3 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3">
-                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Select at least one package to proceed
-            </p>
-            @else
-            <p
-                class="mt-3 text-center text-sm {{ $hasBedItems ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400' }} border-t border-gray-100 dark:border-gray-700 pt-3">
-                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                @if($hasBedItems)
-                This order will be sent to Bed Manager for bed selection first
-                @else
-                This order will be sent directly to Cashier for payment
-                @endif
-            </p>
+            @if($paymentType === 'installment')
+            <!-- Installment Configuration -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Number of
+                        Installments</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" wire:click="removeInstallment"
+                            class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            {{ $installmentCount <=1 ? 'disabled' : '' }}>
+                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4">
+                                </path>
+                            </svg>
+                        </button>
+                        <span class="w-12 text-center font-bold text-xl text-gray-900 dark:text-white">{{
+                            $installmentCount }}</span>
+                        <button type="button" wire:click="addInstallment"
+                            class="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Installment Schedule -->
+                <div class="space-y-3">
+                    <h4 class="font-medium text-gray-900 dark:text-white">Payment Schedule</h4>
+                    @foreach($customInstallments as $index => $installment)
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium text-gray-700 dark:text-gray-300">Installment #{{
+                                $installment['number'] }}</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">{{ $installment['percentage'] }}%
+                                of total</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Amount
+                                    (ETB)</label>
+                                <input type="number" step="0.01"
+                                    wire:input="updateInstallmentAmount({{ $index }}, $event.target.value)"
+                                    value="{{ $installment['amount'] }}"
+                                    class="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Due Date</label>
+                                <input type="date" wire:model="customInstallments.{{ $index }}.due_date"
+                                    class="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:text-white">
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                <!-- Total Verification -->
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-indigo-800 dark:text-indigo-300">Total of Installments:</span>
+                        <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                            ETB {{ number_format(array_sum(array_column($customInstallments, 'amount')), 2) }}
+                        </span>
+                    </div>
+                    @if(abs(array_sum(array_column($customInstallments, 'amount')) - $totalAmount) > 0.01)
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">
+                        Total does not match package amount. Please adjust.
+                    </p>
+                    @endif
+                </div>
+            </div>
             @endif
+
+            <!-- Summary Preview -->
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h4 class="font-medium text-gray-900 dark:text-white mb-3">Payment Summary</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Payment Type:</span>
+                        <span class="font-medium text-gray-900 dark:text-white capitalize">{{ $paymentType }}</span>
+                    </div>
+                    @if($paymentType === 'installment')
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Installments:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ $installmentCount }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">First Payment:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            ETB {{ number_format($customInstallments[0]['amount'] ?? 0, 2) }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">First Due Date:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">
+                            {{ isset($customInstallments[0]['due_date']) ?
+                            \Carbon\Carbon::parse($customInstallments[0]['due_date'])->format('M d, Y') : 'N/A' }}
+                        </span>
+                    </div>
+                    @else
+                    <div class="flex justify-between">
+                        <span class="text-gray-600 dark:text-gray-400">Due Date:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ now()->format('M d, Y') }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end gap-3">
+            <button wire:click="$set('showPaymentPlanModal', false)"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                Cancel
+            </button>
+            <button wire:click="createInstallmentSchedule" 
+                @if($paymentType === 'installment' && abs(array_sum(array_column($customInstallments, 'amount')) - $totalAmount) > 0.01) disabled @endif
+                class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg
+                hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed
+                transition-all shadow-lg hover:shadow-xl">
+                Save Payment Plan
+            </button>
         </div>
     </div>
+</div>
+@endif --}}
 
     <!-- Notification Script -->
     @push('scripts')
@@ -521,4 +706,5 @@
         });
     </script>
     @endpush
+</div>
 </div>

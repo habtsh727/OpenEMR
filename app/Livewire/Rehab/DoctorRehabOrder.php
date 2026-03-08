@@ -104,12 +104,11 @@ class DoctorRehabOrder extends Component
 
             $this->draftOrder->refresh();
             $this->calculateTotal();
-            
+
             $this->dispatch('notify', [
                 'message' => 'Package added successfully',
                 'type' => 'success'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to add package: ' . $e->getMessage());
             $this->dispatch('notify', [
@@ -135,12 +134,11 @@ class DoctorRehabOrder extends Component
             $this->draftOrder->refresh();
             $this->selectedPackageIds = array_values($this->selectedPackageIds);
             $this->calculateTotal();
-            
+
             $this->dispatch('notify', [
                 'message' => 'Package removed successfully',
                 'type' => 'success'
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to remove package: ' . $e->getMessage());
             $this->dispatch('notify', [
@@ -149,7 +147,7 @@ class DoctorRehabOrder extends Component
             ]);
         }
     }
-    
+
     private function calculateTotal()
     {
         if ($this->draftOrder) {
@@ -205,111 +203,81 @@ class DoctorRehabOrder extends Component
     /**
      * Send order to appropriate queue (Bed Manager if has bed, otherwise Cashier)
      */
-    /**
- * Send order to appropriate queue (Bed Manager if has bed, otherwise Cashier)
- */
-public function sendOrder()
-{
-    if ($this->draftOrder->packages->isEmpty()) {
-        $this->dispatch('notify', [
-            'message' => 'Please add at least one package',
-            'type' => 'error'
-        ]);
-        return;
-    }
-
-    try {
-        DB::transaction(function () {
-            $hasBedItems = $this->orderHasBedItems();
-            
-            // Log what we're about to do
-            Log::info('Processing order send', [
-                'order_id' => $this->draftOrder->id,
-                'encounter_id' => $this->rehabEncounter->id,
-                'has_bed_items' => $hasBedItems,
-                'current_order_status' => $this->draftOrder->status,
-                'current_encounter_status' => $this->rehabEncounter->status
-            ]);
-            
-            if ($hasBedItems) {
-                // Order has bed items - send to bed manager first
-                $this->draftOrder->update([
-                    'status' => 'sent_to_bed_manager'
-                ]);
-
-                $this->rehabEncounter->update([
-                    'status' => 'sent_to_bed_manager'
-                ]);
-
-                $message = 'Order sent to Bed Manager for bed selection.';
-                $redirectRoute = 'rehab.bed-manager.queue';
-                $destination = 'Bed Manager';
-            } else {
-                // No bed items - go directly to cashier
-                $this->draftOrder->update([
-                    'status' => 'sent_to_cashier'
-                ]);
-
-                $this->rehabEncounter->update([
-                    'status' => 'sent_to_cashier'
-                ]);
-
-                $message = 'Order sent directly to Cashier for payment.';
-                $redirectRoute = 'rehab.cashier.queue';
-                $destination = 'Cashier';
-            }
-
-            // Log the successful update
-            Log::info('Order sent to ' . $destination, [
-                'order_id' => $this->draftOrder->id,
-                'encounter_id' => $this->rehabEncounter->id,
-                'has_bed_items' => $hasBedItems,
-                'new_order_status' => $this->draftOrder->status,
-                'new_encounter_status' => $this->rehabEncounter->status,
-                'doctor_id' => auth()->id()
-            ]);
-
-            // Store in session
-            session()->flash('success', $message);
-        });
-
-        // Dispatch success notification
-        $this->dispatch('notify', [
-            'message' => session('success'),
-            'type' => 'success'
-        ]);
-
-        // Redirect based on destination
-        // if ($this->orderHasBedItems()) {
-        //     return redirect()->route('rehab.bed-manager.queue');
-        // } else {
-        //     return redirect()->route('rehab.cashier.queue');
-        // }
-
-    } catch (\Exception $e) {
-        // Log the full error details
-        Log::error('Failed to send order: ' . $e->getMessage(), [
-            'order_id' => $this->draftOrder->id,
-            'encounter_id' => $this->rehabEncounter->id,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ]);
-        
-        $this->dispatch('notify', [
-            'message' => 'Failed to send order: ' . $e->getMessage(),
-            'type' => 'error'
-        ]);
-    }
-}
-
-    /**
-     * Keep old method for backward compatibility
-     */
-    public function sendToCashier()
+    public function sendOrder()
     {
-        return $this->sendOrder();
+        if ($this->draftOrder->packages->isEmpty()) {
+            $this->dispatch('notify', [
+                'message' => 'Please add at least one package',
+                'type' => 'error'
+            ]);
+            return;
+        }
+
+        try {
+            DB::transaction(function () {
+                $hasBedItems = $this->orderHasBedItems();
+
+                Log::info('Processing order send', [
+                    'order_id' => $this->draftOrder->id,
+                    'encounter_id' => $this->rehabEncounter->id,
+                    'has_bed_items' => $hasBedItems
+                ]);
+
+                if ($hasBedItems) {
+                    // Order has bed items - send to bed manager first
+                    $this->draftOrder->update([
+                        'status' => 'sent_to_bed_manager'
+                    ]);
+
+                    $this->rehabEncounter->update([
+                        'status' => 'sent_to_bed_manager'
+                    ]);
+
+                    $message = 'Order sent to Bed Manager for bed selection.';
+                    $destination = 'Bed Manager';
+                } else {
+                    // No bed items - go directly to cashier
+                    $this->draftOrder->update([
+                        'status' => 'sent_to_cashier'
+                    ]);
+
+                    $this->rehabEncounter->update([
+                        'status' => 'sent_to_cashier'
+                    ]);
+
+                    $message = 'Order sent directly to Cashier for payment.';
+                    $destination = 'Cashier';
+                }
+
+                Log::info('Order sent to ' . $destination, [
+                    'order_id' => $this->draftOrder->id,
+                    'encounter_id' => $this->rehabEncounter->id,
+                    'new_order_status' => $this->draftOrder->status,
+                    'new_encounter_status' => $this->rehabEncounter->status,
+                    'doctor_id' => auth()->id()
+                ]);
+
+                session()->flash('success', $message);
+            });
+
+            $this->dispatch('notify', [
+                'message' => session('success'),
+                'type' => 'success'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send order: ' . $e->getMessage(), [
+                'order_id' => $this->draftOrder->id,
+                'encounter_id' => $this->rehabEncounter->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $this->dispatch('notify', [
+                'message' => 'Failed to send order: ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
+        }
     }
 
     public function backToReview()
@@ -323,7 +291,7 @@ public function sendOrder()
         $destination = $this->getDestination();
         $buttonText = $this->getButtonText();
         $buttonClasses = $this->getButtonClasses();
-        
+
         return view('livewire.rehab.doctor-rehab-order', [
             'hasBedItems' => $hasBedItems,
             'destination' => $destination,
