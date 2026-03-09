@@ -151,6 +151,9 @@
                 <flux:sidebar.item icon="document-chart-bar" :href="route('reports.rehab-payments')" wire:navigate>
                     Rehab Reports
                 </flux:sidebar.item>
+                 {{-- <flux:sidebar.item icon="document-chart-bar" :href="route('rehab.payment.reports')" wire:navigate>
+                    Rehab Payment  Reports
+                </flux:sidebar.item> --}}
                 @endif
 
             </flux:sidebar.group>
