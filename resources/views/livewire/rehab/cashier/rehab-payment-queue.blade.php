@@ -193,37 +193,49 @@
         </div>
 
         <!-- Tabs -->
-        <div
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-            <div class="flex gap-2">
-                <button wire:click="$set('tab', 'pending')"
-                    class="flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                        {{ $tab === 'pending' 
-                            ? 'bg-indigo-600 text-white shadow-md' 
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                    <span class="flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Pending Payments
-                    </span>
-                </button>
-                <button wire:click="$set('tab', 'processed')"
-                    class="flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                        {{ $tab === 'processed' 
-                            ? 'bg-indigo-600 text-white shadow-md' 
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                    <span class="flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Processed Payments
-                    </span>
-                </button>
-            </div>
-        </div>
+        <!-- Tabs -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+    <div class="flex flex-wrap gap-2">
+        <button wire:click="$set('tab', 'pending')"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                {{ $tab === 'pending' 
+                    ? 'bg-indigo-600 text-white shadow-md' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+            Pending
+        </button>
+        <button wire:click="$set('tab', 'partial')"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                {{ $tab === 'partial' 
+                    ? 'bg-yellow-600 text-white shadow-md' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+            Partial Payments
+            @php
+                $partialCount = \App\Models\RehabOrder::where('payment_status', 'partial')
+                    ->where('status', 'sent_to_cashier')
+                    ->count();
+            @endphp
+            @if($partialCount > 0)
+                <span class="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs">
+                    {{ $partialCount }}
+                </span>
+            @endif
+        </button>
+        <button wire:click="$set('tab', 'overdue')"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                {{ $tab === 'overdue' 
+                    ? 'bg-red-600 text-white shadow-md' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+            Overdue
+        </button>
+        <button wire:click="$set('tab', 'processed')"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                {{ $tab === 'processed' 
+                    ? 'bg-green-600 text-white shadow-md' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+            Completed
+        </button>
+    </div>
+</div>
 
         <!-- Search -->
         <div class="mb-6">
@@ -385,37 +397,61 @@
                             ETB {{ number_format($order->grand_total, 2) }}
                         </td>
 
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($order->status === 'bed_selected')
-                            <span
-                                class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs rounded-full flex items-center gap-1 w-fit">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                                    </path>
-                                </svg>
-                                Bed Selected
-                            </span>
-                            @elseif($order->status === 'sent_to_cashier')
-                            <span
-                                class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1 w-fit">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Pending
-                            </span>
-                            @else
-                            <span
-                                class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full flex items-center gap-1 w-fit">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Paid
-                            </span>
-                            @endif
-                        </td>
+                       <td class="px-6 py-4 whitespace-nowrap">
+    @if($order->status === 'bed_selected')
+        <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs rounded-full flex items-center gap-1 w-fit">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            Bed Selected
+        </span>
+        
+    @elseif($order->payment_status === 'partial')
+        @php 
+            $totalInstallments = $order->paymentInstallments->count();
+            $paidInstallments = $order->paymentInstallments->where('status', 'paid')->count();
+        @endphp
+        <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1 w-fit">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            @if($totalInstallments > 0)
+                Partial ({{ $paidInstallments }}/{{ $totalInstallments }})
+            @else
+                Partial Payment
+            @endif
+        </span>
+        
+    @elseif($order->payment_status === 'overdue')
+        <span class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs rounded-full flex items-center gap-1 w-fit">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Overdue
+        </span>
+        
+    @elseif($order->status === 'sent_to_cashier' && ($order->payment_status === 'pending' || !$order->payment_status))
+        <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1 w-fit">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Pending
+        </span>
+        
+    @elseif($order->status === 'paid' && $order->payment_status === 'paid')
+        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full flex items-center gap-1 w-fit">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Fully Paid
+        </span>
+        
+    @else
+        <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs rounded-full">
+            {{ ucfirst($order->status) }}
+        </span>
+    @endif
+</td>
 
                         <!-- In your queue table, replace the view button -->
                         <td class="px-6 py-4 whitespace-nowrap">
