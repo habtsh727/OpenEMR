@@ -16,7 +16,7 @@ class RehabOrder extends Model
         'payment_method',
         'paid_at',
     ];
-    
+
     protected $casts = [
         'paid_at' => 'datetime',
         'total_amount' => 'decimal:2',
@@ -95,5 +95,55 @@ class RehabOrder extends Model
         return $this->hasOne(RehabBedSelection::class, 'rehab_order_id')
             ->where('status', 'selected')
             ->latestOfMany();
+    }
+
+
+    public function paymentInstallments()
+    {
+        return $this->hasMany(RehabPaymentInstallment::class)->orderBy('installment_number');
+    }
+
+    public function getTotalPaidAmountAttribute()
+    {
+        return $this->paymentInstallments->sum('paid_amount');
+    }
+
+    public function getRemainingAmountAttribute()
+    {
+        return $this->total_amount - $this->total_paid_amount;
+    }
+
+    public function getPaymentProgressAttribute()
+    {
+        if ($this->total_amount > 0) {
+            return round(($this->total_paid_amount / $this->total_amount) * 100, 2);
+        }
+        return 0;
+    }
+
+    public function updatePaymentStatus()
+    {
+        $totalPaid = $this->total_paid_amount;
+
+        if ($totalPaid >= $this->total_amount) {
+            $this->payment_status = 'paid';
+            $this->status = 'paid';
+        } elseif ($totalPaid > 0) {
+            $this->payment_status = 'partial';
+        } else {
+            $this->payment_status = 'pending';
+        }
+
+        // Check for overdue installments
+        $hasOverdue = $this->paymentInstallments()
+            ->where('status', 'pending')
+            ->where('due_date', '<', now())
+            ->exists();
+
+        if ($hasOverdue && $this->payment_status !== 'paid') {
+            $this->payment_status = 'overdue';
+        }
+
+        $this->saveQuietly();
     }
 }

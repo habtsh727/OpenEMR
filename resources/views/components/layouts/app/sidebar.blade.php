@@ -22,7 +22,7 @@
 
         {{-- ========================= ACCOUNTS ========================= --}}
         @canany(['view_user','create_user','update_user','delete_user','manage_roles'])
-        <flux:sidebar.group expandable heading="Accounts" class="grid">
+        <flux:sidebar.group expandable :expanded="false" heading="Accounts" class="grid">
 
             @canany(['view_user','create_user','update_user','delete_user'])
             <flux:sidebar.item icon="user" :href="route('admin.users')" wire:navigate>Users</flux:sidebar.item>
@@ -50,7 +50,7 @@
             {{-- ========================= PAYMENTS ========================= --}}
 
             @canany(['super-admin', 'receive_payment'])
-            <flux:sidebar.group expandable heading="Payment" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Payment" class="grid">
                 @canany(['create_invoice','view_invoice','receive_payment','refund_payment'])
                 <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Register Payments
                 </flux:sidebar.item>
@@ -69,7 +69,7 @@
             @endcanany
             {{-- ========================= CLINICAL ========================= --}}
             @if(auth()->user()->hasRole(['doctor', 'nurse', 'clinician', 'rehab', 'super-admin']))
-            <flux:sidebar.group expandable heading="Clinical" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Clinical" class="grid">
 
                 @if(auth()->user()->hasRole(['nurse','super-admin']))
                 <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage
@@ -92,7 +92,7 @@
             {{-- rehab sidebar-start--}}
             @if(auth()->user()->hasRole(['doctor', 'nurse', 'bed_manager', 'cashier',
             'super-admin']))
-            <flux:sidebar.group expandable heading="Rehabilitation" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Rehabilitation" class="grid">
 
                 <!-- Doctor Routes -->
                 @if(auth()->user()->hasRole(['doctor', 'nurse', 'super-admin']))
@@ -151,6 +151,9 @@
                 <flux:sidebar.item icon="document-chart-bar" :href="route('reports.rehab-payments')" wire:navigate>
                     Rehab Reports
                 </flux:sidebar.item>
+                 {{-- <flux:sidebar.item icon="document-chart-bar" :href="route('rehab.payment.reports')" wire:navigate>
+                    Rehab Payment  Reports
+                </flux:sidebar.item> --}}
                 @endif
 
             </flux:sidebar.group>
@@ -160,9 +163,7 @@
 
             {{-- Appointment Sidebar Group --}}
             @if(auth()->user()->hasAnyRole(['doctor', 'clinician', 'admin', 'reception', 'super-admin']))
-            <flux:sidebar.group expandable heading="Appointments" icon="calendar" class="grid">
-
-                <!-- Doctor & Clinician Routes -->
+            <flux:sidebar.group expandable :expanded="false" heading="Appointments" class="grid">
                 @if(auth()->user()->hasAnyRole(['doctor', 'clinician', 'super-admin']))
                 <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.today')" wire:navigate>
                     Today's Schedule
@@ -178,7 +179,7 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.calendar')" wire:navigate>
                     Calendar View
-                </flux:sidebar.item>    
+                </flux:sidebar.item>
                 <flux:sidebar.item icon="calendar-days" :href="route('doctor.appointments.upcoming')" wire:navigate>
                     Upcoming
                     @php
@@ -239,7 +240,7 @@
 
             {{-- ========================= LABORATORY ========================= --}}
             @canany(['view_lab_result','view_lab_order','enter_lab_result','verify_lab_result'])
-            <flux:sidebar.group expandable heading="Labratory" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Labratory" class="grid">
                 @can('enter_lab_result')
                 <flux:sidebar.item icon="tag" :href="route('lab.dashboard')" wire:navigate>Laboratory Dashboard
                 </flux:sidebar.item>
@@ -256,7 +257,7 @@
             @endcanany
             {{-- ========================= Radiology ========================= --}}
             @canany([ 'view_imaging_order','upload_imaging_result',])
-            <flux:sidebar.group expandable heading="Radiology" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Radiology" class="grid">
 
                 <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
                 </flux:sidebar.item>
@@ -277,7 +278,7 @@
             'transfer_bed',
             'discharge_bed'
             ])
-            <flux:sidebar.group expandable heading="Bed Management" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Bed Management" class="grid">
                 <flux:sidebar.item icon="banknotes" :href="route('beds.index')" wire:navigate>
                     Bed Dashboard
                 </flux:sidebar.item>
@@ -286,7 +287,7 @@
 
             {{-- ========================= PHARMACY ========================= --}}
             @canany(['view_prescription','dispense_drug','manage_drugs'])
-            <flux:sidebar.group expandable heading="Pharmacy" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Pharmacy" class="grid">
                 <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')" wire:navigate>
                     Pharmacy
                 </flux:sidebar.item>
@@ -308,7 +309,7 @@
             {{-- ========================= CONFIGURATION ========================= --}}
             @canany(['manage_medical_history_templates', 'manage_chief_complaint_templates',
             'manage_examination_templates', 'manage_assessment_templates'])
-            <flux:sidebar.group expandable heading="Configuration" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Configuration" class="grid">
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('config.medical-history-templates')"
                     wire:navigate>
                     Medical History
@@ -329,7 +330,7 @@
             @endcanany
             {{-- ========================= SETTINGS ========================= --}}
             @canany(['view_reports','export_reports','manage_inventory','manage_services'])
-            <flux:sidebar.group expandable heading="Settings" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Settings" class="grid">
 
                 @canany(['manage_services'])
                 <flux:sidebar.item icon="document-text" :href="route('service-category')" wire:navigate>Services
@@ -344,7 +345,7 @@
 
             @endcanany
 
-            <flux:sidebar.group expandable heading="Financial Management" class="grid">
+            <flux:sidebar.group expandable :expanded="false" heading="Financial Management" class="grid">
 
                 <flux:sidebar.item icon="currency-dollar" :href="route('reports.registration-payments')" wire:navigate>
                     Registration Payments

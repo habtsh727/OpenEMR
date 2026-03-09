@@ -1,29 +1,35 @@
 <?php
+// app/Livewire/Rehab/Cashier/RehabPaymentQueue.php
 
 namespace App\Livewire\Rehab\Cashier;
 
 use App\Models\RehabOrder;
+use App\Models\RehabPaymentInstallment;
 use App\Models\RehabEncounter;
 use App\Models\RehabBedSelection;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class RehabPaymentQueue extends Component
 {
     use WithPagination;
 
     public $search = '';
-    public $tab = 'pending'; // pending, processed
+    public $tab = 'pending'; // pending, processed, overdue, partial
     public $selectedOrder = null;
     public $showDetailsModal = false;
 
     // Payment properties
     public $showPaymentModal = false;
     public $paymentOrder = null;
+    public $paymentInstallments = [];
+    public $selectedInstallment = null;
     public $paymentMethod = 'cash';
     public $paymentAmount = 0;
     public $changeAmount = 0;
+    public $partialPaymentNote = '';
 
     // Bed selection properties
     public $bedSelection = null;
@@ -31,12 +37,71 @@ class RehabPaymentQueue extends Component
     public $packageTotal = 0;
     public $grandTotal = 0;
 
+    // NEW: Installment creation properties
+    public $showPaymentPlanModal = false;
+    public $paymentType = 'full'; // 'full' or 'installment'
+    public $installmentCount = 2;
+    public $customInstallments = [];
+    public $totalDurationDays = 0;
+
     // Alert properties
     public $showAlert = false;
     public $alertMessage = '';
     public $alertType = 'success';
 
+    // Payment reminder
+    public $paymentReminders = [];
+
     protected $listeners = ['refreshQueue' => '$refresh'];
+
+    public function mount()
+    {
+        $this->checkPaymentReminders();
+    }
+
+    public function checkPaymentReminders()
+    {
+        // Check for upcoming payments (5 days before due)
+        $upcomingPayments = RehabPaymentInstallment::with('rehabOrder.encounter.encounter.patient')
+            ->where('status', 'pending')
+            ->whereBetween('due_date', [now(), now()->addDays(5)])
+            ->get();
+
+        foreach ($upcomingPayments as $installment) {
+            $daysLeft = now()->diffInDays($installment->due_date, false);
+            if ($daysLeft <= 5 && $daysLeft >= 0) {
+                $this->paymentReminders[] = [
+                    'type' => 'warning',
+                    'message' => "Payment of " . number_format($installment->amount, 2) . " ETB due in {$daysLeft} days for patient: " .
+                        ($installment->rehabOrder->encounter->encounter->patient->name ?? 'Unknown'),
+                    'installment_id' => $installment->id,
+                    'order_id' => $installment->rehab_order_id,
+                    'due_date' => $installment->due_date->format('Y-m-d')
+                ];
+            }
+        }
+
+        // Check for overdue payments
+        $overduePayments = RehabPaymentInstallment::with('rehabOrder.encounter.encounter.patient')
+            ->where('status', 'pending')
+            ->where('due_date', '<', now())
+            ->get();
+
+        foreach ($overduePayments as $installment) {
+            $daysOverdue = now()->diffInDays($installment->due_date);
+            $this->paymentReminders[] = [
+                'type' => 'danger',
+                'message' => "OVERDUE by {$daysOverdue} days: " . number_format($installment->amount, 2) . " ETB for patient: " .
+                    ($installment->rehabOrder->encounter->encounter->patient->name ?? 'Unknown'),
+                'installment_id' => $installment->id,
+                'order_id' => $installment->rehab_order_id,
+                'due_date' => $installment->due_date->format('Y-m-d')
+            ];
+
+            // Mark order as overdue
+            $installment->rehabOrder->update(['payment_status' => 'overdue']);
+        }
+    }
 
     public function viewOrder($orderId)
     {
@@ -46,7 +111,8 @@ class RehabPaymentQueue extends Component
             'encounter.encounter.doctor',
             'bedSelections' => function ($query) {
                 $query->with(['bedClass', 'bed'])->latest();
-            }
+            },
+            'paymentInstallments'
         ])->find($orderId);
 
         // Calculate bed cost if exists
@@ -58,66 +124,274 @@ class RehabPaymentQueue extends Component
         $this->showDetailsModal = true;
     }
 
-    public function closeModal()
-    {
-        $this->showDetailsModal = false;
-        $this->selectedOrder = null;
-        $this->bedSelection = null;
-        $this->bedCost = 0;
-    }
-
     public function openPaymentModal($orderId)
-{
-    $this->paymentOrder = RehabOrder::with([
-        'encounter.encounter.patient',
-        'packages',
-        'bedSelections' => function ($query) {
-            $query->with(['bedClass', 'bed'])->latest();
-        }
-    ])->find($orderId);
-
-    if (!$this->paymentOrder) {
-        $this->showAlertMessage('Order not found', 'error');
-        return;
-    }
-
-    // Calculate package total
-    $this->packageTotal = $this->paymentOrder->total_amount;
-    
-    // Get bed selection and cost
-    $this->bedSelection = $this->paymentOrder->bedSelections->first();
-    $this->bedCost = $this->bedSelection->total_price ?? 0;
-    
-    // Calculate grand total
-    $this->grandTotal = $this->packageTotal + $this->bedCost;
-    
-    $this->paymentAmount = $this->grandTotal;
-    $this->changeAmount = 0;
-    $this->paymentMethod = 'cash';
-    $this->showPaymentModal = true;
-
-    if ($this->showDetailsModal) {
-        $this->closeModal();
-    }
-}
-    public function closePaymentModal()
     {
-        $this->showPaymentModal = false;
-        $this->paymentOrder = null;
-        $this->bedSelection = null;
-        $this->bedCost = 0;
-        $this->packageTotal = 0;
-        $this->grandTotal = 0;
-        $this->paymentMethod = 'cash';
-        $this->paymentAmount = 0;
+        $this->paymentOrder = RehabOrder::with([
+            'encounter.encounter.patient',
+            'packages',
+            'bedSelections' => function ($query) {
+                $query->with(['bedClass', 'bed'])->latest();
+            },
+            'paymentInstallments'
+        ])->find($orderId);
+
+        if (!$this->paymentOrder) {
+            $this->showAlertMessage('Order not found', 'error');
+            return;
+        }
+
+        // Calculate package total
+        $this->packageTotal = $this->paymentOrder->total_amount;
+
+        // Get bed selection and cost
+        $this->bedSelection = $this->paymentOrder->bedSelections->first();
+        $this->bedCost = $this->bedSelection->total_price ?? 0;
+
+        // Calculate grand total
+        $this->grandTotal = $this->packageTotal + $this->bedCost;
+
+        // Get bed duration for installment calculation
+        if ($this->bedSelection) {
+            $this->totalDurationDays = $this->bedSelection->duration_days ?? 0;
+        }
+
+        // Get pending installments
+        $this->paymentInstallments = $this->paymentOrder->paymentInstallments()
+            ->whereIn('status', ['pending', 'partial', 'overdue'])
+            ->orderBy('installment_number')
+            ->get();
+
+        // If no installments exist, show payment plan creation modal
+        if ($this->paymentInstallments->isEmpty()) {
+            // DON'T close payment modal, just show payment plan modal
+            // Keep paymentOrder reference
+            $this->initializeCustomInstallments();
+            $this->showPaymentPlanModal = true;
+            return;
+        }
+
+        // Auto-select first pending installment
+        $this->selectedInstallment = $this->paymentInstallments->first();
+
+        if ($this->selectedInstallment) {
+            $this->paymentAmount = $this->selectedInstallment->getRemainingAmount();
+        } else {
+            $this->paymentAmount = 0;
+        }
+
         $this->changeAmount = 0;
+        $this->paymentMethod = 'cash';
+        $this->showPaymentModal = true;
+
+        if ($this->showDetailsModal) {
+            $this->closeModal();
+        }
+    }
+
+    // NEW: Open payment plan modal for creating installments
+    public function openPaymentPlanModal()
+    {
+        $this->initializeCustomInstallments();
+        $this->showPaymentPlanModal = true;
+    }
+
+    // NEW: Initialize custom installments
+    public function initializeCustomInstallments()
+    {
+        $this->customInstallments = [];
+        $totalAmount = $this->grandTotal;
+
+        // Default to 2 installments with 50% each
+        for ($i = 1; $i <= $this->installmentCount; $i++) {
+            $amount = $totalAmount / $this->installmentCount;
+
+            // Calculate due date based on duration
+            $dueDate = now();
+            if ($this->totalDurationDays > 0) {
+                $daysPerInstallment = floor($this->totalDurationDays / $this->installmentCount);
+                $dueDate = now()->addDays($daysPerInstallment * $i);
+            }
+
+            $this->customInstallments[] = [
+                'number' => $i,
+                'amount' => round($amount, 2),
+                'due_date' => $dueDate->format('Y-m-d'),
+                'percentage' => round(100 / $this->installmentCount, 2)
+            ];
+        }
+
+        // Adjust last installment to ensure total matches exactly
+        $total = array_sum(array_column($this->customInstallments, 'amount'));
+        if (abs($total - $totalAmount) > 0.01) {
+            $lastIndex = count($this->customInstallments) - 1;
+            $this->customInstallments[$lastIndex]['amount'] = round(
+                $this->customInstallments[$lastIndex]['amount'] + ($totalAmount - $total),
+                2
+            );
+        }
+    }
+
+    // NEW: Update installment count
+    public function updatedInstallmentCount()
+    {
+        $this->initializeCustomInstallments();
+    }
+
+    // NEW: Update specific installment amount
+    public function updateInstallmentAmount($index, $amount)
+    {
+        if ($index >= 0 && $index < count($this->customInstallments)) {
+            $this->customInstallments[$index]['amount'] = round(floatval($amount), 2);
+
+            // Recalculate percentages
+            $total = array_sum(array_column($this->customInstallments, 'amount'));
+            foreach ($this->customInstallments as $i => $installment) {
+                $this->customInstallments[$i]['percentage'] = round(($installment['amount'] / $total) * 100, 2);
+            }
+        }
+    }
+
+    // NEW: Add new installment
+    public function addInstallment()
+    {
+        $this->installmentCount++;
+        $totalAmount = $this->grandTotal;
+
+        // Calculate new due date
+        $dueDate = now();
+        if ($this->totalDurationDays > 0) {
+            $daysPerInstallment = floor($this->totalDurationDays / $this->installmentCount);
+            $dueDate = now()->addDays($daysPerInstallment * $this->installmentCount);
+        }
+
+        $this->customInstallments[] = [
+            'number' => $this->installmentCount,
+            'amount' => 0,
+            'due_date' => $dueDate->format('Y-m-d'),
+            'percentage' => 0
+        ];
+
+        // Redistribute amounts
+        $this->redistributeInstallments();
+    }
+
+    // NEW: Remove last installment
+    public function removeInstallment()
+    {
+        if ($this->installmentCount > 1) {
+            array_pop($this->customInstallments);
+            $this->installmentCount--;
+            $this->redistributeInstallments();
+        }
+    }
+
+    // NEW: Redistribute installments to match total
+    private function redistributeInstallments()
+    {
+        $totalAmount = $this->grandTotal;
+        $total = array_sum(array_column($this->customInstallments, 'amount'));
+
+        if ($total != $totalAmount) {
+            $perInstallment = floor(($totalAmount / $this->installmentCount) * 100) / 100;
+
+            for ($i = 0; $i < $this->installmentCount; $i++) {
+                if ($i == $this->installmentCount - 1) {
+                    // Last installment gets the remainder
+                    $this->customInstallments[$i]['amount'] = $totalAmount - ($perInstallment * ($this->installmentCount - 1));
+                } else {
+                    $this->customInstallments[$i]['amount'] = $perInstallment;
+                }
+                $this->customInstallments[$i]['percentage'] = round(($this->customInstallments[$i]['amount'] / $totalAmount) * 100, 2);
+            }
+        }
+    }
+
+    // NEW: Create installment schedule
+    public function createInstallmentSchedule()
+    {
+        try {
+            $message = ''; // Declare message variable outside transaction
+
+            DB::transaction(function () use (&$message) { // Pass by reference
+                // Delete any existing installments
+                RehabPaymentInstallment::where('rehab_order_id', $this->paymentOrder->id)->delete();
+
+                if ($this->paymentType === 'installment') {
+                    // Create custom installments
+                    foreach ($this->customInstallments as $installment) {
+                        RehabPaymentInstallment::create([
+                            'rehab_order_id' => $this->paymentOrder->id,
+                            'installment_number' => $installment['number'],
+                            'amount' => $installment['amount'],
+                            'due_date' => $installment['due_date'],
+                            'status' => $installment['number'] === 1 ? 'pending' : 'pending',
+                            'created_by' => auth()->id()
+                        ]);
+                    }
+
+                    // Update order with installment info
+                    $this->paymentOrder->update([
+                        'payment_type' => 'installment',
+                        'installment_count' => $this->installmentCount,
+                        'paid_amount' => 0,
+                        'payment_status' => 'pending',
+                        'next_payment_due' => $this->customInstallments[0]['due_date'] ?? now()
+                    ]);
+
+                    $message = 'Installment plan created successfully with ' . $this->installmentCount . ' payments.';
+                } else {
+                    // Full payment - create single installment
+                    RehabPaymentInstallment::create([
+                        'rehab_order_id' => $this->paymentOrder->id,
+                        'installment_number' => 1,
+                        'amount' => $this->grandTotal,
+                        'due_date' => now(),
+                        'status' => 'pending',
+                        'created_by' => auth()->id()
+                    ]);
+
+                    $this->paymentOrder->update([
+                        'payment_type' => 'full',
+                        'installment_count' => 1,
+                        'paid_amount' => 0,
+                        'payment_status' => 'pending',
+                        'next_payment_due' => now()
+                    ]);
+
+                    $message = 'Full payment plan created.';
+                }
+            });
+
+            $this->closePaymentPlanModal();
+
+            // Re-open payment modal with the new installments
+            $this->openPaymentModal($this->paymentOrder->id);
+
+            $this->showAlertMessage($message, 'success');
+        } catch (\Exception $e) {
+            $this->showAlertMessage('Error creating payment plan: ' . $e->getMessage(), 'error');
+        }
+    }
+
+    public function selectInstallment($installmentId)
+    {
+        $this->selectedInstallment = RehabPaymentInstallment::find($installmentId);
+        if ($this->selectedInstallment) {
+            $this->paymentAmount = $this->selectedInstallment->getRemainingAmount();
+            $this->changeAmount = 0;
+        }
     }
 
     public function updatedPaymentAmount()
     {
-        if ($this->paymentOrder) {
-            if ($this->paymentAmount >= $this->grandTotal) {
-                $this->changeAmount = $this->paymentAmount - $this->grandTotal;
+        if ($this->selectedInstallment) {
+            $remainingAmount = $this->selectedInstallment->getRemainingAmount();
+            if ($this->paymentAmount > $remainingAmount) {
+                $this->paymentAmount = $remainingAmount;
+            }
+
+            if ($this->paymentAmount >= $remainingAmount) {
+                $this->changeAmount = $this->paymentAmount - $remainingAmount;
             } else {
                 $this->changeAmount = 0;
             }
@@ -126,76 +400,151 @@ class RehabPaymentQueue extends Component
 
     public function processPayment()
     {
-        if (!$this->paymentOrder) {
+        if (!$this->paymentOrder || !$this->selectedInstallment) {
             return;
         }
 
+        $remainingAmount = $this->selectedInstallment->getRemainingAmount();
+
         $this->validate([
-            'paymentMethod' => 'required|in:cash,card,insurance',
-            'paymentAmount' => 'required|numeric|min:' . $this->grandTotal,
+            'paymentMethod' => 'required|in:cash,card,insurance,bank_transfer',
+            'paymentAmount' => 'required|numeric|min:1|max:' . $remainingAmount,
         ]);
 
         try {
             DB::transaction(function () {
-                // Update order status with payment details
-                $this->paymentOrder->update([
-                    'status' => 'paid',
-                    'payment_method' => $this->paymentMethod,
-                    'paid_at' => now()
+                // Update installment
+                $newPaidAmount = $this->selectedInstallment->paid_amount + $this->paymentAmount;
+                $installmentStatus = $newPaidAmount >= $this->selectedInstallment->amount ? 'paid' : 'partial';
+
+                $this->selectedInstallment->update([
+                    'paid_amount' => $newPaidAmount,
+                    'paid_date' => $installmentStatus === 'paid' ? now() : null,
+                    'status' => $installmentStatus,
+                    'updated_by' => auth()->id()
                 ]);
 
-                // If there's a bed selection, update bed status to occupied
-                if ($this->bedSelection) {
-                    $bed = \App\Models\Bed::find($this->bedSelection->bed_id);
-                    if ($bed) {
-                        $bed->update([
-                            'status' => 'occupied'
+                // Update order paid amount
+                $totalPaid = $this->paymentOrder->paymentInstallments()->sum('paid_amount');
+                $this->paymentOrder->paid_amount = $totalPaid;
+
+                // Check if this is the first installment
+                $isFirstInstallment = $this->selectedInstallment->installment_number === 1;
+
+                // Check if all installments are paid
+                $pendingInstallments = $this->paymentOrder->paymentInstallments()
+                    ->where('status', '!=', 'paid')
+                    ->count();
+
+                if ($pendingInstallments === 0) {
+                    // ALL INSTALLMENTS PAID - Full payment completed
+                    $this->paymentOrder->status = 'paid';
+                    $this->paymentOrder->payment_status = 'paid';
+                    $this->paymentOrder->payment_method = $this->paymentMethod;
+                    $this->paymentOrder->paid_at = now();
+
+                    // Update rehab encounter status to send to treatment
+                    if ($this->paymentOrder->encounter) {
+                        $this->paymentOrder->encounter->update([
+                            'status' => 'sent_to_rehab' // This sends patient to start treatment
                         ]);
                     }
-                    
-                    // Update bed selection status
-                    $this->bedSelection->update([
-                        'status' => 'completed'
-                    ]);
+
+                    // If there's a bed selection, update bed status
+                    if ($this->bedSelection) {
+                        $bed = \App\Models\Bed::find($this->bedSelection->bed_id);
+                        if ($bed) {
+                            $bed->update(['status' => 'occupied']);
+                        }
+                        $this->bedSelection->update(['status' => 'completed']);
+                    }
+
+                    $this->showAlertMessage(
+                        "Full payment completed! Patient sent to rehabilitation.",
+                        'success'
+                    );
+                } elseif ($isFirstInstallment && $installmentStatus === 'paid') {
+                    // FIRST INSTALLMENT FULLY PAID - Send to treatment
+                    $this->paymentOrder->payment_status = 'partial';
+                    $this->paymentOrder->status = 'paid'; // Change to paid to allow treatment start
+
+                    // Update rehab encounter status to send to treatment
+                    if ($this->paymentOrder->encounter) {
+                        $this->paymentOrder->encounter->update([
+                            'status' => 'sent_to_rehab' // This sends patient to start treatment
+                        ]);
+                    }
+
+                    // Update bed status if exists
+                    if ($this->bedSelection) {
+                        $bed = \App\Models\Bed::find($this->bedSelection->bed_id);
+                        if ($bed) {
+                            $bed->update(['status' => 'occupied']);
+                        }
+                        $this->bedSelection->update(['status' => 'completed']);
+                    }
+
+                    // Set next payment due date
+                    $nextInstallment = $this->paymentOrder->paymentInstallments()
+                        ->where('installment_number', 2)
+                        ->first();
+
+                    if ($nextInstallment) {
+                        $this->paymentOrder->next_payment_due = $nextInstallment->due_date;
+                    }
+
+                    $this->showAlertMessage(
+                        "First installment paid! Patient sent to rehabilitation. Next payment due: " .
+                            ($nextInstallment ? $nextInstallment->due_date->format('M d, Y') : 'N/A'),
+                        'success'
+                    );
+                } else {
+                    // PARTIAL PAYMENT ON ANY INSTALLMENT - Keep in cashier queue
+                    $nextInstallment = $this->paymentOrder->paymentInstallments()
+                        ->where('status', 'pending')
+                        ->orderBy('installment_number')
+                        ->first();
+
+                    if ($nextInstallment) {
+                        $this->paymentOrder->next_payment_due = $nextInstallment->due_date;
+                    }
+
+                    $this->paymentOrder->payment_status = 'partial';
+                    $this->paymentOrder->status = 'sent_to_cashier'; // Keep in cashier queue
+
+                    $this->showAlertMessage(
+                        "Partial payment received. Please complete the remaining amount.",
+                        'warning'
+                    );
                 }
 
-                // Update rehab encounter status
-                $this->paymentOrder->encounter->update([
-                    'status' => 'sent_to_rehab'
-                ]);
+                $this->paymentOrder->save();
             });
 
             $orderId = $this->paymentOrder->id;
+            $installmentNumber = $this->selectedInstallment->installment_number;
             $this->closePaymentModal();
-            
-            $this->showAlertMessage('Payment processed successfully! Order #' . $orderId . ' marked as paid.', 'success');
+
             $this->dispatch('refreshQueue');
+            $this->checkPaymentReminders(); // Refresh reminders
 
         } catch (\Exception $e) {
             $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
         }
     }
-
-    public function recheckPayment($orderId)
+    public function getUpcomingPayments()
     {
-        $order = RehabOrder::with([
-            'encounter.encounter.patient',
-            'bedSelections.bedClass'
-        ])->find($orderId);
+        $upcomingPayments = RehabPaymentInstallment::with([
+            'rehabOrder.encounter.encounter.patient',
+            'rehabOrder.encounter.encounter.doctor'
+        ])
+            ->where('status', 'pending')
+            ->where('due_date', '>=', now())
+            ->where('due_date', '<=', now()->addDays(7))
+            ->orderBy('due_date')
+            ->get();
 
-        if ($order && $order->status === 'paid') {
-            $paidDate = $order->paid_at ? $order->paid_at->format('M d, Y H:i') : 'Unknown date';
-            
-            $bedInfo = '';
-            if ($order->bedSelections->isNotEmpty()) {
-                $bedSelection = $order->bedSelections->first();
-                $bedInfo = " - Bed: {$bedSelection->bedClass->name} ({$bedSelection->duration_days} days, ETB " . number_format($bedSelection->total_price, 2) . ")";
-            }
-            
-            $this->showAlertMessage('Payment rechecked and verified for Order #' . $orderId . ' - Paid on ' . $paidDate . $bedInfo, 'info');
-        } else {
-            $this->showAlertMessage('Order #' . $orderId . ' is not in paid status.', 'warning');
-        }
+        return $upcomingPayments;
     }
 
     public function showAlertMessage($message, $type = 'success')
@@ -203,9 +552,6 @@ class RehabPaymentQueue extends Component
         $this->alertMessage = $message;
         $this->alertType = $type;
         $this->showAlert = true;
-
-        // Auto hide after 5 seconds
-        $this->dispatch('hideAlert');
     }
 
     public function closeAlert()
@@ -213,26 +559,73 @@ class RehabPaymentQueue extends Component
         $this->showAlert = false;
     }
 
-public function render()
+    public function closeModal()
+    {
+        $this->showDetailsModal = false;
+        $this->selectedOrder = null;
+        $this->bedSelection = null;
+        $this->bedCost = 0;
+    }
+
+    public function closePaymentModal()
+    {
+        $this->showPaymentModal = false;
+        $this->paymentOrder = null;
+        $this->paymentInstallments = [];
+        $this->selectedInstallment = null;
+        $this->bedSelection = null;
+        $this->bedCost = 0;
+        $this->packageTotal = 0;
+        $this->grandTotal = 0;
+        $this->paymentMethod = 'cash';
+        $this->paymentAmount = 0;
+        $this->changeAmount = 0;
+        $this->partialPaymentNote = '';
+    }
+
+    public function closePaymentPlanModal()
+    {
+        $this->showPaymentPlanModal = false;
+        $this->paymentType = 'full';
+        $this->installmentCount = 2;
+        $this->customInstallments = [];
+        // DON'T clear $paymentOrder here
+    }
+    public function render()
 {
     // Base query
-    $query = RehabOrder::with([
+       $query = RehabOrder::with([
         'encounter.encounter.patient',
         'encounter.encounter.doctor',
         'packages',
         'bedSelections' => function ($query) {
             $query->with(['bedClass'])->latest();
-        }
+        },
+        'paymentInstallments'
     ]);
 
-    // Apply tab filter
-    if ($this->tab === 'pending') {
-        // Show orders that need payment: 
-        // - Order status 'sent_to_cashier' (no bed items)
-        // - Order status 'bed_selected' (has bed items, ready for payment)
-        $query->whereIn('status', ['sent_to_cashier', 'bed_selected']);
+     if ($this->tab === 'pending') {
+        // Orders with no payments yet
+        $query->whereIn('status', ['sent_to_cashier', 'bed_selected'])
+              ->where(function($q) {
+                  $q->where('payment_status', 'pending')
+                    ->orWhereNull('payment_status');
+              });
+              
+    } elseif ($this->tab === 'partial') {
+        // Orders with partial payments - check payment_status, NOT status
+        $query->where('payment_status', 'partial')
+              ->whereIn('status', ['sent_to_cashier', 'paid']); // Include both for now
+              
+    } elseif ($this->tab === 'overdue') {
+        // Overdue payments
+        $query->where('payment_status', 'overdue')
+              ->whereIn('status', ['sent_to_cashier', 'paid']);
+              
     } elseif ($this->tab === 'processed') {
-        $query->where('status', 'paid');
+        // FULLY PAID and completed orders
+        $query->where('status', 'paid')
+              ->where('payment_status', 'paid');
     }
 
     // Apply search filter
@@ -248,24 +641,41 @@ public function render()
     // Paginate
     $orders = $query->paginate(10);
 
-    // Calculate totals with bed cost for each order
+    // Calculate totals with bed cost and payment progress for each order
     foreach ($orders as $order) {
         $order->bed_cost = 0;
         $order->bed_duration = 0;
         $order->bed_class_name = null;
-        
+
         if ($order->bedSelections->isNotEmpty()) {
             $bedSelection = $order->bedSelections->first();
             $order->bed_cost = $bedSelection->total_price ?? 0;
             $order->bed_duration = $bedSelection->duration_days ?? 0;
             $order->bed_class_name = $bedSelection->bedClass->name ?? null;
         }
-        
+
         $order->grand_total = $order->total_amount + $order->bed_cost;
+        
+        // Calculate payment progress correctly
+        if ($order->grand_total > 0) {
+            $order->payment_progress = round(($order->paid_amount / $order->grand_total) * 100, 1);
+        } else {
+            $order->payment_progress = 0;
+        }
+        
+        // Add installment stats for display
+        if ($order->paymentInstallments->isNotEmpty()) {
+            $order->total_installments = $order->paymentInstallments->count();
+            $order->paid_installments = $order->paymentInstallments->where('status', 'paid')->count();
+        }
     }
 
+    $upcomingPayments = $this->getUpcomingPayments();
+    
     return view('livewire.rehab.cashier.rehab-payment-queue', [
-        'orders' => $orders
+        'orders' => $orders,
+        'paymentReminders' => $this->paymentReminders,
+        'upcomingPayments' => $upcomingPayments
     ]);
 }
 }

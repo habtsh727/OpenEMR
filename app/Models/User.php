@@ -47,7 +47,10 @@ class User extends Authenticatable // implements MustVerifyEmail
             'password' => 'hashed',
         ];
     }
-
+public function rehabOrders()
+{
+    return $this->hasMany(RehabOrder::class, 'doctor_id');
+}
     /**
      * Get the user's initials
      */

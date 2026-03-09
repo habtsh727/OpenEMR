@@ -87,7 +87,7 @@
     @endif
 
     <!-- Bed Class Breakdown -->
-    @if($bedClassStats->count() > 0)
+    {{-- @if($bedClassStats->count() > 0)
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Revenue by Bed Class</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -112,7 +112,7 @@
             @endforeach
         </div>
     </div>
-    @endif
+    @endif --}}
 
     <!-- Item Type Breakdown -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
