@@ -123,6 +123,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cashier/rehab/payments', RehabPaymentQueue::class)->name('cashier.rehab.payments');
     Route::get('/cashier/rehab/payment/{rehabOrder}', RehabPaymentProcess::class)->name('cashier.rehab.payment');
     Route::get('/payment-details/{orderId}', App\Livewire\Rehab\Cashier\PatientPaymentDetails::class)->name('rehab.cashier.payment-details');
+    Route::get('/reports', App\Livewire\Rehab\Cashier\PaymentReports::class)->name('reports');
 });
 
 Route::get('/', function () {
