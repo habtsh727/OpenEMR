@@ -68,24 +68,63 @@ class PaymentReports extends Component
             ->values()
             ->toArray();
 
-        // Get doctors
-        $this->doctors = User::whereHas('rehabOrders')->get(['id', 'name'])->toArray();
+        // Get doctors who have rehab orders
+        $this->doctors = User::whereHas('rehabOrders', function($q) {})
+            ->get(['id', 'name'])
+            ->map(function($doctor) {
+                return [
+                    'id' => $doctor->id,
+                    'name' => $doctor->name
+                ];
+            })
+            ->toArray();
+            
+        // If no doctors found with rehabOrders, get all doctors as fallback
+        if (empty($this->doctors)) {
+            $this->doctors = User::where('role', 'doctor')
+                ->orWhereHas('roles', function($q) {
+                    $q->where('name', 'doctor');
+                })
+                ->get(['id', 'name'])
+                ->map(function($doctor) {
+                    return [
+                        'id' => $doctor->id,
+                        'name' => $doctor->name
+                    ];
+                })
+                ->toArray();
+        }
     }
 
     public function updatedReportType()
     {
         $this->resetPage();
         $this->calculateStatistics();
+        $this->dispatch('refreshChart');
     }
 
     public function updatedDateFrom()
     {
         $this->calculateStatistics();
+        $this->dispatch('refreshChart');
     }
 
     public function updatedDateTo()
     {
         $this->calculateStatistics();
+        $this->dispatch('refreshChart');
+    }
+
+    public function updatedSelectedPatient()
+    {
+        $this->calculateStatistics();
+        $this->dispatch('refreshChart');
+    }
+
+    public function updatedSelectedDoctor()
+    {
+        $this->calculateStatistics();
+        $this->dispatch('refreshChart');
     }
 
     public function calculateStatistics()
@@ -114,31 +153,45 @@ class PaymentReports extends Component
             });
         }
         
+        if ($this->selectedDoctor) {
+            $installmentsQuery->whereHas('rehabOrder', function($q) {
+                $q->where('doctor_id', $this->selectedDoctor);
+            });
+        }
+        
         // Calculate totals
         $this->totalCollected = $installmentsQuery->sum('paid_amount');
         $this->totalOrders = $ordersQuery->count();
         $this->totalInstallments = $installmentsQuery->count();
         
         // Overdue and pending counts
-        $this->overdueCount = RehabPaymentInstallment::where('status', 'overdue')
+        $overdueQuery = RehabPaymentInstallment::where('status', 'overdue')
             ->whereHas('rehabOrder', function($q) {
                 if ($this->selectedPatient) {
                     $q->whereHas('encounter.encounter.patient', function($pq) {
                         $pq->where('id', $this->selectedPatient);
                     });
                 }
-            })
-            ->count();
+                if ($this->selectedDoctor) {
+                    $q->where('doctor_id', $this->selectedDoctor);
+                }
+            });
             
-        $this->pendingCount = RehabPaymentInstallment::where('status', 'pending')
+        $this->overdueCount = $overdueQuery->count();
+        
+        $pendingQuery = RehabPaymentInstallment::where('status', 'pending')
             ->whereHas('rehabOrder', function($q) {
                 if ($this->selectedPatient) {
                     $q->whereHas('encounter.encounter.patient', function($pq) {
                         $pq->where('id', $this->selectedPatient);
                     });
                 }
-            })
-            ->count();
+                if ($this->selectedDoctor) {
+                    $q->where('doctor_id', $this->selectedDoctor);
+                }
+            });
+            
+        $this->pendingCount = $pendingQuery->count();
             
         // Generate chart data based on report type
         $this->generateChartData();
@@ -175,10 +228,22 @@ class PaymentReports extends Component
             $date = $start->copy()->addDays($i);
             $this->chartLabels[] = $date->format('M d');
             
-            $total = RehabPaymentInstallment::whereDate('paid_date', $date)
-                ->where('status', 'paid')
-                ->sum('paid_amount');
+            $query = RehabPaymentInstallment::whereDate('paid_date', $date)
+                ->where('status', 'paid');
                 
+            if ($this->selectedDoctor) {
+                $query->whereHas('rehabOrder', function($q) {
+                    $q->where('doctor_id', $this->selectedDoctor);
+                });
+            }
+            
+            if ($this->selectedPatient) {
+                $query->whereHas('rehabOrder.encounter.encounter.patient', function($q) {
+                    $q->where('id', $this->selectedPatient);
+                });
+            }
+                
+            $total = $query->sum('paid_amount');
             $this->chartData[] = round($total, 2);
         }
     }
@@ -192,11 +257,23 @@ class PaymentReports extends Component
             $month = now()->subMonths($i);
             $this->chartLabels[] = $month->format('M Y');
             
-            $total = RehabPaymentInstallment::whereYear('paid_date', $month->year)
+            $query = RehabPaymentInstallment::whereYear('paid_date', $month->year)
                 ->whereMonth('paid_date', $month->month)
-                ->where('status', 'paid')
-                ->sum('paid_amount');
+                ->where('status', 'paid');
                 
+            if ($this->selectedDoctor) {
+                $query->whereHas('rehabOrder', function($q) {
+                    $q->where('doctor_id', $this->selectedDoctor);
+                });
+            }
+            
+            if ($this->selectedPatient) {
+                $query->whereHas('rehabOrder.encounter.encounter.patient', function($q) {
+                    $q->where('id', $this->selectedPatient);
+                });
+            }
+                
+            $total = $query->sum('paid_amount');
             $this->chartData[] = round($total, 2);
         }
     }
@@ -210,25 +287,37 @@ class PaymentReports extends Component
         foreach ($methods as $method) {
             $this->chartLabels[] = ucfirst($method);
             
-            $total = RehabOrder::where('payment_method', $method)
-                ->whereBetween('paid_at', [$this->dateFrom, $this->dateTo . ' 23:59:59'])
-                ->sum('paid_amount');
+            $query = RehabOrder::where('payment_method', $method)
+                ->whereBetween('paid_at', [$this->dateFrom, $this->dateTo . ' 23:59:59']);
                 
+            if ($this->selectedDoctor) {
+                $query->where('doctor_id', $this->selectedDoctor);
+            }
+            
+            if ($this->selectedPatient) {
+                $query->whereHas('encounter.encounter.patient', function($q) {
+                    $q->where('id', $this->selectedPatient);
+                });
+            }
+                
+            $total = $query->sum('paid_amount');
             $this->chartData[] = round($total, 2);
         }
     }
 
     public function generateDoctorChart()
     {
+        // Get top 5 doctors by payment amount
         $topDoctors = User::whereHas('rehabOrders', function($q) {
                 $q->whereBetween('paid_at', [$this->dateFrom, $this->dateTo . ' 23:59:59']);
             })
-            ->withSum(['rehabOrders as total' => function($q) {
-                $q->whereBetween('paid_at', [$this->dateFrom, $this->dateTo . ' 23:59:59']);
-            }], 'paid_amount')
-            ->orderByDesc('total')
-            ->limit(5)
-            ->get();
+            ->withCount(['rehabOrders as total' => function($q) {
+                $q->whereBetween('paid_at', [$this->dateFrom, $this->dateTo . ' 23:59:59'])
+                  ->select(DB::raw('SUM(paid_amount)'));
+            }])
+            ->get()
+            ->sortByDesc('total')
+            ->take(5);
             
         $this->chartLabels = $topDoctors->pluck('name')->toArray();
         $this->chartData = $topDoctors->pluck('total')->map(function($val) {
@@ -238,7 +327,10 @@ class PaymentReports extends Component
 
     public function getDailyReport()
     {
-        return RehabPaymentInstallment::with(['rehabOrder.encounter.encounter.patient', 'rehabOrder.encounter.encounter.doctor'])
+        return RehabPaymentInstallment::with([
+                'rehabOrder.encounter.encounter.patient', 
+                'rehabOrder.encounter.encounter.doctor'
+            ])
             ->whereBetween('paid_date', [$this->dateFrom, $this->dateTo . ' 23:59:59'])
             ->where('status', 'paid')
             ->when($this->selectedPatient, function($q) {
@@ -247,8 +339,8 @@ class PaymentReports extends Component
                 });
             })
             ->when($this->selectedDoctor, function($q) {
-                $q->whereHas('rehabOrder.encounter.encounter.doctor', function($dq) {
-                    $dq->where('id', $this->selectedDoctor);
+                $q->whereHas('rehabOrder', function($oq) {
+                    $oq->where('doctor_id', $this->selectedDoctor);
                 });
             })
             ->orderBy('paid_date', 'desc')
@@ -264,6 +356,11 @@ class PaymentReports extends Component
                     $pq->where('id', $this->selectedPatient);
                 });
             })
+            ->when($this->selectedDoctor, function($q) {
+                $q->whereHas('rehabOrder', function($oq) {
+                    $oq->where('doctor_id', $this->selectedDoctor);
+                });
+            })
             ->orderBy('due_date')
             ->paginate(15);
     }
@@ -277,13 +374,20 @@ class PaymentReports extends Component
                     $pq->where('id', $this->selectedPatient);
                 });
             })
+            ->when($this->selectedDoctor, function($q) {
+                $q->where('doctor_id', $this->selectedDoctor);
+            })
             ->get()
             ->groupBy('encounter.encounter.patient.id')
             ->map(function($orders, $patientId) {
                 $patient = $orders->first()->encounter->encounter->patient;
                 $totalPaid = $orders->sum('paid_amount');
                 $totalDue = $orders->sum(function($order) {
-                    return ($order->grand_total ?? $order->total_amount) - $order->paid_amount;
+                    $grandTotal = $order->total_amount;
+                    if ($order->bedSelections->isNotEmpty()) {
+                        $grandTotal += $order->bedSelections->first()->total_price ?? 0;
+                    }
+                    return max(0, $grandTotal - $order->paid_amount);
                 });
                 
                 return [
