@@ -32,7 +32,7 @@ class DoctorRehabOrder extends Component
         }
 
         // Only allow ordering if status is doctor_review
-        if ($this->rehabEncounter->status !== 'doctor_review') {
+        if ($this->rehabEncounter->status != 'doctor_review') {
             abort(403, 'Questionnaire must be reviewed before ordering packages.');
         }
 
