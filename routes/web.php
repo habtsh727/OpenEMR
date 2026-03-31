@@ -60,6 +60,7 @@ use App\Livewire\Appointment\AppointmentDetail;
 use App\Livewire\Appointment\AppointmentReports;
 use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
+use App\Livewire\Cashier\CuppingPaymentQueue;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
 use App\Livewire\Cupping\CuppingOrderForm;
@@ -371,7 +372,8 @@ Route::get('/encounter/{encounter}/cupping-order', CuppingOrderForm::class)
     ->name('encounter.cupping-order')
     ->middleware(['auth']);
 
-
+    Route::get('/cashier/cupping-payment-queue', CuppingPaymentQueue::class)
+        ->name('cashier.cupping-payment-queue');
 
 
 
