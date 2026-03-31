@@ -14,10 +14,12 @@ return new class extends Migration
         Schema::create('cupping_therapy_items', function (Blueprint $table) {
             $table->id();
 
+            // Link to therapy
             $table->foreignId('cupping_therapy_id')
                 ->constrained()
                 ->cascadeOnDelete();
 
+            // Type & Location
             $table->foreignId('cupping_type_id')
                 ->constrained()
                 ->cascadeOnDelete();
@@ -26,11 +28,10 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
+            // Details
             $table->integer('qty')->default(1);
-
             $table->decimal('price', 10, 2);
             $table->decimal('total', 10, 2);
-
             $table->text('notes')->nullable();
 
             $table->timestamps();
