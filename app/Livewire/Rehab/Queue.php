@@ -89,7 +89,7 @@ class Queue extends Component
         $rehabEncounter = RehabEncounter::findOrFail($id);
         
         // Check if user is the one who started it
-        if ($rehabEncounter->questionnaire_filled_by !== auth()->id()) {
+        if ($rehabEncounter->questionnaire_filled_by != auth()->id()) {
             $this->dispatch('notify', [
                 'message' => 'This questionnaire is being filled by another staff member.',
                 'type' => 'error'

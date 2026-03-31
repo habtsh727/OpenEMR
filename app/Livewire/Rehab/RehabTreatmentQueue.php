@@ -12,7 +12,7 @@ class RehabTreatmentQueue extends Component
     use WithPagination;
 
     public $search = '';
-    public $statusFilter = 'all'; // all, sent_to_rehab, treatment_in_progress, completed
+    public $statusFilter = 'all';
     public $perPage = 10;
 
     // Alert properties
