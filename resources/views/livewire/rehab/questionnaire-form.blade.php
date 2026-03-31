@@ -159,287 +159,346 @@
 
     <!-- Questionnaire Form -->
     <form wire:submit.prevent="submitQuestionnaire" class="space-y-5">
-        @foreach($questions as $question)
-        <div id="question-{{ $question->id }}" wire:key="question-{{ $question->id }}"
-            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 transition-all duration-200 hover:border-teal-200 dark:hover:border-teal-800">
-
-            <!-- Question Header -->
-            <div class="flex items-start gap-3 mb-4">
-                <span
-                    class="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 text-white text-xs font-semibold shadow-sm">
-                    {{ $loop->iteration }}
-                </span>
-                <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <h3 class="text-base font-medium text-gray-900 dark:text-white">
-                            {{ $question->question }}
-                            @if($question->is_required)
-                            <span class="text-rose-500 ml-1" aria-label="Required field">*</span>
-                            @endif
-                        </h3>
-                        <span
-                            class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                            {{ ucfirst(str_replace('_', ' ', $question->type)) }}
-                        </span>
+    @foreach($questionsByTemplate as $templateId => $templateData)
+    <div wire:key="template-{{ $templateId }}" class="mb-6">
+        <!-- Template Header with Collapse Button -->
+        <div class="sticky top-20 z-10 bg-white dark:bg-gray-800 rounded-t-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-4">
+            <div class="px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg shadow-md">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
                     </div>
-                    @if($question->type === 'checkbox' && $question->options)
-                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                        Select all applicable options
-                    </p>
-                    @endif
-                </div>
-
-                @if($question->is_required && empty($answers[$question->id]['value']))
-                <span
-                    class="inline-flex items-center px-2 py-1 text-xs font-medium text-rose-700 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/20 rounded-md">
-                    Required
-                </span>
-                @endif
-            </div>
-
-            <!-- Answer Input -->
-            <div class="space-y-4 pl-2">
-                @switch($question->type)
-                @case('boolean')
-                <div class="flex flex-wrap gap-4">
-                    <label
-                        class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <input type="radio" wire:model.live="answers.{{ $question->id }}.value"
-                            name="question_{{ $question->id }}" value="1"
-                            class="w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600">
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Yes</span>
-                    </label>
-                    <label
-                        class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <input type="radio" wire:model.live="answers.{{ $question->id }}.value"
-                            name="question_{{ $question->id }}" value="0"
-                            class="w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600">
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">No</span>
-                    </label>
-                </div>
-                @break
-
-                @case('checkbox')
-                @php $options = $question->parsed_options; @endphp
-                @if(!empty($options))
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    @foreach($options as $option)
-                    <label
-                        class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                        <input type="checkbox" wire:model.live="answers.{{ $question->id }}.value" value="{{ $option }}"
-                            class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600">
-                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ $option }}</span>
-                    </label>
-                    @endforeach
-                </div>
-                @endif
-                @break
-                @case('textarea')
-                <textarea wire:model.live="answers.{{ $question->id }}.value" rows="4"
-                    class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors resize-vertical"
-                    placeholder="Enter your detailed response..."></textarea>
-                @break
-
-                @case('number')
-                <input type="number" wire:model.live="answers.{{ $question->id }}.value"
-                    class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors"
-                    placeholder="Enter numerical value..." min="0" step="any">
-                @break
-
-                @case('datetime')
-                <input type="datetime-local" wire:model.live="answers.{{ $question->id }}.value"
-                    class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white text-sm transition-colors font-mono">
-                @break
-                @case('select')
-                @php $options = $question->parsed_options; @endphp
-                <select wire:model.live="answers.{{ $question->id }}.value"
-                    class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white text-sm transition-colors appearance-none">
-                    <option value="">— Select an option —</option>
-                    @if(!empty($options))
-                    @foreach($options as $option)
-                    <option value="{{ $option }}">{{ $option }}</option>
-                    @endforeach
-                    @endif
-                </select>
-                @break
-
-                @default
-                <input type="text" wire:model.live="answers.{{ $question->id }}.value"
-                    class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors"
-                    placeholder="Enter your response...">
-                @endswitch
-
-                <!-- Clinical Note Attachment -->
-                <div x-data="{ showNote: @entangle('answers.' . $question->id . '.note').live }" class="mt-2">
-                    <!-- Add Note Button -->
-                    <div x-show="!showNote" x-cloak class="flex justify-end">
-                        <button type="button" @click="showNote = true"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 dark:text-teal-400 dark:bg-teal-900/30 dark:hover:bg-teal-900/50 rounded-lg transition-colors">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
-                                </path>
-                            </svg>
-                            Add clinical note
-                        </button>
-                    </div>
-
-                    <!-- Note Field -->
-                    <div x-show="showNote || @entangle('answers.' . $question->id . '.note')"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 transform -translate-y-2"
-                        x-transition:enter-end="opacity-100 transform translate-y-0" x-cloak>
-                        <div
-                            class="flex items-start gap-2.5 p-3.5 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30">
-                            <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 mt-1 flex-shrink-0" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                </path>
-                            </svg>
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between mb-1">
-                                    <span
-                                        class="text-xs font-medium text-amber-800 dark:text-amber-400 uppercase tracking-wider">
-                                        Clinical Note
-                                    </span>
-                                    <button type="button"
-                                        @click="showNote = false; $wire.set('answers.{{ $question->id }}.note', null)"
-                                        class="p-1 hover:bg-amber-200 dark:hover:bg-amber-800/50 rounded-md transition-colors"
-                                        x-show="!@entangle('answers.' . $question->id . '.note')">
-                                        <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                                <textarea wire:model.live="answers.{{ $question->id }}.note" rows="2"
-                                    class="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-700 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:text-white placeholder:text-amber-600/50 dark:placeholder:text-amber-400/50"
-                                    placeholder="Document additional observations, concerns, or clinical context..."></textarea>
-                            </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                            {{ $templateData['title'] }}
+                        </h2>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $templateData['questions']->count() }} questions
+                            </span>
+                            <span class="text-xs px-2 py-0.5 rounded-full {{ $templateData['answered_count'] == $templateData['total_questions'] ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' }}">
+                                {{ $templateData['answered_count'] }}/{{ $templateData['total_questions'] }} answered
+                            </span>
                         </div>
                     </div>
                 </div>
-
-                <!-- Error Message -->
-                @error("answers.{$question->id}.value")
-                <p
-                    class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5 bg-rose-50 dark:bg-rose-900/20 p-2 rounded-md">
-                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                
+                <!-- Collapse/Expand Button -->
+                <button type="button" 
+                    wire:click="toggleSection({{ $templateId }})"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group">
+                    <span class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">
+                        {{ $collapsedSections[$templateId] ? 'Show Questions' : 'Hide Questions' }}
+                    </span>
+                    <svg class="w-5 h-5 text-gray-500 transition-transform duration-300 {{ $collapsedSections[$templateId] ? 'rotate-180' : '' }}" 
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
-                    <span>{{ $message }}</span>
-                </p>
-                @enderror
+                </button>
             </div>
-        </div>
-        @endforeach
-
-        <!-- Rehabilitation Clinical Summary -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div
-                class="border-b border-gray-200 dark:border-gray-700 px-5 py-4 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20">
-                <div class="flex items-center gap-2">
-                    <div class="p-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                        <svg class="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2">
-                            </path>
-                        </svg>
-                    </div>
-                    <h3 class="font-semibold text-gray-900 dark:text-white">
-                        Rehabilitation Clinical Summary
-                    </h3>
+            
+            <!-- Progress Bar for Section -->
+            @php
+                $sectionProgress = $templateData['total_questions'] > 0 
+                    ? round(($templateData['answered_count'] / $templateData['total_questions']) * 100) 
+                    : 0;
+            @endphp
+            <div class="px-5 pb-3">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                    <div class="bg-gradient-to-r from-teal-500 to-cyan-600 h-1.5 rounded-full transition-all duration-500"
+                        style="width: {{ $sectionProgress }}%"></div>
                 </div>
             </div>
-            <div class="p-5">
-                <textarea wire:model.live="rehabNotes" rows="4"
-                    class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors resize-vertical"
-                    placeholder="Provide a comprehensive summary of your assessment, clinical impressions, and recommendations..."></textarea>
-                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                    This summary will be visible to the reviewing physician
-                </p>
-            </div>
         </div>
 
-        <!-- Form Actions -->
-        <div class="sticky bottom-6 z-10">
-            <div
-                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <a href="{{ route('rehab.queue') }}" wire:navigate
-                            class="inline-flex items-center justify-center px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors gap-2 w-full sm:w-auto">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                            </svg>
-                            <span>Queue</span>
-                        </a>
+        <!-- Questions Container with Collapse Animation -->
+        <div x-data="{ collapsed: @entangle('collapsedSections.' . $templateId) }"
+            x-show="!collapsed"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform -translate-y-4"
+            x-transition:enter-end="opacity-100 transform translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 transform translate-y-0"
+            x-transition:leave-end="opacity-0 transform -translate-y-4"
+            class="space-y-5">
+            
+            @foreach($templateData['questions']->sortBy('order') as $question)
+            <div id="question-{{ $question->id }}" wire:key="question-{{ $question->id }}"
+                class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 transition-all duration-200 hover:border-teal-200 dark:hover:border-teal-800 ml-4">
 
-                        <button type="button" wire:click="saveProgress" wire:loading.attr="disabled"
-                            class="inline-flex items-center justify-center px-4 py-2.5 border-2 border-teal-500 dark:border-teal-600 rounded-lg text-sm font-semibold text-teal-600 dark:text-teal-500 bg-teal-50 dark:bg-teal-900/30 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors gap-2 w-full sm:w-auto">
-                            <svg wire:loading wire:target="saveProgress" class="w-4 h-4 animate-spin" fill="none"
-                                viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                            <span wire:loading.remove wire:target="saveProgress">Save Draft</span>
-                            <span wire:loading wire:target="saveProgress">Saving...</span>
-                        </button>
+                <!-- Question Header -->
+                <div class="flex items-start gap-3 mb-4">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 text-white text-xs font-semibold shadow-sm flex-shrink-0">
+                        {{ $loop->parent->iteration }}.{{ $loop->iteration }}
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="text-base font-medium text-gray-900 dark:text-white">
+                                {{ $question->question }}
+                                @if($question->is_required)
+                                <span class="text-rose-500 ml-1" aria-label="Required field">*</span>
+                                @endif
+                            </h3>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                {{ ucfirst(str_replace('_', ' ', $question->type)) }}
+                            </span>
+                        </div>
+                        @if($question->type === 'checkbox' && $question->options)
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            Select all applicable options
+                        </p>
+                        @endif
                     </div>
 
-                    <button type="submit" wire:loading.attr="disabled"
-                        class="inline-flex items-center justify-center px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 gap-2 w-full sm:w-auto min-w-[180px]">
-                        <svg wire:loading wire:target="submitQuestionnaire" class="w-4 h-4 animate-spin" fill="none"
+                    @if($question->is_required && empty($answers[$question->id]['value']))
+                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-rose-700 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/20 rounded-md">
+                        Required
+                    </span>
+                    @endif
+                </div>
+
+                <!-- Answer Input -->
+                <div class="space-y-4 pl-2">
+                    @switch($question->type)
+                    @case('boolean')
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <input type="radio" wire:model.live="answers.{{ $question->id }}.value"
+                                name="question_{{ $question->id }}" value="1"
+                                class="w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Yes</span>
+                        </label>
+                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <input type="radio" wire:model.live="answers.{{ $question->id }}.value"
+                                name="question_{{ $question->id }}" value="0"
+                                class="w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">No</span>
+                        </label>
+                    </div>
+                    @break
+
+                    @case('checkbox')
+                    @php $options = $question->parsed_options; @endphp
+                    @if(!empty($options))
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                        @foreach($options as $option)
+                        <label class="flex items-center gap-2.5 cursor-pointer p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <input type="checkbox" wire:model.live="answers.{{ $question->id }}.value" value="{{ $option }}"
+                                class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $option }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                    @endif
+                    @break
+
+                    @case('textarea')
+                    <textarea wire:model.live="answers.{{ $question->id }}.value" rows="4"
+                        class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors resize-vertical"
+                        placeholder="Enter your detailed response..."></textarea>
+                    @break
+
+                    @case('number')
+                    <input type="number" wire:model.live="answers.{{ $question->id }}.value"
+                        class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors"
+                        placeholder="Enter numerical value..." min="0" step="any">
+                    @break
+
+                    @case('datetime')
+                    <input type="datetime-local" wire:model.live="answers.{{ $question->id }}.value"
+                        class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white text-sm transition-colors font-mono">
+                    @break
+
+                    @case('select')
+                    @php $options = $question->parsed_options; @endphp
+                    <select wire:model.live="answers.{{ $question->id }}.value"
+                        class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white text-sm transition-colors appearance-none">
+                        <option value="">— Select an option —</option>
+                        @if(!empty($options))
+                        @foreach($options as $option)
+                        <option value="{{ $option }}">{{ $option }}</option>
+                        @endforeach
+                        @endif
+                    </select>
+                    @break
+
+                    @default
+                    <input type="text" wire:model.live="answers.{{ $question->id }}.value"
+                        class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors"
+                        placeholder="Enter your response...">
+                    @endswitch
+
+                    <!-- Clinical Note Attachment -->
+                    <div x-data="{ showNote: @entangle('answers.' . $question->id . '.note').live }" class="mt-2">
+                        <!-- Add Note Button -->
+                        <div x-show="!showNote" x-cloak class="flex justify-end">
+                            <button type="button" @click="showNote = true"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 dark:text-teal-400 dark:bg-teal-900/30 dark:hover:bg-teal-900/50 rounded-lg transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                    </path>
+                                </svg>
+                                Add clinical note
+                            </button>
+                        </div>
+
+                        <!-- Note Field -->
+                        <div x-show="showNote || @entangle('answers.' . $question->id . '.note')"
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 transform -translate-y-2"
+                            x-transition:enter-end="opacity-100 transform translate-y-0" x-cloak>
+                            <div class="flex items-start gap-2.5 p-3.5 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30">
+                                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 mt-1 flex-shrink-0" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                    </path>
+                                </svg>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="text-xs font-medium text-amber-800 dark:text-amber-400 uppercase tracking-wider">
+                                            Clinical Note
+                                        </span>
+                                        <button type="button"
+                                            @click="showNote = false; $wire.set('answers.{{ $question->id }}.note', null)"
+                                            class="p-1 hover:bg-amber-200 dark:hover:bg-amber-800/50 rounded-md transition-colors"
+                                            x-show="!@entangle('answers.' . $question->id . '.note')">
+                                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <textarea wire:model.live="answers.{{ $question->id }}.note" rows="2"
+                                        class="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-700 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:text-white placeholder:text-amber-600/50 dark:placeholder:text-amber-400/50"
+                                        placeholder="Document additional observations, concerns, or clinical context..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Message -->
+                    @error("answers.{$question->id}.value")
+                    <p class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5 bg-rose-50 dark:bg-rose-900/20 p-2 rounded-md">
+                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>{{ $message }}</span>
+                    </p>
+                    @enderror
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endforeach
+
+    <!-- Rehabilitation Clinical Summary -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="border-b border-gray-200 dark:border-gray-700 px-5 py-4 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20">
+            <div class="flex items-center gap-2">
+                <div class="p-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                    <svg class="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2">
+                        </path>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">
+                    Rehabilitation Clinical Summary
+                </h3>
+            </div>
+        </div>
+        <div class="p-5">
+            <textarea wire:model.live="rehabNotes" rows="4"
+                class="w-full px-3.5 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:text-white placeholder:text-gray-400 text-sm transition-colors resize-vertical"
+                placeholder="Provide a comprehensive summary of your assessment, clinical impressions, and recommendations..."></textarea>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                This summary will be visible to the reviewing physician
+            </p>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="sticky bottom-6 z-10">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <a href="{{ route('rehab.queue') }}" wire:navigate
+                        class="inline-flex items-center justify-center px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors gap-2 w-full sm:w-auto">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        <span>Queue</span>
+                    </a>
+
+                    <button type="button" wire:click="saveProgress" wire:loading.attr="disabled"
+                        class="inline-flex items-center justify-center px-4 py-2.5 border-2 border-teal-500 dark:border-teal-600 rounded-lg text-sm font-semibold text-teal-600 dark:text-teal-500 bg-teal-50 dark:bg-teal-900/30 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors gap-2 w-full sm:w-auto">
+                        <svg wire:loading wire:target="saveProgress" class="w-4 h-4 animate-spin" fill="none"
                             viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                             </path>
                         </svg>
-                        <span wire:loading.remove wire:target="submitQuestionnaire">
-                            <svg class="w-4 h-4 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Submit for Review
-                        </span>
-                        <span wire:loading wire:target="submitQuestionnaire">Processing...</span>
+                        <span wire:loading.remove wire:target="saveProgress">Save Draft</span>
+                        <span wire:loading wire:target="saveProgress">Saving...</span>
                     </button>
                 </div>
 
-                <!-- Form Metadata -->
-                <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                    <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400">
-                            <span class="flex items-center gap-1">
-                                <span class="text-rose-500">*</span> Required field
-                            </span>
-                            <span class="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
-                            <span class="flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Auto-saved every 30s
-                            </span>
-                        </div>
-                        <span class="text-gray-400 dark:text-gray-500">
-                            Submission cannot be modified after review
+                <button type="submit" wire:loading.attr="disabled"
+                    class="inline-flex items-center justify-center px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 gap-2 w-full sm:w-auto min-w-[180px]">
+                    <svg wire:loading wire:target="submitQuestionnaire" class="w-4 h-4 animate-spin" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <span wire:loading.remove wire:target="submitQuestionnaire">
+                        <svg class="w-4 h-4 inline mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Submit for Review
+                    </span>
+                    <span wire:loading wire:target="submitQuestionnaire">Processing...</span>
+                </button>
+            </div>
+
+            <!-- Form Metadata -->
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+                        <span class="flex items-center gap-1">
+                            <span class="text-rose-500">*</span> Required field
+                        </span>
+                        <span class="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Auto-saved every 30s
                         </span>
                     </div>
+                    <span class="text-gray-400 dark:text-gray-500">
+                        Submission cannot be modified after review
+                    </span>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
+</form>
     <!-- Submission Confirmation Modal -->
     @if($showConfirmModal)
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
