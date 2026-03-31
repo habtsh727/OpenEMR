@@ -2,23 +2,25 @@
 
 namespace App\Livewire\Cupping;
 
-use Livewire\Component;
 use App\Models\CuppingLocation;
 use App\Models\CuppingTherapy;
 use App\Models\CuppingTherapyItem;
 use App\Models\CuppingType;
 use App\Models\Encounter;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 
 class CuppingOrderForm extends Component
 {
-      public $encounter;
+    public Encounter $encounter;
     public $items = [];
     public $notes = '';
     public $discount = 0;
     public $grandTotal = 0;
     public $finalTotal = 0;
-    
+    public $isSubmitting = false;
+
     protected $rules = [
         'items.*.cupping_type_id' => 'required|exists:cupping_types,id',
         'items.*.cupping_location_id' => 'required|exists:cupping_locations,id',
@@ -28,7 +30,7 @@ class CuppingOrderForm extends Component
         'notes' => 'nullable|string',
         'discount' => 'required|numeric|min:0',
     ];
-    
+
     protected $messages = [
         'items.*.cupping_type_id.required' => 'Please select a cupping type',
         'items.*.cupping_location_id.required' => 'Please select a cupping location',
@@ -38,14 +40,18 @@ class CuppingOrderForm extends Component
         'items.*.price.min' => 'Price cannot be negative',
         'discount.min' => 'Discount cannot be negative',
     ];
-    
+
     public function mount(Encounter $encounter)
     {
-        $this->encounter = $encounter;
+        if (!Auth::check()) {
+            abort(403, 'You must be logged in to place cupping orders.');
+        }
+
+        $this->encounter = $encounter->load(['patient', 'doctor']);
         $this->addItem();
         $this->calculateTotals();
     }
-    
+
     public function addItem()
     {
         $this->items[] = [
@@ -56,25 +62,28 @@ class CuppingOrderForm extends Component
             'total' => 0,
             'notes' => '',
         ];
+        $this->calculateTotals();
     }
-    
+
     public function removeItem($index)
     {
         unset($this->items[$index]);
         $this->items = array_values($this->items);
         $this->calculateTotals();
     }
-    
+
+    // Listen for changes on specific fields
     public function updatedItems($value, $key)
     {
         $this->calculateTotals();
     }
-    
+
     public function updatedDiscount()
     {
         $this->calculateTotals();
     }
-    
+
+    // Method to recalculate all totals
     public function calculateTotals()
     {
         $this->grandTotal = 0;
@@ -84,6 +93,7 @@ class CuppingOrderForm extends Component
             $price = (float)($item['price'] ?? 0);
             $total = $qty * $price;
             
+            // Update the total for this item
             $this->items[$index]['total'] = $total;
             $this->grandTotal += $total;
         }
@@ -91,13 +101,16 @@ class CuppingOrderForm extends Component
         $discount = (float)$this->discount;
         $this->finalTotal = max(0, $this->grandTotal - $discount);
     }
-    
+
     public function save()
     {
+        $this->isSubmitting = true;
+        
         $this->validate();
         
         if (count($this->items) == 0) {
             $this->addError('items', 'Please add at least one item');
+            $this->isSubmitting = false;
             return;
         }
         
@@ -129,16 +142,81 @@ class CuppingOrderForm extends Component
             
             DB::commit();
             
-            session()->flash('message', 'Cupping order placed successfully!');
-            return redirect()->route('encounter.show', $this->encounter->id);
+            session()->flash('success', 'Cupping order placed successfully!');
+            $this->dispatch('order-placed');
             
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Error saving cupping order: ' . $e->getMessage());
+        } finally {
+            $this->isSubmitting = false;
         }
     }
+
+    public function saveDraft()
+    {
+        $this->isSubmitting = true;
+        
+        if (count($this->items) == 0) {
+            session()->flash('info', 'No items to save. Please add at least one item.');
+            $this->isSubmitting = false;
+            return;
+        }
+        
+        try {
+            DB::beginTransaction();
+            
+            $cuppingTherapy = CuppingTherapy::create([
+                'encounter_id' => $this->encounter->id,
+                'notes' => $this->notes,
+                'total_amount' => $this->grandTotal,
+                'discount' => $this->discount,
+                'final_amount' => $this->finalTotal,
+                'status' => 'pending',
+            ]);
+            
+            foreach ($this->items as $item) {
+                CuppingTherapyItem::create([
+                    'cupping_therapy_id' => $cuppingTherapy->id,
+                    'cupping_type_id' => $item['cupping_type_id'],
+                    'cupping_location_id' => $item['cupping_location_id'],
+                    'qty' => $item['qty'],
+                    'price' => $item['price'],
+                    'total' => $item['total'],
+                    'notes' => $item['notes'] ?? null,
+                ]);
+            }
+            
+            DB::commit();
+            
+            session()->flash('success', 'Draft saved successfully! You can continue later.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error saving draft: ' . $e->getMessage());
+        } finally {
+            $this->isSubmitting = false;
+        }
+    }
+
+    public function back()
+    {
+        return $this->redirect(route('consultation.examination', $this->encounter), navigate: true);
+    }
+
     public function render()
     {
-        return view('livewire.cupping.cupping-order-form');
+        $cuppingTypes = CuppingType::where('status', true)
+            ->orderBy('name')
+            ->get();
+            
+        $cuppingLocations = CuppingLocation::where('status', true)
+            ->orderBy('name')
+            ->get();
+        
+        return view('livewire.cupping.cupping-order-form', [
+            'cuppingTypes' => $cuppingTypes,
+            'cuppingLocations' => $cuppingLocations,
+        ]);
     }
 }

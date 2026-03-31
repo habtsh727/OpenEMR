@@ -62,6 +62,7 @@ use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
+use App\Livewire\Cupping\CuppingOrderForm;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
 use App\Livewire\Doctor\RehabQueue;
@@ -356,4 +357,22 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
     Route::get('/appointments/{id}', AppointmentDetail::class)
         ->name('appointments.detail');
 });
+
+
+
+
+
+
+
+
+
+
+Route::get('/encounter/{encounter}/cupping-order', CuppingOrderForm::class)
+    ->name('encounter.cupping-order')
+    ->middleware(['auth']);
+
+
+
+
+
 require __DIR__ . '/auth.php';
