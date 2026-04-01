@@ -147,8 +147,5 @@ class Encounter extends Model
     {
         return $this->hasMany(RehabEncounter::class);
     }
-    public function cuppingTherapies()
-    {
-        return $this->hasMany(CuppingTherapy::class);
-    }
+ 
 }

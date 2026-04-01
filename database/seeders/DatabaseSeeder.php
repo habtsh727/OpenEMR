@@ -40,8 +40,6 @@ class DatabaseSeeder extends Seeder
             FrequencySeeder::class,
             RehabPackageSeeder::class,
             RehabTreatmentTypeSeeder::class,
-            CuppingLocationSeeder::class,
-            CuppingTypeSeeder::class,
         ]);
     }
 }
