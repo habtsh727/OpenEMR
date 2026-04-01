@@ -147,4 +147,5 @@ class Encounter extends Model
     {
         return $this->hasMany(RehabEncounter::class);
     }
+ 
 }

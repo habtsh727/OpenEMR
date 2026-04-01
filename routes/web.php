@@ -356,4 +356,17 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
     Route::get('/appointments/{id}', AppointmentDetail::class)
         ->name('appointments.detail');
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
 require __DIR__ . '/auth.php';

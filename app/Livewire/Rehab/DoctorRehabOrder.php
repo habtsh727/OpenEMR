@@ -27,12 +27,12 @@ class DoctorRehabOrder extends Component
         ])->findOrFail($rehabEncounter);
 
         // Security check
-        if ($this->rehabEncounter->encounter->doctor_id !== auth()->id()) {
+        if ($this->rehabEncounter->encounter->doctor_id != auth()->id()) {
             abort(403, 'This rehabilitation case is not assigned to you.');
         }
 
         // Only allow ordering if status is doctor_review
-        if ($this->rehabEncounter->status !== 'doctor_review') {
+        if ($this->rehabEncounter->status != 'doctor_review') {
             abort(403, 'Questionnaire must be reviewed before ordering packages.');
         }
 
