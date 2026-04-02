@@ -42,7 +42,8 @@ class CuppingOrderForm extends Component
     public function initializeSessions()
     {
         $this->sessions = [];
-        for ($i = 1; $i <= $this->total_sessions; $i++) {
+        $total = (int) $this->total_sessions;
+        for ($i = 1; $i <= $total; $i++) {
             $this->sessions[] = [
                 'session_number' => $i,
                 'session_date' => now()->addDays($i - 1)->format('Y-m-d'),
@@ -63,9 +64,22 @@ class CuppingOrderForm extends Component
 
     public function updatedTotalSessions()
     {
+        // Convert to integer to ensure proper type
+        $newTotal = (int) $this->total_sessions;
         $currentCount = count($this->sessions);
-        if ($this->total_sessions > $currentCount) {
-            for ($i = $currentCount + 1; $i <= $this->total_sessions; $i++) {
+
+        // Ensure value is within bounds
+        if ($newTotal < 1) {
+            $newTotal = 1;
+            $this->total_sessions = 1;
+        }
+        if ($newTotal > 10) {
+            $newTotal = 10;
+            $this->total_sessions = 10;
+        }
+
+        if ($newTotal > $currentCount) {
+            for ($i = $currentCount + 1; $i <= $newTotal; $i++) {
                 $this->sessions[] = [
                     'session_number' => $i,
                     'session_date' => now()->addDays($i - 1)->format('Y-m-d'),
@@ -82,9 +96,10 @@ class CuppingOrderForm extends Component
                     ]
                 ];
             }
-        } elseif ($this->total_sessions < $currentCount) {
-            $this->sessions = array_slice($this->sessions, 0, $this->total_sessions);
+        } elseif ($newTotal < $currentCount) {
+            $this->sessions = array_slice($this->sessions, 0, $newTotal);
         }
+
         $this->calculateTotals();
     }
 
@@ -136,6 +151,11 @@ class CuppingOrderForm extends Component
     {
         $this->validate();
 
+        if (empty($this->sessions)) {
+            $this->addError('sessions', 'At least one session is required.');
+            return;
+        }
+
         DB::beginTransaction();
 
         try {
@@ -147,7 +167,7 @@ class CuppingOrderForm extends Component
                 'total_amount' => $this->grand_total,
                 'discount' => $this->discount,
                 'final_amount' => $this->final_amount,
-                'total_sessions' => $this->total_sessions,
+                'total_sessions' => (int) $this->total_sessions,
                 'status' => CuppingTherapy::STATUS_ORDERED,
             ]);
 
@@ -184,16 +204,21 @@ class CuppingOrderForm extends Component
                 CuppingQueue::create([
                     'cupping_session_id' => $session->id,
                     'queue_type' => 'payment',
-                    'position' => $lastPosition + 1,
+                    'position' => (int) $lastPosition + 1,
                     'status' => 'waiting'
                 ]);
             }
 
             DB::commit();
 
-            $this->dispatch('alert', type: 'success', message: "{$this->total_sessions} session(s) created and added to payment queue!");
-            return redirect()->route('cashier.queue');
+            // Reset form after successful submission
+            $this->reset(['notes', 'discount']);
+            $this->total_sessions = 1;
+            $this->initializeSessions();
+            $this->calculateTotals();
 
+            // Show success message only - NO REDIRECT
+            $this->dispatch('alert', type: 'success', message: "✓ Cupping order created successfully! {$this->total_sessions} session(s) added to cashier payment queue.");
         } catch (\Exception $e) {
             DB::rollBack();
             $this->dispatch('alert', type: 'error', message: 'Failed to save order: ' . $e->getMessage());

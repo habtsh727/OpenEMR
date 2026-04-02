@@ -61,9 +61,11 @@ use App\Livewire\Appointment\AppointmentReports;
 use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\CuppingPaymentForm;
+use App\Livewire\Cashier\CuppingPaymentQueue;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
 use App\Livewire\CuppingDepartment\CuppingReportForm;
+use App\Livewire\CuppingDepartment\TreatmentQueue;
 use App\Livewire\Doctor\CuppingOrderForm;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
@@ -368,20 +370,18 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
 
 
 
-
-
 Route::middleware(['auth'])->group(function () {
-    // Doctor routes
+    
+    // Doctor Routes
     Route::get('/doctor/encounter/{encounter}/cupping-order', CuppingOrderForm::class)
         ->name('doctor.cupping-order');
     
-    // Cashier routes
-    Route::get('/cashier/cupping/{cupping}', CuppingPaymentForm::class)
-        ->name('cashier.cupping');
+    // Cashier Routes
+    Route::get('/cashier/payment-queue', CuppingPaymentQueue::class)
+        ->name('cashier.queue');
     
-    // Cupping Department routes
-    Route::get('/cupping-department/{cupping}', CuppingReportForm::class)
-        ->name('cupping-department.report');
+    // Cupping Department Routes
+    Route::get('/cupping-department/treatment-queue', TreatmentQueue::class)
+        ->name('cupping.queue');
 });
-
 require __DIR__ . '/auth.php';
