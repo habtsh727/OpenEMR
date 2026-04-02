@@ -22,6 +22,11 @@ class CuppingOrderForm extends Component
     public $sessions = [];
     public $grand_total = 0;
     public $final_amount = 0;
+    
+    // Alert properties
+    public $showAlert = false;
+    public $alertMessage = '';
+    public $alertType = 'success';
 
     protected $rules = [
         'total_sessions' => 'required|integer|min:1|max:10',
@@ -64,11 +69,9 @@ class CuppingOrderForm extends Component
 
     public function updatedTotalSessions()
     {
-        // Convert to integer to ensure proper type
         $newTotal = (int) $this->total_sessions;
         $currentCount = count($this->sessions);
 
-        // Ensure value is within bounds
         if ($newTotal < 1) {
             $newTotal = 1;
             $this->total_sessions = 1;
@@ -159,7 +162,6 @@ class CuppingOrderForm extends Component
         DB::beginTransaction();
 
         try {
-            // Create main therapy
             $therapy = CuppingTherapy::create([
                 'encounter_id' => $this->encounter->id,
                 'doctor_id' => Auth::id(),
@@ -171,7 +173,6 @@ class CuppingOrderForm extends Component
                 'status' => CuppingTherapy::STATUS_ORDERED,
             ]);
 
-            // Create sessions and items
             foreach ($this->sessions as $sessionData) {
                 $session = CuppingSession::create([
                     'cupping_therapy_id' => $therapy->id,
@@ -196,7 +197,6 @@ class CuppingOrderForm extends Component
                     ]);
                 }
 
-                // Add to payment queue
                 $lastPosition = CuppingQueue::where('queue_type', 'payment')
                     ->where('status', 'waiting')
                     ->max('position') ?? 0;
@@ -211,18 +211,31 @@ class CuppingOrderForm extends Component
 
             DB::commit();
 
-            // Reset form after successful submission
             $this->reset(['notes', 'discount']);
             $this->total_sessions = 1;
             $this->initializeSessions();
             $this->calculateTotals();
 
-            // Show success message only - NO REDIRECT
-            $this->dispatch('alert', type: 'success', message: "✓ Cupping order created successfully! {$this->total_sessions} session(s) added to cashier payment queue.");
+            $this->showAlertMessage("✓ Cupping order created successfully! {$this->total_sessions} session(s) added to cashier payment queue.", 'success');
+
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->dispatch('alert', type: 'error', message: 'Failed to save order: ' . $e->getMessage());
+            $this->showAlertMessage('Failed to save order: ' . $e->getMessage(), 'error');
         }
+    }
+
+    public function showAlertMessage($message, $type = 'success')
+    {
+        $this->alertMessage = $message;
+        $this->alertType = $type;
+        $this->showAlert = true;
+        
+        $this->dispatch('alert-shown');
+    }
+
+    public function closeAlert()
+    {
+        $this->showAlert = false;
     }
 
     public function render()
