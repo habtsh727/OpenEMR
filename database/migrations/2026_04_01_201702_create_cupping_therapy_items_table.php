@@ -13,6 +13,25 @@ return new class extends Migration
     {
         Schema::create('cupping_therapy_items', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('cupping_therapy_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('cupping_type_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->foreignId('cupping_location_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->integer('qty')->default(1);
+            $table->decimal('price', 10, 2);
+            $table->decimal('total', 10, 2);
+
+            $table->text('notes')->nullable();
+
             $table->timestamps();
         });
     }
