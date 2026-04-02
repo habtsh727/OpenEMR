@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cupping_reports', function (Blueprint $table) {
+        Schema::create('cupping_queues', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cupping_session_id')->constrained()->cascadeOnDelete();
-            $table->text('report_text');
-            $table->text('observations')->nullable();
-            $table->text('recommendations')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('queue_type', ['payment', 'treatment']);
+            $table->integer('position')->default(0);
+            $table->enum('status', ['waiting', 'processing', 'completed'])->default('waiting');
+            $table->timestamp('assigned_at')->nullable();
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cupping_reports');
+        Schema::dropIfExists('cupping_queues');
     }
 };

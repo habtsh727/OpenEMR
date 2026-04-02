@@ -7,16 +7,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CuppingReport extends Model
 {
+    protected $table = 'cupping_reports';
+    
     protected $fillable = [
-        'cupping_therapy_id',
+        'cupping_session_id',
         'report_text',
-        'notes',
+        'observations',
+        'recommendations',
         'created_by'
     ];
 
-    public function cuppingTherapy(): BelongsTo
+    public function cuppingSession(): BelongsTo
     {
-        return $this->belongsTo(CuppingTherapy::class);
+        return $this->belongsTo(CuppingSession::class);
     }
 
     public function createdBy(): BelongsTo

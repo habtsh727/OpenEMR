@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('cupping_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name');        // Full, Half, Dry, Wet
+            $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->boolean('status')->default(true);
             $table->timestamps();
         });
     }

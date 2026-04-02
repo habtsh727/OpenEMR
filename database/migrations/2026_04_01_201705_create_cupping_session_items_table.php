@@ -11,27 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cupping_therapy_items', function (Blueprint $table) {
+        Schema::create('cupping_session_items', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('cupping_therapy_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->foreignId('cupping_type_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->foreignId('cupping_location_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
+            $table->foreignId('cupping_session_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('cupping_type_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('cupping_location_id')->constrained()->cascadeOnDelete();
             $table->integer('qty')->default(1);
             $table->decimal('price', 10, 2);
             $table->decimal('total', 10, 2);
-
             $table->text('notes')->nullable();
-
             $table->timestamps();
         });
     }
@@ -41,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cupping_therapy_items');
+        Schema::dropIfExists('cupping_session_items');
     }
 };

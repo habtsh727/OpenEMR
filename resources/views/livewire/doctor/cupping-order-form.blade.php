@@ -1,125 +1,140 @@
-{{-- resources/views/livewire/doctor/cupping-order-form.blade.php --}}
-<div>
-    <div class="p-6 max-w-7xl mx-auto">
-        <h2 class="text-2xl font-bold mb-6">Create Cupping Order</h2>
-        
-        <!-- Encounter Info -->
-        <div class="bg-gray-100 p-4 rounded mb-6">
-            <p><strong>Patient ID:</strong> {{ $encounter->id }}</p>
-            <p><strong>Patient Name:</strong> {{ $encounter->patient->name ?? 'N/A' }}</p>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+        <div class="px-6 py-4 bg-blue-600 dark:bg-blue-700">
+            <h2 class="text-2xl font-bold text-white">Create Cupping Order</h2>
+            <p class="text-blue-100">Patient: {{ $encounter->patient->name ?? 'N/A' }} | Encounter #{{ $encounter->id }}
+            </p>
         </div>
 
-        <form wire:submit.prevent="save">
-            <!-- Treatment Date -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-2">Treatment Date</label>
-                <input type="date" wire:model="treatment_date" class="w-full p-2 border rounded">
-                @error('treatment_date') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+        <form wire:submit.prevent="save" class="p-6">
+            <!-- Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Total Sessions</label>
+                    <input type="number" wire:model.live="total_sessions" min="1" max="10"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Discount (Fixed Amount)</label>
+                    <input type="number" step="0.01" wire:model.live="discount"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700">
+                </div>
             </div>
 
-            <!-- Items -->
-            <div class="mb-4">
-                <div class="flex justify-between items-center mb-3">
-                    <label class="block text-sm font-medium">Cupping Items</label>
-                    <button type="button" wire:click="addItem" class="bg-green-500 text-white px-3 py-1 rounded text-sm">
-                        + Add Item
-                    </button>
-                </div>
-
-                @foreach($items as $index => $item)
-                    <div class="border p-4 rounded mb-3 bg-gray-50">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Cupping Type</label>
-                                <select wire:model="items.{{ $index }}.cupping_type_id" class="w-full p-2 border rounded text-sm">
-                                    <option value="">Select Type</option>
-                                    @foreach($cuppingTypes as $type)
-                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Location</label>
-                                <select wire:model="items.{{ $index }}.cupping_location_id" class="w-full p-2 border rounded text-sm">
-                                    <option value="">Select Location</option>
-                                    @foreach($cuppingLocations as $location)
-                                        <option value="{{ $location->id }}">{{ $location->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Quantity</label>
-                                <input type="number" wire:model.live="items.{{ $index }}.qty" wire:change="updateItemTotal({{ $index }})" class="w-full p-2 border rounded text-sm">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Price</label>
-                                <input type="number" step="0.01" wire:model.live="items.{{ $index }}.price" wire:change="updateItemTotal({{ $index }})" class="w-full p-2 border rounded text-sm">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-medium mb-1">Total</label>
-                                <input type="text" value="{{ number_format($item['total'], 2) }}" readonly class="w-full p-2 border rounded bg-gray-100 text-sm">
-                            </div>
-                        </div>
-
-                        <div class="mt-2">
-                            <label class="block text-xs font-medium mb-1">Notes</label>
-                            <input type="text" wire:model="items.{{ $index }}.notes" class="w-full p-2 border rounded text-sm">
-                        </div>
-
-                        <button type="button" wire:click="removeItem({{ $index }})" class="mt-2 text-red-500 text-sm">Remove</button>
+            <!-- Sessions -->
+            @foreach($sessions as $sessionIndex => $session)
+            <div class="mb-8 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex justify-between items-center">
+                    <h3 class="font-semibold text-lg">Session #{{ $session['session_number'] }}</h3>
+                    <div class="text-sm">
+                        Date: <input type="date" wire:model="sessions.{{ $sessionIndex }}.session_date"
+                            class="ml-2 px-2 py-1 border rounded dark:bg-gray-600">
                     </div>
-                @endforeach
-
-                @error('items') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-            </div>
-
-            <!-- Notes & Discount -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2">General Notes</label>
-                    <textarea wire:model="notes" rows="3" class="w-full p-2 border rounded"></textarea>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium mb-2">Discount</label>
-                    <input type="number" step="0.01" wire:model.live="discount" class="w-full p-2 border rounded">
+                <div class="p-4">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-100 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-sm">Type</th>
+                                    <th class="px-3 py-2 text-left text-sm">Location</th>
+                                    <th class="px-3 py-2 text-center text-sm">Qty</th>
+                                    <th class="px-3 py-2 text-right text-sm">Price</th>
+                                    <th class="px-3 py-2 text-right text-sm">Total</th>
+                                    <th class="px-3 py-2 text-center text-sm">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($session['items'] as $itemIndex => $item)
+                                <tr class="border-b dark:border-gray-700">
+                                    <td class="px-3 py-2">
+                                        <select
+                                            wire:model="sessions.{{ $sessionIndex }}.items.{{ $itemIndex }}.cupping_type_id"
+                                            class="w-full px-2 py-1 border rounded text-sm dark:bg-gray-700">
+                                            <option value="">Select Type</option>
+                                            @foreach($cuppingTypes as $type)
+                                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <select
+                                            wire:model="sessions.{{ $sessionIndex }}.items.{{ $itemIndex }}.cupping_location_id"
+                                            class="w-full px-2 py-1 border rounded text-sm dark:bg-gray-700">
+                                            <option value="">Select Location</option>
+                                            @foreach($cuppingLocations as $location)
+                                            <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td class="px-3 py-2 text-center">
+                                        <input type="number"
+                                            wire:model.live="sessions.{{ $sessionIndex }}.items.{{ $itemIndex }}.qty"
+                                            wire:change="updateItemTotal({{ $sessionIndex }}, {{ $itemIndex }})"
+                                            class="w-20 px-2 py-1 border rounded text-center dark:bg-gray-700">
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" step="0.01"
+                                            wire:model.live="sessions.{{ $sessionIndex }}.items.{{ $itemIndex }}.price"
+                                            wire:change="updateItemTotal({{ $sessionIndex }}, {{ $itemIndex }})"
+                                            class="w-28 px-2 py-1 border rounded text-right dark:bg-gray-700">
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-medium">
+                                        {{ number_format($item['total'], 2) }}
+                                    </td>
+                                    <td class="px-3 py-2 text-center">
+                                        <button type="button"
+                                            wire:click="removeItem({{ $sessionIndex }}, {{ $itemIndex }})"
+                                            class="text-red-500 hover:text-red-700">🗑️</button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="button" wire:click="addItem({{ $sessionIndex }})"
+                        class="mt-3 text-sm text-blue-500 hover:text-blue-700">+ Add Item</button>
+
+                    <div class="mt-3 text-right font-bold">
+                        Session Total: {{ number_format($session['session_amount'], 2) }}
+                    </div>
                 </div>
             </div>
+            @endforeach
 
             <!-- Totals -->
-            <div class="bg-blue-50 p-4 rounded mb-4">
-                <div class="flex justify-between mb-2">
-                    <span class="font-medium">Grand Total:</span>
+            <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-6">
+                <div class="flex justify-between text-lg">
+                    <span>Grand Total:</span>
                     <span class="font-bold">{{ number_format($grand_total, 2) }}</span>
                 </div>
-                <div class="flex justify-between mb-2">
-                    <span class="font-medium">Discount:</span>
-                    <span>{{ number_format($discount, 2) }}</span>
-                </div>
                 <div class="flex justify-between text-lg">
+                    <span>Discount:</span>
+                    <span class="font-bold text-green-600">- {{ number_format($discount, 2) }}</span>
+                </div>
+                <div class="flex justify-between text-xl mt-2 pt-2 border-t dark:border-gray-600">
                     <span class="font-bold">Final Amount:</span>
                     <span class="font-bold text-blue-600">{{ number_format($final_amount, 2) }}</span>
                 </div>
             </div>
 
+            <!-- Notes -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium mb-2">General Notes</label>
+                <textarea wire:model="notes" rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700"
+                    placeholder="Any additional notes..."></textarea>
+            </div>
+
             <!-- Submit -->
             <div class="flex justify-end">
-                <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
-                    Create Order & Proceed to Payment
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-200">
+                    Create Order & Send to Payment Queue
                 </button>
             </div>
         </form>
     </div>
-
-    <script>
-        document.addEventListener('livewire:initialized', () => {
-            Livewire.on('alert', (event) => {
-                alert(event.type.toUpperCase() + ': ' + event.message);
-            });
-        });
-    </script>
 </div>

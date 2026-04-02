@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('cupping_locations', function (Blueprint $table) {
             $table->id();
-            $table->string('name');        // Head, Back, Leg, Shoulder, Arm
+            $table->string('name');
             $table->text('description')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->boolean('status')->default(true);
             $table->timestamps();
         });
     }

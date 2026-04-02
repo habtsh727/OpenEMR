@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CuppingPayment extends Model
 {
+    protected $table = 'cupping_payments';
+    
     protected $fillable = [
+        'cupping_session_id',
         'cupping_therapy_id',
         'amount',
         'payment_method',
@@ -21,8 +24,10 @@ class CuppingPayment extends Model
         'paid_at' => 'datetime',
     ];
 
-    const STATUS_PENDING = 'pending';
-    const STATUS_PAID = 'paid';
+    public function cuppingSession(): BelongsTo
+    {
+        return $this->belongsTo(CuppingSession::class);
+    }
 
     public function cuppingTherapy(): BelongsTo
     {

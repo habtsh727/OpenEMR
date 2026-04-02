@@ -5,42 +5,92 @@ namespace App\Livewire\Doctor;
 use Livewire\Component;
 use App\Models\Encounter;
 use App\Models\CuppingTherapy;
-use App\Models\CuppingTherapyItem;
+use App\Models\CuppingSession;
+use App\Models\CuppingSessionItem;
 use App\Models\CuppingType;
 use App\Models\CuppingLocation;
+use App\Models\CuppingQueue;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CuppingOrderForm extends Component
 {
     public Encounter $encounter;
-    public $treatment_date;
     public $notes = '';
     public $discount = 0;
-    public $items = [];
+    public $total_sessions = 1;
+    public $sessions = [];
     public $grand_total = 0;
     public $final_amount = 0;
 
     protected $rules = [
-        'treatment_date' => 'required|date',
+        'total_sessions' => 'required|integer|min:1|max:10',
         'discount' => 'required|numeric|min:0',
-        'items.*.cupping_type_id' => 'required|exists:cupping_types,id',
-        'items.*.cupping_location_id' => 'required|exists:cupping_locations,id',
-        'items.*.qty' => 'required|integer|min:1',
-        'items.*.price' => 'required|numeric|min:0',
-        'items.*.notes' => 'nullable|string',
+        'sessions.*.session_date' => 'required|date',
+        'sessions.*.items.*.cupping_type_id' => 'required|exists:cupping_types,id',
+        'sessions.*.items.*.cupping_location_id' => 'required|exists:cupping_locations,id',
+        'sessions.*.items.*.qty' => 'required|integer|min:1',
+        'sessions.*.items.*.price' => 'required|numeric|min:0',
     ];
 
     public function mount(Encounter $encounter)
     {
         $this->encounter = $encounter;
-        $this->treatment_date = date('Y-m-d');
-        $this->addItem();
+        $this->initializeSessions();
     }
 
-    public function addItem()
+    public function initializeSessions()
     {
-        $this->items[] = [
+        $this->sessions = [];
+        for ($i = 1; $i <= $this->total_sessions; $i++) {
+            $this->sessions[] = [
+                'session_number' => $i,
+                'session_date' => now()->addDays($i - 1)->format('Y-m-d'),
+                'session_amount' => 0,
+                'items' => [
+                    [
+                        'cupping_type_id' => '',
+                        'cupping_location_id' => '',
+                        'qty' => 1,
+                        'price' => 0,
+                        'total' => 0,
+                        'notes' => '',
+                    ]
+                ]
+            ];
+        }
+    }
+
+    public function updatedTotalSessions()
+    {
+        $currentCount = count($this->sessions);
+        if ($this->total_sessions > $currentCount) {
+            for ($i = $currentCount + 1; $i <= $this->total_sessions; $i++) {
+                $this->sessions[] = [
+                    'session_number' => $i,
+                    'session_date' => now()->addDays($i - 1)->format('Y-m-d'),
+                    'session_amount' => 0,
+                    'items' => [
+                        [
+                            'cupping_type_id' => '',
+                            'cupping_location_id' => '',
+                            'qty' => 1,
+                            'price' => 0,
+                            'total' => 0,
+                            'notes' => '',
+                        ]
+                    ]
+                ];
+            }
+        } elseif ($this->total_sessions < $currentCount) {
+            $this->sessions = array_slice($this->sessions, 0, $this->total_sessions);
+        }
+        $this->calculateTotals();
+    }
+
+    public function addItem($sessionIndex)
+    {
+        $this->sessions[$sessionIndex]['items'][] = [
             'cupping_type_id' => '',
             'cupping_location_id' => '',
             'qty' => 1,
@@ -50,24 +100,30 @@ class CuppingOrderForm extends Component
         ];
     }
 
-    public function removeItem($index)
+    public function removeItem($sessionIndex, $itemIndex)
     {
-        unset($this->items[$index]);
-        $this->items = array_values($this->items);
-        $this->calculateTotals();
+        unset($this->sessions[$sessionIndex]['items'][$itemIndex]);
+        $this->sessions[$sessionIndex]['items'] = array_values($this->sessions[$sessionIndex]['items']);
+        $this->calculateSessionTotal($sessionIndex);
     }
 
-    public function updateItemTotal($index)
+    public function updateItemTotal($sessionIndex, $itemIndex)
     {
-        if (isset($this->items[$index])) {
-            $this->items[$index]['total'] = $this->items[$index]['qty'] * $this->items[$index]['price'];
-            $this->calculateTotals();
-        }
+        $item = &$this->sessions[$sessionIndex]['items'][$itemIndex];
+        $item['total'] = $item['qty'] * $item['price'];
+        $this->calculateSessionTotal($sessionIndex);
+    }
+
+    public function calculateSessionTotal($sessionIndex)
+    {
+        $sessionTotal = collect($this->sessions[$sessionIndex]['items'])->sum('total');
+        $this->sessions[$sessionIndex]['session_amount'] = $sessionTotal;
+        $this->calculateTotals();
     }
 
     public function calculateTotals()
     {
-        $this->grand_total = collect($this->items)->sum('total');
+        $this->grand_total = collect($this->sessions)->sum('session_amount');
         $this->final_amount = max(0, $this->grand_total - $this->discount);
     }
 
@@ -80,58 +136,63 @@ class CuppingOrderForm extends Component
     {
         $this->validate();
 
-        if (empty($this->items)) {
-            $this->addError('items', 'At least one item is required.');
-            return;
-        }
-
         DB::beginTransaction();
 
         try {
-            // Check for existing pending session
-            $existingTherapy = CuppingTherapy::where('encounter_id', $this->encounter->id)
-                ->whereIn('status', [
-                    CuppingTherapy::STATUS_PENDING,
-                    CuppingTherapy::STATUS_ORDERED,
-                    CuppingTherapy::STATUS_PAYMENT_PARTIAL,
-                    CuppingTherapy::STATUS_PAYMENT_COMPLETED,
-                    CuppingTherapy::STATUS_SENT_TO_CUPPING,
-                ])
-                ->first();
-
-            if ($existingTherapy) {
-                $this->dispatch('alert', type: 'error', message: 'Patient has an active cupping session. Please complete or cancel it first.');
-                DB::rollBack();
-                return;
-            }
-
+            // Create main therapy
             $therapy = CuppingTherapy::create([
                 'encounter_id' => $this->encounter->id,
                 'doctor_id' => Auth::id(),
-                'treatment_date' => $this->treatment_date,
                 'notes' => $this->notes,
                 'total_amount' => $this->grand_total,
                 'discount' => $this->discount,
                 'final_amount' => $this->final_amount,
+                'total_sessions' => $this->total_sessions,
                 'status' => CuppingTherapy::STATUS_ORDERED,
             ]);
 
-            foreach ($this->items as $item) {
-                CuppingTherapyItem::create([
+            // Create sessions and items
+            foreach ($this->sessions as $sessionData) {
+                $session = CuppingSession::create([
                     'cupping_therapy_id' => $therapy->id,
-                    'cupping_type_id' => $item['cupping_type_id'],
-                    'cupping_location_id' => $item['cupping_location_id'],
-                    'qty' => $item['qty'],
-                    'price' => $item['price'],
-                    'total' => $item['total'],
-                    'notes' => $item['notes'],
+                    'session_number' => $sessionData['session_number'],
+                    'session_date' => $sessionData['session_date'],
+                    'session_amount' => $sessionData['session_amount'],
+                    'paid_amount' => 0,
+                    'payment_status' => 'unpaid',
+                    'treatment_status' => 'pending',
+                    'notes' => $sessionData['notes'] ?? null,
+                ]);
+
+                foreach ($sessionData['items'] as $item) {
+                    CuppingSessionItem::create([
+                        'cupping_session_id' => $session->id,
+                        'cupping_type_id' => $item['cupping_type_id'],
+                        'cupping_location_id' => $item['cupping_location_id'],
+                        'qty' => $item['qty'],
+                        'price' => $item['price'],
+                        'total' => $item['total'],
+                        'notes' => $item['notes'] ?? null,
+                    ]);
+                }
+
+                // Add to payment queue
+                $lastPosition = CuppingQueue::where('queue_type', 'payment')
+                    ->where('status', 'waiting')
+                    ->max('position') ?? 0;
+
+                CuppingQueue::create([
+                    'cupping_session_id' => $session->id,
+                    'queue_type' => 'payment',
+                    'position' => $lastPosition + 1,
+                    'status' => 'waiting'
                 ]);
             }
 
             DB::commit();
 
-            $this->dispatch('alert', type: 'success', message: 'Cupping order created successfully!');
-            return redirect()->route('cashier.cupping', $therapy->id);
+            $this->dispatch('alert', type: 'success', message: "{$this->total_sessions} session(s) created and added to payment queue!");
+            return redirect()->route('cashier.queue');
 
         } catch (\Exception $e) {
             DB::rollBack();

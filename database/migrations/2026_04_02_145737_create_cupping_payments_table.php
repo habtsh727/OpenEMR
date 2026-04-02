@@ -13,29 +13,13 @@ return new class extends Migration
     {
         Schema::create('cupping_payments', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('cupping_therapy_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
-            // Payment details
+            $table->foreignId('cupping_session_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('cupping_therapy_id')->constrained()->cascadeOnDelete();
             $table->decimal('amount', 10, 2);
-            $table->string('payment_method')->nullable(); // cash, card
-
-            // Who received payment (cashier)
-            $table->foreignId('received_by')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
-
-            // Status
-            $table->enum('status', [
-                'pending',
-                'paid'
-            ])->default('paid');
-
+            $table->string('payment_method')->nullable();
+            $table->foreignId('received_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('status', ['pending', 'completed'])->default('completed');
             $table->timestamp('paid_at')->nullable();
-
             $table->timestamps();
         });
     }

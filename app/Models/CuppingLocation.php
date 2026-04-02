@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CuppingLocation extends Model
 {
+    protected $table = 'cupping_locations';
+    
     protected $fillable = [
         'name',
         'description',
@@ -17,8 +19,8 @@ class CuppingLocation extends Model
         'status' => 'boolean'
     ];
 
-    public function cuppingTherapyItems(): HasMany
+    public function sessionItems(): HasMany
     {
-        return $this->hasMany(CuppingTherapyItem::class);
+        return $this->hasMany(CuppingSessionItem::class);
     }
 }
