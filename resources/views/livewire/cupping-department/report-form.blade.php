@@ -1,5 +1,5 @@
 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
-    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-700 dark:to-indigo-700 px-6 py-4">
+    <div class="bg-gradient-to-r from-gray-900 via-gray-800 dark:from-gray-950 dark:via-gray-900 px-6 py-4">
         <h2 class="text-2xl font-bold text-white">📝 Cupping Treatment Report</h2>
         <p class="text-purple-100">Session {{ $session->session_number }} of {{ $session->cuppingTherapy->total_sessions }}</p>
     </div>
@@ -100,9 +100,10 @@
 
             <div class="flex justify-end">
                 <button type="submit" 
-                        class="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg">
+                        class="px-6 py-3 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900  hover:from-gray-900 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg">
                     ✓ Complete Treatment & Submit Report
                 </button>
+                
             </div>
         </form>
     </div>

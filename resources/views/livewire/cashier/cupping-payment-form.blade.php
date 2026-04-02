@@ -41,10 +41,11 @@
         @endif
     </div>
 
-    <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700">
+    <div class="px-6 py-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900">
         <h2 class="text-2xl font-bold text-white">Process Payment</h2>
         <p class="text-blue-100">Session #{{ $session->session_number }} of {{ $session->cuppingTherapy->total_sessions }}</p>
     </div>
+    {{-- bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 rounded-2xl shadow-2xl overflow-hidden relative --}}
 
     <div class="p-6">
         <!-- Patient Info -->
@@ -108,10 +109,10 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Method</label>
                     <select wire:model="payment_method" 
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="cash">💵 Cash</option>
-                        <option value="card">💳 Card</option>
-                        <option value="bank_transfer">🏦 Bank Transfer</option>
-                        <option value="mobile_money">📱 Mobile Money (Telebirr)</option>
+                        <option value="cash">Cash</option>
+                        {{-- <option value="card">💳 Card</option> --}}
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="mobile_money">Mobile Money</option>
                     </select>
                 </div>
             </div>
