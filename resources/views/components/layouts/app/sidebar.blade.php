@@ -64,6 +64,9 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
                     Pharmacy Payment
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.queue')" wire:navigate>
+                    Cupping Payment
+                </flux:sidebar.item>
             </flux:sidebar.group>
 
             @endcanany
@@ -83,6 +86,19 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="paper-airplane" :href="route('referrals.queue')" wire:navigate>
                     Referral
+                </flux:sidebar.item>
+                @endif
+            </flux:sidebar.group>
+            @endif
+
+
+            {{-- cupping order --}}
+            @if(auth()->user()->hasRole(['doctor', 'cupping', 'super-admin']))
+            <flux:sidebar.group expandable :expanded="false" heading="Cupping" class="grid">
+                @if(auth()->user()->hasRole(['doctor', 'cupping','nurse','super-admin']))
+                <flux:sidebar.item icon="home-modern" :href="route('cupping.queue')" wire:navigate>Treatment Queue
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('doctor.cupping-reports')" wire:navigate>Cupping Reports
                 </flux:sidebar.item>
                 @endif
             </flux:sidebar.group>
@@ -370,6 +386,7 @@
                 <flux:sidebar.item icon="home-modern" :href="route('reports.bed-payments')" wire:navigate>
                     Bed Payments Report
                 </flux:sidebar.item>
+                
             </flux:sidebar.group>
 
         </flux:sidebar.nav>
