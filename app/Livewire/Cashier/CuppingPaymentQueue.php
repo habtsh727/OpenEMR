@@ -7,7 +7,6 @@ use App\Models\CuppingQueue;
 use App\Models\CuppingSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 
 class CuppingPaymentQueue extends Component
 {
@@ -15,7 +14,7 @@ class CuppingPaymentQueue extends Component
     public $selectedSession = null;
     public $showPaymentForm = false;
     public $selectedPatient = null;
-    public $patientSessions = [];
+    public $patientAllSessions = []; // ALL sessions - both paid and unpaid
     
     // Alert properties
     public $showAlert = false;
@@ -66,19 +65,18 @@ class CuppingPaymentQueue extends Component
             'name' => $patientName
         ];
         
-        // Get all unpaid sessions for this patient
-        $this->patientSessions = CuppingSession::with([
+        // Get ALL sessions for this patient - NO FILTERS (both paid and unpaid)
+        $this->patientAllSessions = CuppingSession::with([
             'cuppingTherapy.encounter.patient',
             'items.cuppingType',
             'items.cuppingLocation',
             'payments'
         ])
-            ->whereHas('cuppingTherapy.encounter.patient', function($query) use ($patientId) {
-                $query->where('id', $patientId);
-            })
-            ->where('payment_status', '!=', 'paid')
-            ->orderBy('session_date')
-            ->get();
+        ->whereHas('cuppingTherapy.encounter.patient', function($query) use ($patientId) {
+            $query->where('id', $patientId);
+        })
+        ->orderBy('session_date', 'desc')
+        ->get();
     }
 
     public function processPayment($sessionId)
@@ -102,7 +100,7 @@ class CuppingPaymentQueue extends Component
     public function backToQueue()
     {
         $this->selectedPatient = null;
-        $this->patientSessions = [];
+        $this->patientAllSessions = [];
         $this->loadQueue();
     }
 

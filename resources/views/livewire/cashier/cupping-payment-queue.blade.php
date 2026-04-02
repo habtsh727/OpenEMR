@@ -82,7 +82,7 @@
                 </div>
             </div>
 
-            <!-- Queue Statistics - Full Width Cards -->
+            <!-- Queue Statistics -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
@@ -148,9 +148,9 @@
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Today's Collections</p>
-                            <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">0.00</p>
-                            <p class="text-xs text-gray-400 mt-1">ETB</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Completed Payments</p>
+                            <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">0</p>
+                            <p class="text-xs text-gray-400 mt-1">Today</p>
                         </div>
                         <div class="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                             <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,7 +161,7 @@
                 </div>
             </div>
 
-            <!-- Patient Cards - Full Width -->
+            <!-- Patient Cards -->
             @if(count($queueItems) > 0)
                 <div class="space-y-6">
                     @foreach($queueItems as $patientId => $group)
@@ -200,7 +200,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Sessions Table - Full Width -->
+                            <!-- Sessions Table -->
                             <div class="p-0">
                                 <div class="overflow-x-auto">
                                     <table class="w-full">
@@ -258,15 +258,15 @@
                                 </div>
                             </div>
                             
-                            <!-- Footer Button -->
+                            <!-- Footer Button - View Complete History -->
                             <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700">
                                 <button wire:click="viewPatientPayments({{ $patient->id }}, '{{ $patient->name }}')"
-                                    class="w-full md:w-auto px-6 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-sm">
+                                    class="w-full md:w-auto px-6 py-2.5 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-950 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    View Complete Payment History
+                                    View Complete Payment History (All Sessions - Paid & Unpaid)
                                 </button>
                             </div>
                         </div>
@@ -287,7 +287,7 @@
             @endif
         @endif
 
-        <!-- Patient Sessions View - Full Width Table -->
+        <!-- Patient Complete History View - Shows ALL Sessions (Both Paid & Unpaid) -->
         @if($selectedPatient && !$showPaymentForm)
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -300,17 +300,45 @@
                             </button>
                             <div>
                                 <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ $selectedPatient['name'] }}</h2>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Complete payment history and pending sessions</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Complete payment history - Showing ALL sessions (paid & unpaid)</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Summary Stats Cards -->
+                        @php
+                            $totalAmount = $patientAllSessions->sum('session_amount');
+                            $totalPaid = $patientAllSessions->sum('paid_amount');
+                            $totalDue = $totalAmount - $totalPaid;
+                            $paidCount = $patientAllSessions->where('payment_status', 'paid')->count();
+                            $unpaidCount = $patientAllSessions->where('payment_status', '!=', 'paid')->count();
+                            $partialCount = $patientAllSessions->where('payment_status', 'partial')->count();
+                        @endphp
+                        <div class="flex gap-3">
+                            <div class="text-center px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                                <p class="text-xs text-green-600 dark:text-green-400">Fully Paid</p>
+                                <p class="text-xl font-bold text-green-700 dark:text-green-300">{{ $paidCount }}</p>
+                            </div>
+                            <div class="text-center px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                                <p class="text-xs text-yellow-600 dark:text-yellow-400">Partial</p>
+                                <p class="text-xl font-bold text-yellow-700 dark:text-yellow-300">{{ $partialCount }}</p>
+                            </div>
+                            <div class="text-center px-4 py-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                                <p class="text-xs text-red-600 dark:text-red-400">Unpaid</p>
+                                <p class="text-xl font-bold text-red-700 dark:text-red-300">{{ $unpaidCount - $partialCount }}</p>
+                            </div>
+                            <div class="text-center px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                <p class="text-xs text-blue-600 dark:text-blue-400">Total Due</p>
+                                <p class="text-xl font-bold text-blue-700 dark:text-blue-300">{{ number_format($totalDue, 2) }} ETB</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="p-0">
-                    @if(count($patientSessions) > 0)
+                    @if(count($patientAllSessions) > 0)
                         <div class="overflow-x-auto">
                             <table class="w-full">
-                                <thead class="bg-gray-50 dark:bg-gray-700/50">
+                                <thead class="bg-gray-50 dark:bg-gray-700/50 sticky top-0">
                                     <tr>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Session</th>
                                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Date</th>
@@ -318,17 +346,30 @@
                                         <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Amount (ETB)</th>
                                         <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Paid (ETB)</th>
                                         <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Due (ETB)</th>
-                                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Payment Status</th>
+                                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Treatment Status</th>
                                         <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                    @foreach($patientSessions as $session)
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                                    @foreach($patientAllSessions as $session)
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors 
+                                            {{ $session->payment_status === 'paid' ? 'bg-green-50/50 dark:bg-green-900/10' : '' }}
+                                            {{ $session->payment_status === 'partial' ? 'bg-yellow-50/50 dark:bg-yellow-900/10' : '' }}
+                                            {{ $session->payment_status === 'unpaid' ? 'bg-red-50/50 dark:bg-red-900/10' : '' }}">
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <span class="font-medium text-gray-900 dark:text-white">
-                                                    Session {{ $session->session_number }}/{{ $session->cuppingTherapy->total_sessions }}
-                                                </span>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-medium text-gray-900 dark:text-white">
+                                                        Session {{ $session->session_number }}/{{ $session->cuppingTherapy->total_sessions }}
+                                                    </span>
+                                                    @if($session->payment_status === 'paid')
+                                                        <span class="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                            </svg>
+                                                        </span>
+                                                    @endif
+                                                </div>
                                              </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                                                 {{ \Carbon\Carbon::parse($session->session_date)->format('F d, Y') }}
@@ -348,7 +389,8 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-right text-green-600 dark:text-green-400 font-medium">
                                                 {{ number_format($session->paid_amount, 2) }}
                                              </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right font-bold {{ $session->remaining_amount > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600' }}">
+                                            <td class="px-6 py-4 whitespace-nowrap text-right font-bold 
+                                                {{ $session->remaining_amount > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600' }}">
                                                 {{ number_format($session->remaining_amount, 2) }}
                                              </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -358,6 +400,16 @@
                                                     'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400')
                                                 }}">
                                                     {{ ucfirst($session->payment_status) }}
+                                                </span>
+                                             </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                <span class="px-3 py-1 rounded-full text-xs font-semibold {{ 
+                                                    $session->treatment_status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
+                                                    ($session->treatment_status === 'in_progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : 
+                                                    ($session->treatment_status === 'in_queue' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' : 
+                                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'))
+                                                }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $session->treatment_status)) }}
                                                 </span>
                                              </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -371,13 +423,30 @@
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                         </svg>
-                                                        Paid
+                                                        Completed
                                                     </span>
                                                 @endif
                                              </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
+                                <tfoot class="bg-gray-100 dark:bg-gray-800 sticky bottom-0 border-t-2 border-gray-300 dark:border-gray-600">
+                                    <tr>
+                                        <td colspan="3" class="px-6 py-4 text-right font-bold text-gray-900 dark:text-white text-lg">
+                                            GRAND TOTALS:
+                                         </td>
+                                        <td class="px-6 py-4 text-right font-bold text-gray-900 dark:text-white text-lg">
+                                            {{ number_format($patientAllSessions->sum('session_amount'), 2) }}
+                                         </td>
+                                        <td class="px-6 py-4 text-right font-bold text-green-600 dark:text-green-400 text-lg">
+                                            {{ number_format($patientAllSessions->sum('paid_amount'), 2) }}
+                                         </td>
+                                        <td class="px-6 py-4 text-right font-bold text-red-600 dark:text-red-400 text-lg">
+                                            {{ number_format($patientAllSessions->sum('session_amount') - $patientAllSessions->sum('paid_amount'), 2) }}
+                                         </td>
+                                        <td colspan="3" class="px-6 py-4"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     @else
@@ -386,7 +455,7 @@
                                 <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
-                                <p class="text-gray-500 dark:text-gray-400 text-lg">No payment records found for this patient</p>
+                                <p class="text-gray-500 dark:text-gray-400 text-lg">No sessions found for this patient</p>
                             </div>
                         </div>
                     @endif
