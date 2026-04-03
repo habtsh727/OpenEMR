@@ -191,9 +191,9 @@
                                         'completed' => 'Completed',
                                     ];
                                 @endphp
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColors[$encounter->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                    {{ $statusLabels[$encounter->status] ?? ucfirst(str_replace('_', ' ', $encounter->status)) }}
-                                </span>
+                                  <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColors[$encounter->status] ?? 'bg-gray-100 text-gray-800' }}">
+        {{ $statusLabels[$encounter->status] ?? ucfirst(str_replace('_', ' ', $encounter->status)) }}
+    </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($encounter->status === 'sent_to_rehab')

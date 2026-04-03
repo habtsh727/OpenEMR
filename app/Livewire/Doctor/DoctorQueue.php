@@ -87,33 +87,36 @@ class DoctorQueue extends Component
         ];
     }
     
-    public function render()
-    {
-        $doctorId = Auth::id();
+  public function render()
+{
+    $doctorId = Auth::id();
+    
+    $encounters = Encounter::with('patient')
+        ->where('doctor_id', $doctorId)
+        ->when($this->statusFilter, function ($query) {
+            $query->where('status', $this->statusFilter);
+        })
+        ->when($this->search, function ($query) {
+            $query->whereHas('patient', function ($q) {
+                $search = "%{$this->search}%";
+                $q->where('first_name', 'like', $search)
+                    ->orWhere('last_name', 'like', $search)
+                    ->orWhere('card_number', 'like', $search)
+                    ->orWhere('phone_number1', 'like', $search);
+            });
+        })
+        ->orderByRaw("CASE 
+            WHEN status = 'completed' THEN 2 
+            ELSE 1 
+        END")
+        ->orderBy('created_at', 'desc')  // Last comer first within each group
+        ->paginate(10);
         
-        $encounters = Encounter::with('patient')
-            ->where('doctor_id', $doctorId)
-            ->when($this->statusFilter, function ($query) {
-                $query->where('status', $this->statusFilter);
-            })
-            ->when($this->search, function ($query) {
-                $query->whereHas('patient', function ($q) {
-                    $search = "%{$this->search}%";
-                    $q->where('first_name', 'like', $search)
-                        ->orWhere('last_name', 'like', $search)
-                        ->orWhere('card_number', 'like', $search)
-                        ->orWhere('phone_number1', 'like', $search);
-                });
-            })
-            ->orderByRaw("FIELD(priority, 'high', 'medium', 'low')")
-            ->orderBy('created_at', 'asc')
-            ->paginate(10);
-            
-        $stats = $this->getQueueStats();
-        
-        return view('livewire.doctor.doctor-queue', [
-            'encounters' => $encounters,
-            'stats' => $stats
-        ]);
-    }
+    $stats = $this->getQueueStats();
+    
+    return view('livewire.doctor.doctor-queue', [
+        'encounters' => $encounters,
+        'stats' => $stats
+    ]);
+}
 }

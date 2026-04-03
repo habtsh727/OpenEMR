@@ -36,7 +36,7 @@ class RehabTreatmentQueue extends Component
     {
         try {
             $encounter = RehabEncounter::findOrFail($encounterId);
-            
+
             // Security check - only allow if status is sent_to_rehab
             if ($encounter->status !== 'sent_to_rehab') {
                 $this->showAlertMessage('This patient is not ready for treatment.', 'error');
@@ -45,7 +45,6 @@ class RehabTreatmentQueue extends Component
 
             // Redirect to treatment page
             return redirect()->route('rehab.treatment', $encounterId);
-            
         } catch (\Exception $e) {
             $this->showAlertMessage('Error accessing treatment page: ' . $e->getMessage(), 'error');
         }
@@ -55,10 +54,9 @@ class RehabTreatmentQueue extends Component
     {
         try {
             $encounter = RehabEncounter::findOrFail($encounterId);
-            
+
             // Redirect to treatment page (for viewing, even if completed)
             return redirect()->route('rehab.treatment', $encounterId);
-            
         } catch (\Exception $e) {
             $this->showAlertMessage('Error accessing treatment page: ' . $e->getMessage(), 'error');
         }
@@ -69,7 +67,7 @@ class RehabTreatmentQueue extends Component
         $this->alertMessage = $message;
         $this->alertType = $type;
         $this->showAlert = true;
-        
+
         $this->dispatch('alert-shown');
     }
 
@@ -77,6 +75,7 @@ class RehabTreatmentQueue extends Component
     {
         $this->showAlert = false;
     }
+
 
     public function render()
     {
@@ -98,7 +97,7 @@ class RehabTreatmentQueue extends Component
         if ($this->search) {
             $query->whereHas('encounter.patient', function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+                    ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -120,7 +119,7 @@ class RehabTreatmentQueue extends Component
                 }
             }
             $encounter->bed_duration = $bedDuration;
-            
+
             // Get bed info
             $bedSelection = $encounter->bedSelections->first();
             $encounter->bed_info = $bedSelection ? [
@@ -139,9 +138,24 @@ class RehabTreatmentQueue extends Component
             'total' => RehabEncounter::whereIn('status', ['sent_to_rehab', 'treatment_in_progress', 'completed'])->count(),
         ];
 
+        // Status labels for the view
+        $statusLabels = [
+            'sent_to_rehab' => 'Awaiting Treatment',
+            'treatment_in_progress' => 'In Progress',
+            'completed' => 'Completed',
+        ];
+
+        $statusColors = [
+            'sent_to_rehab' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+            'treatment_in_progress' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+            'completed' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        ];
+
         return view('livewire.rehab.rehab-treatment-queue', [
             'encounters' => $encounters,
-            'stats' => $stats
+            'stats' => $stats,
+            'statusLabels' => $statusLabels,
+            'statusColors' => $statusColors,
         ]);
     }
 }
