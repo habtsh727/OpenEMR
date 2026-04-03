@@ -98,6 +98,10 @@
                 @if(auth()->user()->hasRole(['cupping','nurse','super-admin']))
                 <flux:sidebar.item icon="home-modern" :href="route('cupping.queue')" wire:navigate>Treatment Queue
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('admin.cupping.types')" wire:navigate>Cupping Types
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="home-modern" :href="route('admin.cupping.locations')" wire:navigate>Cupping Locations
+                </flux:sidebar.item>
                 @if(auth()->user()->hasRole(['doctor']))
                 <flux:sidebar.item icon="home-modern" :href="route('doctor.cupping-reports')" wire:navigate>Cupping Reports
                 @endif

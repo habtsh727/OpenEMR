@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
+use App\Livewire\Admin\CuppingLocationManager;
+use App\Livewire\Admin\CuppingTypeManager;
 use App\Livewire\Appointment\AppointmentIndex;
 use App\Livewire\Appointment\AppointmentRequests;
 use App\Livewire\Appointment\CalendarView;
@@ -387,5 +389,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/doctor/cupping-reports', CuppingReports::class)
         ->name('doctor.cupping-reports');
+});
+
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('/cupping-types', CuppingTypeManager::class)->name('admin.cupping.types');
+    Route::get('/cupping-locations', CuppingLocationManager::class)->name('admin.cupping.locations');
 });
 require __DIR__ . '/auth.php';
