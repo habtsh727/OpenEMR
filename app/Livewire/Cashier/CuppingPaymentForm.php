@@ -24,7 +24,7 @@ class CuppingPaymentForm extends Component
 
     protected $rules = [
         'amount' => 'required|numeric|min:0.01',
-        'payment_method' => 'required|in:cash,card,bank_transfer,mobile_money',
+        'payment_method' => 'required|in:cash,bank_transfer,mobile_money',
     ];
 
     public function mount($session)
@@ -111,11 +111,12 @@ class CuppingPaymentForm extends Component
                 ? "✓ Payment completed! Session has been moved to treatment queue." 
                 : "✓ Partial payment of " . number_format($this->amount, 2) . " ETB recorded.";
 
+            // Show success message
             $this->showAlertMessage($message, 'success');
             
-            // Emit event to refresh parent component
-            $this->dispatch('payment-processed');
-            $this->dispatch('close-form-delayed');
+            // Close modal after 1.5 seconds
+            $this->dispatch('payment-successful');
+            $this->dispatch('close-payment-modal');
 
         } catch (\Exception $e) {
             DB::rollBack();

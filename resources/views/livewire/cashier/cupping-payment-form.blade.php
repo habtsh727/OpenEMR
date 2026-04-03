@@ -43,9 +43,8 @@
 
     <div class="px-6 py-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900">
         <h2 class="text-2xl font-bold text-white">Process Payment</h2>
-        <p class="text-blue-100">Session #{{ $session->session_number }} of {{ $session->cuppingTherapy->total_sessions }}</p>
+        <p class="text-gray-300 text-sm">Session #{{ $session->session_number }} of {{ $session->cuppingTherapy->total_sessions }}</p>
     </div>
-    {{-- bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 rounded-2xl shadow-2xl overflow-hidden relative --}}
 
     <div class="p-6">
         <!-- Patient Info -->
@@ -53,7 +52,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Patient</p>
-                    <p class="font-semibold text-gray-900 dark:text-white">{{ $session->cuppingTherapy->encounter->patient->name ?? 'N/A' }}</p>
+                    <p class="font-semibold text-gray-900 dark:text-white">{{ $session->cuppingTherapy->encounter->patient->first_name ?? '' }} {{ $session->cuppingTherapy->encounter->patient->last_name ?? '' }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Session Date</p>
@@ -100,7 +99,7 @@
                     <div class="relative">
                         <span class="absolute left-3 top-2 text-gray-500">ብር</span>
                         <input type="number" step="0.01" wire:model.live="amount" 
-                               class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                               class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 dark:bg-gray-700 dark:text-white">
                     </div>
                     @error('amount') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
@@ -108,9 +107,8 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Method</label>
                     <select wire:model="payment_method" 
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 dark:bg-gray-700 dark:text-white">
                         <option value="cash">Cash</option>
-                        {{-- <option value="card">💳 Card</option> --}}
                         <option value="bank_transfer">Bank Transfer</option>
                         <option value="mobile_money">Mobile Money</option>
                     </select>
@@ -124,15 +122,33 @@
             </div>
 
             <div class="flex justify-end gap-3">
-                <button type="button" wire:click="$dispatch('close-payment-form')" 
-                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <button type="button" wire:click="$dispatch('close-payment-modal')" 
+                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     Cancel
                 </button>
                 <button type="submit" 
-                        class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors">
+                        class="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow">
                     Process Payment
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        // Listen for payment success
+        Livewire.on('payment-successful', () => {
+            // Show success message briefly then close
+            setTimeout(() => {
+                Livewire.dispatch('close-payment-modal');
+            }, 1500);
+        });
+        
+        // Listen for close modal event
+        Livewire.on('close-payment-modal', () => {
+            // This will be caught by the parent component
+            Livewire.dispatch('closePaymentForm');
+        });
+    });
+</script>

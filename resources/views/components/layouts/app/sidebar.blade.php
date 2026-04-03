@@ -95,10 +95,12 @@
             {{-- cupping order --}}
             @if(auth()->user()->hasRole(['doctor', 'cupping', 'super-admin']))
             <flux:sidebar.group expandable :expanded="false" heading="Cupping" class="grid">
-                @if(auth()->user()->hasRole(['doctor', 'cupping','nurse','super-admin']))
+                @if(auth()->user()->hasRole(['cupping','nurse','super-admin']))
                 <flux:sidebar.item icon="home-modern" :href="route('cupping.queue')" wire:navigate>Treatment Queue
                 </flux:sidebar.item>
+                @if(auth()->user()->hasRole(['doctor']))
                 <flux:sidebar.item icon="home-modern" :href="route('doctor.cupping-reports')" wire:navigate>Cupping Reports
+                @endif
                 </flux:sidebar.item>
                 @endif
             </flux:sidebar.group>
