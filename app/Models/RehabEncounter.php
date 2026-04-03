@@ -25,6 +25,16 @@ class RehabEncounter extends Model
         return $this->belongsTo(Encounter::class);
     }
 
+    // Add this boot method to RehabEncounter.php
+protected static function booted()
+{
+    static::updating(function ($model) {
+        if ($model->isDirty('status')) {
+            \Log::info('RehabEncounter status changing from: ' . $model->getOriginal('status') . ' to: ' . $model->status);
+            \Log::info('Stack trace: ', debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10));
+        }
+    });
+}
     /**
      * Get the user who filled the questionnaire
      */

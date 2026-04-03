@@ -572,7 +572,10 @@ class AssessmentForm extends Component
             $this->showAlert('❌ Failed to order rehabilitation.', 'error');
         }
     }
-
+    public function orderCupping()
+    {
+        return $this->redirect(route('doctor.cupping-order', ['encounter' => $this->encounter->id]),navigate: true);
+    }
     public function render()
     {
         return view('livewire.doctor.assessment-form', [

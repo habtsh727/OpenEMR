@@ -22,12 +22,12 @@ class PatientFinanceReport extends Component
     public $isPrintMode = false;
     public $dateFrom;
     public $dateTo;
-
+    public $cuppingData = [];
     protected $queryString = ['encounterId', 'showPrintView'];
 
     public function mount($patientId)
     {
-        $this->patient = Patient::with(['encounters' => function($q) {
+        $this->patient = Patient::with(['encounters' => function ($q) {
             $q->orderBy('created_at', 'desc');
         }])->findOrFail($patientId);
 
@@ -35,21 +35,114 @@ class PatientFinanceReport extends Component
         $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
         $this->dateTo = now()->format('Y-m-d');
         $this->loadFinancialData();
+        $this->loadCuppingData();
+    }
+    // Add this new method to load cupping data
+    public function loadCuppingData()
+    {
+        $this->cuppingData = [];
+
+        $cuppingSessions = DB::table('cupping_sessions')
+            ->join('cupping_therapies', 'cupping_therapies.id', '=', 'cupping_sessions.cupping_therapy_id')
+            ->join('encounters', 'encounters.id', '=', 'cupping_therapies.encounter_id')
+            ->leftJoin('cupping_payments', 'cupping_payments.cupping_session_id', '=', 'cupping_sessions.id')
+            ->where('encounters.patient_id', $this->patient->id)
+            ->whereBetween('cupping_sessions.session_date', [$this->dateFrom, $this->dateTo])
+            ->select(
+                'cupping_sessions.*',
+                'cupping_therapies.id as therapy_id',
+                'cupping_therapies.discount as therapy_discount',
+                'cupping_therapies.total_amount as therapy_total',
+                'cupping_therapies.final_amount as therapy_final',
+                'cupping_payments.id as payment_id',
+                'cupping_payments.amount as payment_amount',
+                'cupping_payments.payment_method',
+                'cupping_payments.paid_at',
+                'encounters.id as encounter_id'
+            )
+            ->get();
+
+        // Group by session
+        $groupedSessions = [];
+        foreach ($cuppingSessions as $session) {
+            $sessionId = $session->id;
+            if (!isset($groupedSessions[$sessionId])) {
+                $groupedSessions[$sessionId] = [
+                    'id' => $session->id,
+                    'therapy_id' => $session->therapy_id,
+                    'encounter_id' => $session->encounter_id,
+                    'session_number' => $session->session_number,
+                    'session_date' => $session->session_date,
+                    'session_amount' => (float)$session->session_amount,
+                    'paid_amount' => (float)$session->paid_amount,
+                    'payment_status' => $session->payment_status,
+                    'treatment_status' => $session->treatment_status,
+                    'therapy_discount' => (float)$session->therapy_discount,
+                    'therapy_total' => (float)$session->therapy_total,
+                    'therapy_final' => (float)$session->therapy_final,
+                    'payments' => [],
+                    'items' => []
+                ];
+            }
+
+            // Add payment if exists
+            if ($session->payment_id) {
+                $groupedSessions[$sessionId]['payments'][] = [
+                    'id' => $session->payment_id,
+                    'amount' => (float)$session->payment_amount,
+                    'method' => $session->payment_method,
+                    'date' => $session->paid_at,
+                ];
+            }
+        }
+
+        // Get items for each session
+        if (!empty($groupedSessions)) {
+            $sessionIds = array_keys($groupedSessions);
+            $items = DB::table('cupping_session_items')
+                ->join('cupping_types', 'cupping_types.id', '=', 'cupping_session_items.cupping_type_id')
+                ->join('cupping_locations', 'cupping_locations.id', '=', 'cupping_session_items.cupping_location_id')
+                ->whereIn('cupping_session_items.cupping_session_id', $sessionIds)
+                ->select(
+                    'cupping_session_items.*',
+                    'cupping_types.name as type_name',
+                    'cupping_locations.name as location_name'
+                )
+                ->get();
+
+            foreach ($items as $item) {
+                $sessionId = $item->cupping_session_id;
+                if (isset($groupedSessions[$sessionId])) {
+                    $groupedSessions[$sessionId]['items'][] = [
+                        'type' => $item->type_name,
+                        'location' => $item->location_name,
+                        'qty' => $item->qty,
+                        'price' => (float)$item->price,
+                        'total' => (float)$item->total,
+                    ];
+                }
+            }
+        }
+
+        $this->cuppingData = array_values($groupedSessions);
     }
 
     public function updatedEncounterId()
     {
         $this->loadFinancialData();
+        $this->loadCuppingData();
     }
 
     public function updatedDateFrom()
     {
         $this->loadFinancialData();
+        $this->loadCuppingData();
     }
 
     public function updatedDateTo()
     {
         $this->loadFinancialData();
+        $this->loadCuppingData();
     }
 
     public function loadFinancialData()
@@ -59,8 +152,8 @@ class PatientFinanceReport extends Component
         $this->totalPaid = 0;
         $this->totalDiscount = 0;
 
-        $encounters = $this->encounterId === 'all' 
-            ? $this->encounters 
+        $encounters = $this->encounterId === 'all'
+            ? $this->encounters
             : $this->encounters->where('id', $this->encounterId);
 
         foreach ($encounters as $encounter) {
@@ -285,7 +378,7 @@ class PatientFinanceReport extends Component
 
             // Sort payments by date
             if (!empty($encounterData['payments'])) {
-                usort($encounterData['payments'], function($a, $b) {
+                usort($encounterData['payments'], function ($a, $b) {
                     return strtotime($a['date']) - strtotime($b['date']);
                 });
 
@@ -318,7 +411,7 @@ class PatientFinanceReport extends Component
 
     public function getPaymentMethodColor($method)
     {
-        return match(strtolower($method)) {
+        return match (strtolower($method)) {
             'cash' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
             'card' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
             'insurance' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -330,7 +423,7 @@ class PatientFinanceReport extends Component
 
     public function getTypeColor($type)
     {
-        return match($type) {
+        return match ($type) {
             'Registration Card' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
             'Service' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
             'Lab Test' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
@@ -344,7 +437,7 @@ class PatientFinanceReport extends Component
 
     public function getTypeIcon($type)
     {
-        return match($type) {
+        return match ($type) {
             'Registration Card' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>',
             'Service' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
             'Lab Test' => '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 3v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V7L8 4z"></path></svg>',
@@ -362,6 +455,7 @@ class PatientFinanceReport extends Component
             'patient' => $this->patient,
             'encounters' => $this->encounters,
             'financialData' => $this->financialData,
+            'cuppingData' => $this->cuppingData,
         ]);
     }
 }

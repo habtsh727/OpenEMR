@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
+use Illuminate\Support\Facades\Log;
 class RehabOrder extends Model
 {
     protected $fillable = [
@@ -23,7 +23,21 @@ class RehabOrder extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
-
+protected static function booted()
+{
+    static::updated(function ($model) {
+        if ($model->isDirty('status')) {
+            \Log::info('RehabOrder status changed from: ' . $model->getOriginal('status') . ' to: ' . $model->status);
+            \Log::info('RehabOrder ID: ' . $model->id);
+        }
+    });
+    
+    static::saved(function ($model) {
+        if ($model->isDirty('status')) {
+            \Log::info('RehabOrder saved with status change: ' . $model->status);
+        }
+    });
+}
     /**
      * Get the rehab encounter that owns this order
      */

@@ -5,6 +5,8 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Patient;
 use App\Models\CardPayment;
+use App\Models\CuppingSession;
+use App\Models\CuppingTherapy;
 use App\Models\Encounter;
 use App\Models\EncounterMedicalHistory;
 
@@ -18,17 +20,50 @@ class PatientProfile extends Component
     public $vitalGrouping = 'encounter'; // For vitals display grouping
     public $currentVitals = []; // Store current vitals if needed
 
+    // Add these properties for cupping
+    public $cuppingSessions = [];
+    public $cuppingStats = [];
     public function mount(Patient $patient)
     {
         $this->patient = $patient;
         $this->calculateFinancials();
         $this->getLastVisit();
         $this->getCurrentPriority();
+        $this->loadCuppingData();
+    }
+     public function loadCuppingData()
+    {
+        // Get all cupping sessions for this patient
+        $this->cuppingSessions = CuppingSession::with([
+            'cuppingTherapy',
+            'cuppingTherapy.doctor',
+            'items.cuppingType',
+            'items.cuppingLocation',
+            'payments'
+        ])
+        ->whereHas('cuppingTherapy.encounter', function($query) {
+            $query->where('patient_id', $this->patient->id);
+        })
+        ->orderBy('session_date', 'desc')
+        ->get();
+
+        // Calculate statistics
+        $totalAmount = $this->cuppingSessions->sum('session_amount');
+        $totalPaid = $this->cuppingSessions->sum('paid_amount');
+        
+        $this->cuppingStats = [
+            'total_sessions' => $this->cuppingSessions->count(),
+            'completed_sessions' => $this->cuppingSessions->where('treatment_status', 'completed')->count(),
+            'in_progress_sessions' => $this->cuppingSessions->where('treatment_status', 'in_progress')->count(),
+            'pending_sessions' => $this->cuppingSessions->where('payment_status', 'unpaid')->count(),
+            'total_amount' => $totalAmount,
+            'total_paid' => $totalPaid,
+            'total_due' => $totalAmount - $totalPaid,
+        ];
     }
     public function viewFinanceReport()
     {
         return $this->redirect(route('patients.finance', $this->patient->id), navigate: true);
-
     }
 
     public function calculateFinancials()
@@ -239,6 +274,9 @@ class PatientProfile extends Component
 
     public function render()
     {
-        return view('livewire.patient-profile');
+        return view('livewire.patient-profile', [
+            'cuppingSessions' => $this->cuppingSessions,
+            'cuppingStats' => $this->cuppingStats,
+        ]);
     }
 }

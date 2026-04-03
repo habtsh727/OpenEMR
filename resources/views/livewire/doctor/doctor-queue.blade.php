@@ -270,41 +270,28 @@
                                             <span wire:loading wire:target="takePatient">Processing...</span>
                                         </button>
                                         @elseif($encounter->status === 'in_progress')
-                                        <div class="flex items-center space-x-2">
-                                            <a href="{{ route('consultation.medical-history', ['encounter' => $encounter->id]) }}"
-                                                wire:navigate
-                                                class="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
-                                                </svg>
-                                                <span>Continue</span>
-                                            </a>
-                                            <button wire:click="completeConsultation({{ $encounter->id }})"
-                                                wire:loading.attr="disabled" wire:target="completeConsultation"
-                                                onclick="return confirm('Complete this consultation?')"
-                                                class="px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-1">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24" wire:loading.remove
-                                                    wire:target="completeConsultation">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                <svg class="w-4 h-4 animate-spin hidden" wire:loading
-                                                    wire:target="completeConsultation" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                                    </path>
-                                                </svg>
-                                                <span wire:loading.remove
-                                                    wire:target="completeConsultation">Complete</span>
-                                                <span wire:loading wire:target="completeConsultation">...</span>
-                                            </button>
-                                        </div>
-                                        @endif
+<div class="flex items-center space-x-2">
+    <a href="{{ route('consultation.medical-history', ['encounter' => $encounter->id]) }}"
+        wire:navigate
+        class="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+        </svg>
+        <span>Continue</span>
+    </a>
+    
+    {{-- Complete Button with Alpine.js confirmation --}}
+    <button 
+        x-data="{}"
+        x-on:click="if(confirm('Complete this consultation? This will mark the patient as done.')) $wire.completeConsultation({{ $encounter->id }})"
+        class="px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span>Complete</span>
+    </button>
+</div>
+@endif
                                     </div>
                                 </td>
                             </tr>
