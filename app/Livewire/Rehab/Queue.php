@@ -35,7 +35,7 @@ class Queue extends Component
                 $query->whereHas('encounter.patient', function ($q) {
                     $q->where('first_name', 'like', '%' . $this->search . '%')
                       ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                      ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+                      ->orWhere('card_number', 'like', '%' . $this->search . '%'); // FIXED: Changed from medical_record_number to card_number
                 });
             })
             ->when($this->statusFilter, function ($query) {
@@ -61,7 +61,7 @@ class Queue extends Component
     public function startQuestionnaire($id)
     {
         $rehabEncounter = RehabEncounter::findOrFail($id);
-        
+
         // Only allow starting if pending
         if ($rehabEncounter->status !== 'pending_questionnaire') {
             $this->dispatch('notify', [
@@ -87,7 +87,7 @@ class Queue extends Component
     public function continueQuestionnaire($id)
     {
         $rehabEncounter = RehabEncounter::findOrFail($id);
-        
+
         // Check if user is the one who started it
         if ($rehabEncounter->questionnaire_filled_by != auth()->id()) {
             $this->dispatch('notify', [

@@ -171,7 +171,7 @@
                                         $rehab->encounter->patient->last_name ?? '' }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        MRN: {{ $rehab->encounter->patient->medical_record_number ?? 'N/A' }}
+                                        MRN: {{ $rehab->encounter->patient->card_number ?? 'N/A' }}
                                     </div>
                                 </div>
                             </div>
