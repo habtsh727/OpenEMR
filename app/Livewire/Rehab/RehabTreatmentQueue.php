@@ -76,7 +76,6 @@ class RehabTreatmentQueue extends Component
         $this->showAlert = false;
     }
 
-
     public function render()
     {
         $query = RehabEncounter::query()
@@ -93,11 +92,12 @@ class RehabTreatmentQueue extends Component
             $query->where('status', $this->statusFilter);
         }
 
-        // Apply search
+        // Apply search - FIXED: Using first_name, last_name, and card_number instead of name and medical_record_number
         if ($this->search) {
             $query->whereHas('encounter.patient', function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+                $q->where('first_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('card_number', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -108,12 +108,18 @@ class RehabTreatmentQueue extends Component
         foreach ($encounters as $encounter) {
             // Get bed duration from orders
             $bedDuration = 0;
-            foreach ($encounter->rehabOrders as $order) {
-                foreach ($order->orderPackages as $package) {
-                    foreach ($package->orderItems as $item) {
-                        if ($item->item_type === 'bed' && $item->bed_duration_days) {
-                            $bedDuration = $item->bed_duration_days;
-                            break 3;
+            if ($encounter->rehabOrders) {
+                foreach ($encounter->rehabOrders as $order) {
+                    if ($order->orderPackages) {
+                        foreach ($order->orderPackages as $package) {
+                            if ($package->orderItems) {
+                                foreach ($package->orderItems as $item) {
+                                    if ($item->item_type === 'bed' && $item->bed_duration_days) {
+                                        $bedDuration = $item->bed_duration_days;
+                                        break 3;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
