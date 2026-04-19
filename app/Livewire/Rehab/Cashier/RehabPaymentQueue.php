@@ -62,7 +62,7 @@ class RehabPaymentQueue extends Component
     public function checkPaymentReminders()
     {
         // Check for upcoming payments (5 days before due)
-        $upcomingPayments = RehabPaymentInstallment::with('rehabOrder.encounter.encounter.patient')
+        $upcomingPayments = RehabPaymentInstallment::with(['rehabOrder.encounter.encounter.patient'])
             ->where('status', 'pending')
             ->whereBetween('due_date', [now(), now()->addDays(5)])
             ->get();
@@ -70,10 +70,15 @@ class RehabPaymentQueue extends Component
         foreach ($upcomingPayments as $installment) {
             $daysLeft = now()->diffInDays($installment->due_date, false);
             if ($daysLeft <= 5 && $daysLeft >= 0) {
+                // FIXED: Use first_name and last_name instead of name
+                $patientName = trim(
+                    ($installment->rehabOrder->encounter->encounter->patient->first_name ?? '') . ' ' .
+                    ($installment->rehabOrder->encounter->encounter->patient->last_name ?? '')
+                );
+
                 $this->paymentReminders[] = [
                     'type' => 'warning',
-                    'message' => "Payment of " . number_format($installment->amount, 2) . " ETB due in {$daysLeft} days for patient: " .
-                        ($installment->rehabOrder->encounter->encounter->patient->name ?? 'Unknown'),
+                    'message' => "Payment of " . number_format($installment->amount, 2) . " ETB due in {$daysLeft} days for patient: " . $patientName,
                     'installment_id' => $installment->id,
                     'order_id' => $installment->rehab_order_id,
                     'due_date' => $installment->due_date->format('Y-m-d')
@@ -82,17 +87,22 @@ class RehabPaymentQueue extends Component
         }
 
         // Check for overdue payments
-        $overduePayments = RehabPaymentInstallment::with('rehabOrder.encounter.encounter.patient')
+        $overduePayments = RehabPaymentInstallment::with(['rehabOrder.encounter.encounter.patient'])
             ->where('status', 'pending')
             ->where('due_date', '<', now())
             ->get();
 
         foreach ($overduePayments as $installment) {
             $daysOverdue = now()->diffInDays($installment->due_date);
+            // FIXED: Use first_name and last_name instead of name
+            $patientName = trim(
+                ($installment->rehabOrder->encounter->encounter->patient->first_name ?? '') . ' ' .
+                ($installment->rehabOrder->encounter->encounter->patient->last_name ?? '')
+            );
+
             $this->paymentReminders[] = [
                 'type' => 'danger',
-                'message' => "OVERDUE by {$daysOverdue} days: " . number_format($installment->amount, 2) . " ETB for patient: " .
-                    ($installment->rehabOrder->encounter->encounter->patient->name ?? 'Unknown'),
+                'message' => "OVERDUE by {$daysOverdue} days: " . number_format($installment->amount, 2) . " ETB for patient: " . $patientName,
                 'installment_id' => $installment->id,
                 'order_id' => $installment->rehab_order_id,
                 'due_date' => $installment->due_date->format('Y-m-d')
@@ -532,6 +542,7 @@ class RehabPaymentQueue extends Component
             $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
         }
     }
+
     public function getUpcomingPayments()
     {
         $upcomingPayments = RehabPaymentInstallment::with([
@@ -591,91 +602,95 @@ class RehabPaymentQueue extends Component
         $this->customInstallments = [];
         // DON'T clear $paymentOrder here
     }
+
     public function render()
-{
-    // Base query
-       $query = RehabOrder::with([
-        'encounter.encounter.patient',
-        'encounter.encounter.doctor',
-        'packages',
-        'bedSelections' => function ($query) {
-            $query->with(['bedClass'])->latest();
-        },
-        'paymentInstallments'
-    ]);
+    {
+        // Base query
+        $query = RehabOrder::with([
+            'encounter.encounter.patient',
+            'encounter.encounter.doctor',
+            'packages',
+            'bedSelections' => function ($query) {
+                $query->with(['bedClass'])->latest();
+            },
+            'paymentInstallments'
+        ]);
 
-     if ($this->tab === 'pending') {
-        // Orders with no payments yet
-        $query->whereIn('status', ['sent_to_cashier', 'bed_selected'])
-              ->where(function($q) {
-                  $q->where('payment_status', 'pending')
-                    ->orWhereNull('payment_status');
-              });
-              
-    } elseif ($this->tab === 'partial') {
-        // Orders with partial payments - check payment_status, NOT status
-        $query->where('payment_status', 'partial')
-              ->whereIn('status', ['sent_to_cashier', 'paid']); // Include both for now
-              
-    } elseif ($this->tab === 'overdue') {
-        // Overdue payments
-        $query->where('payment_status', 'overdue')
-              ->whereIn('status', ['sent_to_cashier', 'paid']);
-              
-    } elseif ($this->tab === 'processed') {
-        // FULLY PAID and completed orders
-        $query->where('status', 'paid')
-              ->where('payment_status', 'paid');
-    }
+        if ($this->tab === 'pending') {
+            // Orders with no payments yet
+            $query->whereIn('status', ['sent_to_cashier', 'bed_selected'])
+                  ->where(function($q) {
+                      $q->where('payment_status', 'pending')
+                        ->orWhereNull('payment_status');
+                  });
 
-    // Apply search filter
-    if ($this->search) {
-        $query->whereHas('encounter.encounter.patient', function ($patient) {
-            $patient->where('name', 'like', '%' . $this->search . '%');
-        });
-    }
+        } elseif ($this->tab === 'partial') {
+            // Orders with partial payments - check payment_status, NOT status
+            $query->where('payment_status', 'partial')
+                  ->whereIn('status', ['sent_to_cashier', 'paid']); // Include both for now
 
-    // Order by latest
-    $query->latest();
+        } elseif ($this->tab === 'overdue') {
+            // Overdue payments
+            $query->where('payment_status', 'overdue')
+                  ->whereIn('status', ['sent_to_cashier', 'paid']);
 
-    // Paginate
-    $orders = $query->paginate(10);
-
-    // Calculate totals with bed cost and payment progress for each order
-    foreach ($orders as $order) {
-        $order->bed_cost = 0;
-        $order->bed_duration = 0;
-        $order->bed_class_name = null;
-
-        if ($order->bedSelections->isNotEmpty()) {
-            $bedSelection = $order->bedSelections->first();
-            $order->bed_cost = $bedSelection->total_price ?? 0;
-            $order->bed_duration = $bedSelection->duration_days ?? 0;
-            $order->bed_class_name = $bedSelection->bedClass->name ?? null;
+        } elseif ($this->tab === 'processed') {
+            // FULLY PAID and completed orders
+            $query->where('status', 'paid')
+                  ->where('payment_status', 'paid');
         }
 
-        $order->grand_total = $order->total_amount + $order->bed_cost;
-        
-        // Calculate payment progress correctly
-        if ($order->grand_total > 0) {
-            $order->payment_progress = round(($order->paid_amount / $order->grand_total) * 100, 1);
-        } else {
-            $order->payment_progress = 0;
+        // Apply search filter - FIXED: Using first_name, last_name, and card_number
+        if ($this->search) {
+            $searchTerm = '%' . $this->search . '%';
+            $query->whereHas('encounter.encounter.patient', function ($patient) use ($searchTerm) {
+                $patient->where('first_name', 'like', $searchTerm)
+                        ->orWhere('last_name', 'like', $searchTerm)
+                        ->orWhere('card_number', 'like', $searchTerm);
+            });
         }
-        
-        // Add installment stats for display
-        if ($order->paymentInstallments->isNotEmpty()) {
-            $order->total_installments = $order->paymentInstallments->count();
-            $order->paid_installments = $order->paymentInstallments->where('status', 'paid')->count();
-        }
-    }
 
-    $upcomingPayments = $this->getUpcomingPayments();
-    
-    return view('livewire.rehab.cashier.rehab-payment-queue', [
-        'orders' => $orders,
-        'paymentReminders' => $this->paymentReminders,
-        'upcomingPayments' => $upcomingPayments
-    ]);
-}
+        // Order by latest
+        $query->latest();
+
+        // Paginate
+        $orders = $query->paginate(10);
+
+        // Calculate totals with bed cost and payment progress for each order
+        foreach ($orders as $order) {
+            $order->bed_cost = 0;
+            $order->bed_duration = 0;
+            $order->bed_class_name = null;
+
+            if ($order->bedSelections->isNotEmpty()) {
+                $bedSelection = $order->bedSelections->first();
+                $order->bed_cost = $bedSelection->total_price ?? 0;
+                $order->bed_duration = $bedSelection->duration_days ?? 0;
+                $order->bed_class_name = $bedSelection->bedClass->name ?? null;
+            }
+
+            $order->grand_total = $order->total_amount + $order->bed_cost;
+
+            // Calculate payment progress correctly
+            if ($order->grand_total > 0) {
+                $order->payment_progress = round(($order->paid_amount / $order->grand_total) * 100, 1);
+            } else {
+                $order->payment_progress = 0;
+            }
+
+            // Add installment stats for display
+            if ($order->paymentInstallments->isNotEmpty()) {
+                $order->total_installments = $order->paymentInstallments->count();
+                $order->paid_installments = $order->paymentInstallments->where('status', 'paid')->count();
+            }
+        }
+
+        $upcomingPayments = $this->getUpcomingPayments();
+
+        return view('livewire.rehab.cashier.rehab-payment-queue', [
+            'orders' => $orders,
+            'paymentReminders' => $this->paymentReminders,
+            'upcomingPayments' => $upcomingPayments
+        ]);
+    }
 }
