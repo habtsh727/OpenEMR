@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200" x-data="{ showFilters: false }">
     {{-- Alert Component with Dark Mode Support --}}
-    <div x-data="{ show: @entangle('showAlert') }" 
-         x-show="show" 
+    <div x-data="{ show: @entangle('showAlert') }"
+         x-show="show"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 translate-x-2"
          x-transition:enter-end="opacity-100 translate-x-0"
@@ -88,7 +88,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors">
                     <div class="flex items-center justify-between">
                         <div>
@@ -102,7 +102,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors">
                     <div class="flex items-center justify-between">
                         <div>
@@ -116,7 +116,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors">
                     <div class="flex items-center justify-between">
                         <div>
@@ -136,9 +136,9 @@
         {{-- Search and Filters with Dark Mode --}}
         <div class="mb-6 space-y-4">
             <div class="relative">
-                <input type="text" 
-                       wire:model.live.debounce.300ms="search" 
-                       placeholder="Search by patient name or MRN..." 
+                <input type="text"
+                       wire:model.live.debounce.300ms="search"
+                       placeholder="Search by patient name or MRN..."
                        class="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,24 +194,24 @@
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($encounters as $encounter)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition group">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 flex items-center justify-center text-white font-medium shadow-sm">
-                                        {{ substr($encounter->encounter->patient->name ?? 'N/A', 0, 1) }}
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-                                            {{ $encounter->encounter->patient->name ?? 'N/A' }}
-                                        </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            MRN: {{ $encounter->encounter->patient->medical_record_number ?? 'N/A' }}
-                                        </div>
-                                        <div class="text-xs text-gray-400 dark:text-gray-500">
-                                            Order #{{ $encounter->rehabOrders->first()?->id }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
+                          <td class="px-6 py-4">
+    <div class="flex items-center">
+        <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 flex items-center justify-center text-white font-medium shadow-sm">
+            {{ substr($encounter->encounter->patient->first_name ?? 'N/A', 0, 1) }}
+        </div>
+        <div class="ml-4">
+            <div class="text-sm font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+                {{ $encounter->encounter->patient->first_name ?? '' }} {{ $encounter->encounter->patient->last_name ?? '' }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+                MRN: {{ $encounter->encounter->patient->card_number ?? 'N/A' }}
+            </div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">
+                Order #{{ $encounter->rehabOrders->first()?->id }}
+            </div>
+        </div>
+    </div>
+</td>
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900 dark:text-white">{{ $encounter->encounter->doctor->name ?? 'N/A' }}</div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400">Attending</div>
@@ -354,12 +354,12 @@
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     @foreach($bedClasses as $class)
                                         <div wire:key="{{ $class->id }}" class="relative">
-                                            <input type="radio" 
-                                                   wire:model.live="selectedBedClass" 
-                                                   value="{{ $class->id }}" 
+                                            <input type="radio"
+                                                   wire:model.live="selectedBedClass"
+                                                   value="{{ $class->id }}"
                                                    id="class_{{ $class->id }}"
                                                    class="hidden peer">
-                                            <label for="class_{{ $class->id }}" 
+                                            <label for="class_{{ $class->id }}"
                                                    class="block p-4 border-2 rounded-xl cursor-pointer transition-all
                                                           peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20
                                                           hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md
@@ -396,8 +396,8 @@
                                         </span>
                                     </label>
                                     <div class="relative">
-                                        <input type="text" 
-                                               wire:model.live.debounce.300ms="bedSearch" 
+                                        <input type="text"
+                                               wire:model.live.debounce.300ms="bedSearch"
                                                placeholder="Search by bed number, room, or ward..."
                                                class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -450,7 +450,7 @@
                                                                 Selected
                                                             </span>
                                                         @else
-                                                            <button wire:click="selectBed({{ $bed->id }})" 
+                                                            <button wire:click="selectBed({{ $bed->id }})"
                                                                     class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition">
                                                                 Select
                                                             </button>
@@ -507,7 +507,7 @@
                         {{-- Modal Footer with Dark Mode --}}
                         <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
                             <div class="flex items-center justify-end gap-3">
-                                <button wire:click="closeModal" 
+                                <button wire:click="closeModal"
                                         class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                     Cancel
                                 </button>

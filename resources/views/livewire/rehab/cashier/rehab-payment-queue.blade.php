@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200" x-data="{ 
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200" x-data="{
         showAlert: @entangle('showAlert'),
         alertMessage: @entangle('alertMessage'),
         alertType: @entangle('alertType')
@@ -198,15 +198,15 @@
     <div class="flex flex-wrap gap-2">
         <button wire:click="$set('tab', 'pending')"
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                {{ $tab === 'pending' 
-                    ? 'bg-indigo-600 text-white shadow-md' 
+                {{ $tab === 'pending'
+                    ? 'bg-indigo-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
             Pending
         </button>
         <button wire:click="$set('tab', 'partial')"
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                {{ $tab === 'partial' 
-                    ? 'bg-yellow-600 text-white shadow-md' 
+                {{ $tab === 'partial'
+                    ? 'bg-yellow-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
             Partial Payments
             @php
@@ -222,15 +222,15 @@
         </button>
         <button wire:click="$set('tab', 'overdue')"
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                {{ $tab === 'overdue' 
-                    ? 'bg-red-600 text-white shadow-md' 
+                {{ $tab === 'overdue'
+                    ? 'bg-red-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
             Overdue
         </button>
         <button wire:click="$set('tab', 'processed')"
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                {{ $tab === 'processed' 
-                    ? 'bg-green-600 text-white shadow-md' 
+                {{ $tab === 'processed'
+                    ? 'bg-green-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
             Completed
         </button>
@@ -257,8 +257,7 @@
                 <div class="flex justify-between items-start mb-3">
                     <div>
                         <span class="text-sm text-gray-500 dark:text-gray-400">Order #{{ $order->id }}</span>
-                        <h3 class="font-semibold text-gray-900 dark:text-white">{{
-                            $order->encounter->encounter->patient->name }}</h3>
+                        <h3 class="font-semibold text-gray-900 dark:text-white">{{ $order->encounter->encounter->patient->first_name ?? '' }} {{ $order->encounter->encounter->patient->last_name ?? '' }}</h3>
                     </div>
                     @if($order->status === 'sent_to_cashier')
                     <span
@@ -361,7 +360,7 @@
 
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900 dark:text-white">{{
-                                $order->encounter->encounter->patient->name }}</div>
+    $order->encounter->encounter->patient->first_name ?? '' }} {{ $order->encounter->encounter->patient->last_name ?? '' }}</div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">ID: {{
                                 $order->encounter->encounter->patient->id }}</div>
                         </td>
@@ -405,9 +404,9 @@
             </svg>
             Bed Selected
         </span>
-        
+
     @elseif($order->payment_status === 'partial')
-        @php 
+        @php
             $totalInstallments = $order->paymentInstallments->count();
             $paidInstallments = $order->paymentInstallments->where('status', 'paid')->count();
         @endphp
@@ -421,7 +420,7 @@
                 Partial Payment
             @endif
         </span>
-        
+
     @elseif($order->payment_status === 'overdue')
         <span class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs rounded-full flex items-center gap-1 w-fit">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -429,7 +428,7 @@
             </svg>
             Overdue
         </span>
-        
+
     @elseif($order->status === 'sent_to_cashier' && ($order->payment_status === 'pending' || !$order->payment_status))
         <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-xs rounded-full flex items-center gap-1 w-fit">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -437,7 +436,7 @@
             </svg>
             Pending
         </span>
-        
+
     @elseif($order->status === 'paid' && $order->payment_status === 'paid')
         <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full flex items-center gap-1 w-fit">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -445,7 +444,7 @@
             </svg>
             Fully Paid
         </span>
-        
+
     @else
         <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs rounded-full">
             {{ ucfirst($order->status) }}
@@ -648,8 +647,8 @@
                         <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Payment Schedule</h3>
                         <div class="space-y-3">
                             @foreach($selectedOrder->paymentInstallments as $installment)
-                            <div class="border rounded-lg p-4 {{ $installment->status === 'paid' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 
-                                ($installment->due_date->isPast() && $installment->status !== 'paid' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 
+                            <div class="border rounded-lg p-4 {{ $installment->status === 'paid' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+                                ($installment->due_date->isPast() && $installment->status !== 'paid' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
                                 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-700') }}">
                                 <div class="flex justify-between items-start">
                                     <div>
@@ -838,8 +837,8 @@
                                 class="peer hidden">
                                 <label for="installment_{{ $installment->id }}"
                                     class="block p-4 border-2 rounded-xl cursor-pointer transition-all duration-200
-                                        {{ $selectedInstallment && $selectedInstallment->id === $installment->id 
-                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800' 
+                                        {{ $selectedInstallment && $selectedInstallment->id === $installment->id
+                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800'
                                             : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700' }}">
                                     <div class="flex justify-between items-start">
                                         <div>
@@ -920,8 +919,8 @@
                                 @foreach($methods as $value => $label)
                                 <button type="button" wire:click="$set('paymentMethod', '{{ $value }}')"
                                     class="p-3 border-2 rounded-lg text-center transition-all duration-200
-                                        {{ $paymentMethod === $value 
-                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                                        {{ $paymentMethod === $value
+                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
                                             : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700' }}">
                                     <span class="block text-sm font-medium text-gray-900 dark:text-white capitalize">{{
                                         $label }}</span>
@@ -1083,8 +1082,8 @@
                         <div class="grid grid-cols-2 gap-3">
                             <button type="button" wire:click="$set('paymentType', 'full')"
                                 class="p-4 border-2 rounded-xl text-center transition-all duration-200
-                                    {{ $paymentType === 'full' 
-                                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800' 
+                                    {{ $paymentType === 'full'
+                                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800'
                                         : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700' }}">
                                 <svg class="w-8 h-8 mx-auto mb-2 {{ $paymentType === 'full' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500' }}"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1101,8 +1100,8 @@
 
                             <button type="button" wire:click="$set('paymentType', 'installment')"
                                 class="p-4 border-2 rounded-xl text-center transition-all duration-200
-                                    {{ $paymentType === 'installment' 
-                                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800' 
+                                    {{ $paymentType === 'installment'
+                                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 ring-2 ring-indigo-200 dark:ring-indigo-800'
                                         : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700' }}">
                                 <svg class="w-8 h-8 mx-auto mb-2 {{ $paymentType === 'installment' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500' }}"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,8 +1,8 @@
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 transition-colors duration-200">
-    
+
     <!-- Alert Notification -->
-    <div x-data="{ show: @entangle('showAlert') }" 
-         x-show="show" 
+    <div x-data="{ show: @entangle('showAlert') }"
+         x-show="show"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 translate-x-2"
          x-transition:enter-end="opacity-100 translate-x-0"
@@ -12,8 +12,8 @@
          class="fixed top-4 right-4 z-50 max-w-md w-full">
         @if($showAlert)
             <div class="rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm">
-                <div class="flex items-center justify-between p-4 {{ 
-                    $alertType === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 
+                <div class="flex items-center justify-between p-4 {{
+                    $alertType === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
                     'bg-gradient-to-r from-red-500 to-rose-600' }}">
                     <div class="flex items-center space-x-3">
                         <div class="h-8 w-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -47,7 +47,7 @@
             <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-800 dark:via-purple-800 dark:to-pink-800 rounded-2xl shadow-2xl overflow-hidden relative">
                 <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
                 <div class="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-24 -translate-x-24 blur-2xl"></div>
-                
+
                 <div class="relative p-6 md:p-8">
                     <div class="flex items-center space-x-4">
                         <div class="relative">
@@ -92,7 +92,7 @@
             <div class="flex flex-col md:flex-row gap-4">
                 <!-- Status Filter -->
                 <div class="flex-1">
-                    <select wire:model.live="statusFilter" 
+                    <select wire:model.live="statusFilter"
                             class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                         <option value="all">All Statuses</option>
                         <option value="pending_review">Pending Review</option>
@@ -100,15 +100,15 @@
                         <option value="ordered">Ordered</option>
                     </select>
                 </div>
-                
+
                 <!-- Search -->
                 <div class="flex-1 relative">
                     <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <input type="text" 
-                           wire:model.live.debounce.300ms="search" 
-                           placeholder="Search by patient name or MRN..." 
+                    <input type="text"
+                           wire:model.live.debounce.300ms="search"
+                           placeholder="Search by patient name or MRN..."
                            class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                 </div>
             </div>
@@ -134,11 +134,11 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
                                     <div class="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-medium shadow-sm">
-                                        {{ substr($encounter->encounter->patient->name ?? 'N/A', 0, 1) }}
+                                        {{ substr($encounter->encounter->patient->first_name ?? 'N/A', 0, 1) }}
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $encounter->encounter->patient->name ?? 'N/A' }}
+                                            {{ $encounter->encounter->patient->first_name ?? '' }} {{ $encounter->encounter->patient->last_name ?? '' }}
                                         </div>
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
                                             DOB: {{ $encounter->encounter->patient->date_of_birth ? \Carbon\Carbon::parse($encounter->encounter->patient->date_of_birth)->format('M d, Y') : 'N/A' }}
@@ -148,7 +148,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-sm font-mono text-gray-900 dark:text-white">
-                                    {{ $encounter->encounter->patient->medical_record_number ?? 'N/A' }}
+                                    {{ $encounter->encounter->patient->card_number ?? 'N/A' }} <!-- FIXED HERE -->
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">

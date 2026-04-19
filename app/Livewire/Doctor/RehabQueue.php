@@ -14,7 +14,7 @@ class RehabQueue extends Component
     public $search = '';
     public $statusFilter = 'all'; // all, pending_review, reviewed, ordered
     public $perPage = 10;
-    
+
     // Alert properties
     public $showAlert = false;
     public $alertMessage = '';
@@ -36,7 +36,7 @@ class RehabQueue extends Component
     {
         try {
             $encounter = RehabEncounter::findOrFail($encounterId);
-            
+
             // Security check - only assigned doctor can review
             if ($encounter->encounter->doctor_id != auth()->id()) {
                 $this->showAlertMessage('This rehabilitation case is not assigned to you.', 'error');
@@ -44,10 +44,8 @@ class RehabQueue extends Component
             }
 
             // Redirect to review page
-            // return redirect()->route('doctor.rehab.review', $encounterId);
             return $this->redirect(route('doctor.rehab.review', $encounterId), navigate: true);
 
-            
         } catch (\Exception $e) {
             Log::error('Failed to start review: ' . $e->getMessage());
             $this->showAlertMessage('Failed to load review. Please try again.', 'error');
@@ -59,7 +57,7 @@ class RehabQueue extends Component
         $this->alertMessage = $message;
         $this->alertType = $type;
         $this->showAlert = true;
-        
+
         $this->dispatch('alert-shown');
     }
 
@@ -94,11 +92,12 @@ class RehabQueue extends Component
             // 'all' shows everything
         }
 
-        // Apply search
+        // Apply search - FIXED: Using card_number instead of medical_record_number
         if ($this->search) {
             $query->whereHas('encounter.patient', function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('medical_record_number', 'like', '%' . $this->search . '%');
+                $q->where('first_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('card_number', 'like', '%' . $this->search . '%'); // FIXED HERE
             });
         }
 
