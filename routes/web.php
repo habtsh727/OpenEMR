@@ -92,6 +92,7 @@ use App\Livewire\Rehab\Cashier\RehabPaymentQueue;
 use App\Livewire\Rehab\DoctorRehabOrder;
 use App\Livewire\Rehab\QuestionnaireForm;
 use App\Livewire\Rehab\Queue;
+use App\Livewire\Rehab\RehabFinanceReport;
 use App\Livewire\Rehab\RehabPackagesComponent;
 use App\Livewire\Rehab\Template\Index as TemplateIndex;
 use App\Livewire\Rehab\Template\Form as TemplateForm;
@@ -137,6 +138,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cashier/rehab/payment/{rehabOrder}', RehabPaymentProcess::class)->name('cashier.rehab.payment');
     Route::get('/payment-details/{orderId}', App\Livewire\Rehab\Cashier\PatientPaymentDetails::class)->name('rehab.cashier.payment-details');
     Route::get('rehab/reports', App\Livewire\Rehab\Cashier\PaymentReports::class)->name('rehab.payment.reports');
+    Route::get('/rehab/finance-report', RehabFinanceReport::class)->name('rehab.finance.report');
 });
 
 Route::get('/', function () {

@@ -147,7 +147,6 @@
                 <flux:sidebar.item icon="beaker" :href="route('rehab.treatment-types')" wire:navigate>
                     Treatment Types
                 </flux:sidebar.item>
-
                 @endif
 
                 <!-- Bed Manager Routes -->
@@ -165,6 +164,10 @@
                 <flux:sidebar.item icon="document-text" :href="route('cashier.rehab.payments')" wire:navigate>
                     Payment History
                 </flux:sidebar.item>
+                 <flux:sidebar.item icon="document-text" :href="route('rehab.finance.report')" wire:navigate>
+                    Finance  History
+                </flux:sidebar.item>
+
                 @endif
 
                 <!-- Admin/Manager Routes (only super-admin) -->
