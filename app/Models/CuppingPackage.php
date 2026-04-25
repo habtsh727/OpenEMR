@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CuppingPackage extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+
+    // Remove SoftDeletes trait if present
 
     protected $fillable = [
         'name',

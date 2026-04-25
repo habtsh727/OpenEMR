@@ -581,7 +581,7 @@ class AssessmentForm extends Component
 
     public function orderCupping()
     {
-        return $this->redirect(route('doctor.cupping-order', ['encounter' => $this->encounter->id]), navigate: true);
+        return $this->redirect(route('cupping.doctor.order', ['encounter' => $this->encounter->id]), navigate: true);
     }
 
     /**

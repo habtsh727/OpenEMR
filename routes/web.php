@@ -63,6 +63,7 @@ use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
+use App\Livewire\Cupping\DoctorCuppingOrder;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
 use App\Livewire\Doctor\RehabQueue;
@@ -369,14 +370,21 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
 
 
 
-
-
-
-
 Route::middleware(['auth'])->group(function () {
     Route::get('/pharmacy/walkin/create', PharmacistOrder::class)->name('pharmacy.walkin.create');
     Route::get('/pharmacy/walkin/payment', CashierPayment::class)->name('pharmacy.walkin.payment');
     Route::get('/pharmacy/walkin/dispense', PharmacistDispense::class)->name('pharmacy.walkin.dispense');
     Route::get('/pharmacy/walkin/report', WalkinSalesReport::class)->name('pharmacy.walkin.report');
 });
+
+// Route::prefix('cupping')->name('cupping.')->middleware(['auth'])->group(function () {
+
+//     // Doctor Routes
+//     Route::prefix('doctor')->name('doctor.')->group(function () {
+//         Route::get('/order/{encounter}', DoctorCuppingOrder::class)->name('order');
+//     });
+
+
+// });
+Route::get('/cupping/doctor/order/{encounter}', DoctorCuppingOrder::class)->name('cupping.doctor.order');
 require __DIR__ . '/auth.php';
