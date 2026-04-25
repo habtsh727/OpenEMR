@@ -80,6 +80,7 @@ use App\Livewire\Referral\SubmitResultModal;
 use App\Livewire\VitalTypes\Index;
 use App\Livewire\Forms\RehabPackageForm;
 use App\Livewire\Forms\RehabPackageList;
+use App\Livewire\Pharmacy\Report\SalesReport;
 use App\Livewire\Rehab\BedManager\BedSelectionQueue;
 use App\Livewire\Rehab\BedQueue;
 use App\Livewire\Rehab\Cashier\RehabPaymentProcess;
@@ -291,6 +292,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/pharmacy/custom-medications', \App\Livewire\Pharmacy\CustomMedicationComponent::class)
         ->name('pharmacy.custom-medications');
+    Route::get('/pharmacy/report/sales', SalesReport::class)->name('pharmacy.report.sales');
 });
 
 // routes/web.php (add these routes)

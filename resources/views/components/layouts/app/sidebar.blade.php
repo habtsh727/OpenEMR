@@ -325,6 +325,10 @@
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('inventory.consumables')" wire:navigate>
                     Consumables
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.report.sales')" wire:navigate>
+                    Sales Report
+                </flux:sidebar.item>
+
             </flux:sidebar.group>
             @endcanany
 
@@ -392,7 +396,7 @@
                 <flux:sidebar.item icon="home-modern" :href="route('reports.bed-payments')" wire:navigate>
                     Bed Payments Report
                 </flux:sidebar.item>
-                
+
             </flux:sidebar.group>
 
         </flux:sidebar.nav>
