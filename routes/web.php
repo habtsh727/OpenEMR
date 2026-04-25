@@ -2,8 +2,6 @@
 
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
-use App\Livewire\Admin\CuppingLocationManager;
-use App\Livewire\Admin\CuppingTypeManager;
 use App\Livewire\Appointment\AppointmentIndex;
 use App\Livewire\Appointment\AppointmentRequests;
 use App\Livewire\Appointment\CalendarView;
@@ -63,14 +61,8 @@ use App\Livewire\Appointment\AppointmentDetail;
 use App\Livewire\Appointment\AppointmentReports;
 use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
-use App\Livewire\Cashier\CuppingPaymentForm;
-use App\Livewire\Cashier\CuppingPaymentQueue;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
-use App\Livewire\CuppingDepartment\CuppingReportForm;
-use App\Livewire\CuppingDepartment\TreatmentQueue;
-use App\Livewire\Doctor\CuppingOrderForm;
-use App\Livewire\Doctor\CuppingReports;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
 use App\Livewire\Doctor\RehabQueue;
@@ -380,29 +372,6 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
 
 
 
-
-Route::middleware(['auth'])->group(function () {
-
-    // Doctor Routes
-    Route::get('/doctor/encounter/{encounter}/cupping-order', CuppingOrderForm::class)
-        ->name('doctor.cupping-order');
-
-    // Cashier Routes
-    Route::get('/cashier/payment-queue', CuppingPaymentQueue::class)
-        ->name('cashier.queue');
-
-    // Cupping Department Routes
-    Route::get('/cupping-department/treatment-queue', TreatmentQueue::class)
-        ->name('cupping.queue');
-
-    Route::get('/doctor/cupping-reports', CuppingReports::class)
-        ->name('doctor.cupping-reports');
-});
-
-Route::middleware(['auth'])->prefix('admin')->group(function () {
-    Route::get('/cupping-types', CuppingTypeManager::class)->name('admin.cupping.types');
-    Route::get('/cupping-locations', CuppingLocationManager::class)->name('admin.cupping.locations');
-});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/pharmacy/walkin/create', PharmacistOrder::class)->name('pharmacy.walkin.create');

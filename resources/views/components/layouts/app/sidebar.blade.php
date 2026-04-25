@@ -64,9 +64,6 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
                     Pharmacy Payment
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.queue')" wire:navigate>
-                    Cupping Payment
-                </flux:sidebar.item>
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.payment')" wire:navigate>
                     Walk-in Payment
                 </flux:sidebar.item>
@@ -95,25 +92,6 @@
             @endif
 
 
-            {{-- cupping order --}}
-            @if(auth()->user()->hasRole(['doctor', 'cupping', 'super-admin']))
-            <flux:sidebar.group expandable :expanded="false" heading="Cupping" class="grid">
-                @if(auth()->user()->hasRole(['cupping','nurse','super-admin']))
-                <flux:sidebar.item icon="home-modern" :href="route('cupping.queue')" wire:navigate>Treatment Queue
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('admin.cupping.types')" wire:navigate>Cupping Types
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('admin.cupping.locations')" wire:navigate>Cupping
-                    Locations
-                </flux:sidebar.item>
-                @if(auth()->user()->hasRole(['doctor']))
-                <flux:sidebar.item icon="home-modern" :href="route('doctor.cupping-reports')" wire:navigate>Cupping
-                    Reports
-                    @endif
-                </flux:sidebar.item>
-                @endif
-            </flux:sidebar.group>
-            @endif
 
 
             {{-- rehab sidebar-start--}}
