@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CuppingPayment extends Model
 {
     protected $table = 'cupping_payments';
-    
+
     protected $fillable = [
         'cupping_session_id',
         'cupping_therapy_id',
@@ -27,6 +27,10 @@ class CuppingPayment extends Model
     public function cuppingSession(): BelongsTo
     {
         return $this->belongsTo(CuppingSession::class);
+    }
+    public function therapyPackage()
+    {
+        return $this->belongsTo(CuppingTherapyPackage::class, 'cupping_therapy_package_id');
     }
 
     public function cuppingTherapy(): BelongsTo

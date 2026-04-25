@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class CuppingTherapy extends Model
 {
     protected $table = 'cupping_therapies';
-    
+
     protected $fillable = [
         'encounter_id',
         'doctor_id',
@@ -18,14 +18,20 @@ class CuppingTherapy extends Model
         'discount',
         'final_amount',
         'total_sessions',
-        'status'
+        'status',
+        'primary_package_id',
+        'payment_type',
+        'installment_count',
+        'next_payment_due',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
         'discount' => 'decimal:2',
         'final_amount' => 'decimal:2',
-        'total_sessions' => 'integer'
+        'total_sessions' => 'integer',
+        'installment_count' => 'integer',
+        'next_payment_due' => 'date',
     ];
 
     // Status Constants
@@ -53,6 +59,10 @@ class CuppingTherapy extends Model
         return $this->hasMany(CuppingSession::class);
     }
 
+    // public function primaryPackage()
+    // {
+    //     return $this->belongsTo(CuppingPackage::class, 'primary_package_id');
+    // }
     public function payments(): HasMany
     {
         return $this->hasMany(CuppingPayment::class);
@@ -102,5 +112,25 @@ class CuppingTherapy extends Model
         }
 
         $this->saveQuietly();
+    }
+    public function primaryPackage()
+    {
+        return $this->belongsTo(CuppingPackage::class, 'primary_package_id');
+    }
+
+    public function therapyPackages()
+    {
+        return $this->hasMany(CuppingTherapyPackage::class, 'cupping_therapy_id');
+    }
+
+    // public function getRemainingAmountAttribute()
+    // {
+    //     $totalPaid = $this->payments()->sum('amount');
+    //     return $this->final_amount - $totalPaid;
+    // }
+
+    public function getCompletedSessionsCountAttribute()
+    {
+        return $this->sessions()->where('treatment_status', 'completed')->count();
     }
 }
