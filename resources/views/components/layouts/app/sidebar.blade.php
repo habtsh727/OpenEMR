@@ -67,6 +67,9 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('cashier.queue')" wire:navigate>
                     Cupping Payment
                 </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.payment')" wire:navigate>
+                    Walk-in Customer Payment
+                </flux:sidebar.item>
             </flux:sidebar.group>
 
             @endcanany
@@ -100,11 +103,13 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="home-modern" :href="route('admin.cupping.types')" wire:navigate>Cupping Types
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('admin.cupping.locations')" wire:navigate>Cupping Locations
+                <flux:sidebar.item icon="home-modern" :href="route('admin.cupping.locations')" wire:navigate>Cupping
+                    Locations
                 </flux:sidebar.item>
                 @if(auth()->user()->hasRole(['doctor']))
-                <flux:sidebar.item icon="home-modern" :href="route('doctor.cupping-reports')" wire:navigate>Cupping Reports
-                @endif
+                <flux:sidebar.item icon="home-modern" :href="route('doctor.cupping-reports')" wire:navigate>Cupping
+                    Reports
+                    @endif
                 </flux:sidebar.item>
                 @endif
             </flux:sidebar.group>
@@ -173,8 +178,8 @@
                 <flux:sidebar.item icon="document-chart-bar" :href="route('reports.rehab-payments')" wire:navigate>
                     Rehab Reports
                 </flux:sidebar.item>
-                 {{-- <flux:sidebar.item icon="document-chart-bar" :href="route('rehab.payment.reports')" wire:navigate>
-                    Rehab Payment  Reports
+                {{-- <flux:sidebar.item icon="document-chart-bar" :href="route('rehab.payment.reports')" wire:navigate>
+                    Rehab Payment Reports
                 </flux:sidebar.item> --}}
                 @endif
 
@@ -328,7 +333,13 @@
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.report.sales')" wire:navigate>
                     Sales Report
                 </flux:sidebar.item>
-
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.create')" wire:navigate>
+                    Walk-in Customer Order
+                </flux:sidebar.item>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.dispense')"
+                    wire:navigate>
+                    Walk-in Customer Dispense
+                </flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
 
@@ -433,7 +444,7 @@
                     <flux:menu.item href="/settings/profile" icon="cog" wire:navigate>Settings</flux:menu.item>
                 </flux:menu.radio.group>
 
-                <flux:menu.separator />
+          enu.separator />
 
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
