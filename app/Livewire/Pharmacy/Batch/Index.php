@@ -20,6 +20,12 @@ class Index extends Component
     public $editingId = null;
     public $search = '';
 
+    // Add search filters
+    public $searchByMedicine = true;
+    public $searchByBatch = true;
+    public $filterExpiringSoon = false;
+    public $filterExpired = false;
+
     protected $rules = [
         'medicine_id' => 'required|exists:pharmacy_items,id',
         'batch_number' => 'required|string',
@@ -47,6 +53,9 @@ class Index extends Component
 
         $this->reset(['medicine_id','batch_number','expiry_date','quantity','purchase_price','selling_price','editingId']);
         session()->flash('message', 'Batch saved successfully.');
+
+        // Refresh the component
+        $this->dispatch('batch-saved');
     }
 
     public function edit($id)
@@ -68,17 +77,87 @@ class Index extends Component
         session()->flash('message', 'Batch deleted successfully.');
     }
 
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function clearSearch()
+    {
+        $this->search = '';
+        $this->filterExpiringSoon = false;
+        $this->filterExpired = false;
+        $this->resetPage();
+    }
+
+    public function toggleExpiringSoon()
+    {
+        $this->filterExpiringSoon = !$this->filterExpiringSoon;
+        if ($this->filterExpiringSoon) {
+            $this->filterExpired = false;
+        }
+        $this->resetPage();
+    }
+
+    public function toggleExpired()
+    {
+        $this->filterExpired = !$this->filterExpired;
+        if ($this->filterExpired) {
+            $this->filterExpiringSoon = false;
+        }
+        $this->resetPage();
+    }
+
     public function render()
     {
         $batches = PharmacyBatch::with('medicine')
-            ->whereHas('medicine', function($q) {
-                $q->where('name', 'like', "%{$this->search}%");
+            ->when($this->search, function($query) {
+                // Search in medicine name OR batch number
+                $query->where(function($q) {
+                    // Search by batch number directly
+                    if ($this->searchByBatch) {
+                        $q->orWhere('batch_number', 'like', "%{$this->search}%");
+                    }
+
+                    // Search by medicine name through relationship
+                    if ($this->searchByMedicine) {
+                        $q->orWhereHas('medicine', function($subQuery) {
+                            $subQuery->where('name', 'like', "%{$this->search}%")
+                                     ->orWhere('generic_name', 'like', "%{$this->search}%")
+                                     ->orWhere('code', 'like', "%{$this->search}%")
+                                     ->orWhere('strength', 'like', "%{$this->search}%");
+                        });
+                    }
+                });
+            })
+            ->when($this->filterExpiringSoon, function($query) {
+                // Batches expiring in next 30 days
+                $query->whereBetween('expiry_date', [now(), now()->addDays(30)])
+                      ->where('quantity', '>', 0);
+            })
+            ->when($this->filterExpired, function($query) {
+                // Expired batches
+                $query->where('expiry_date', '<', now());
             })
             ->orderBy('expiry_date', 'asc')
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $medicines = PharmacyItem::where('is_active', 1)->get();
+        // Keep pagination with search query
+        $batches->appends(['search' => $this->search]);
 
-        return view('livewire.pharmacy.batch.index', compact('batches','medicines'));
+        $medicines = PharmacyItem::where('is_active', 1)
+            ->orderBy('name')
+            ->get();
+
+        // Get statistics
+        $stats = [
+            'total_batches' => PharmacyBatch::count(),
+            'total_stock' => PharmacyBatch::sum('quantity'),
+            'expiring_soon' => PharmacyBatch::whereBetween('expiry_date', [now(), now()->addDays(30)])->sum('quantity'),
+            'expired_stock' => PharmacyBatch::where('expiry_date', '<', now())->sum('quantity'),
+        ];
+
+        return view('livewire.pharmacy.batch.index', compact('batches', 'medicines', 'stats'));
     }
 }
