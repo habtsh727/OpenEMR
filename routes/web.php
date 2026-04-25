@@ -387,4 +387,5 @@ Route::middleware(['auth'])->group(function () {
 
 // });
 Route::get('/cupping/doctor/order/{encounter}', DoctorCuppingOrder::class)->name('cupping.doctor.order');
+Route::get('/cupping/admin/packages', \App\Livewire\Cupping\AdminCuppingPackageManager::class)->name('cupping.admin.packages');
 require __DIR__ . '/auth.php';
