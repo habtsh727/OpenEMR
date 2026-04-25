@@ -13,29 +13,28 @@ class QuestionnaireForm extends Component
 {
     public RehabEncounter $rehabEncounter;
     public $template; // Changed from RehabQuestionnaireTemplate to allow virtual template
-    
+
     // Form data
     public $answers = [];
     public $rehabNotes = '';
-    
+
     // UI state
     public $showConfirmModal = false;
-    public $autoSaveEnabled = true;
     public $lastSaved = null;
-    
+
     // Track which questions belong to which template (for organization)
     public $questionsByTemplate = [];
-    
+
     // Track collapsed sections
     public $collapsedSections = [];
 
     protected function rules()
     {
         $rules = [];
-        
+
         foreach ($this->template['questions'] as $question) {
             $rule = [];
-            
+
             if ($question->is_required) {
                 $rule[] = 'required';
             } else {
@@ -77,12 +76,12 @@ class QuestionnaireForm extends Component
     protected function messages()
     {
         $messages = [];
-        
+
         foreach ($this->template['questions'] as $question) {
             if ($question->is_required) {
                 $messages["answers.{$question->id}.value.required"] = "Please answer: {$question->question}";
             }
-            
+
             switch ($question->type) {
                 case 'boolean':
                     $messages["answers.{$question->id}.value.in"] = "Please select Yes or No for: {$question->question}";
@@ -112,7 +111,7 @@ class QuestionnaireForm extends Component
         ])->findOrFail($id);
 
         // Security check - only assigned staff can edit
-        if ($this->rehabEncounter->questionnaire_filled_by && 
+        if ($this->rehabEncounter->questionnaire_filled_by &&
             $this->rehabEncounter->questionnaire_filled_by != auth()->id()) {
             abort(403, 'This questionnaire is being filled by another staff member.');
         }
@@ -121,16 +120,16 @@ class QuestionnaireForm extends Component
         $allTemplates = RehabQuestionnaireTemplate::with('questions')
             ->orderBy('title')
             ->get();
-        
+
         // Check if there are any templates
         if ($allTemplates->isEmpty()) {
             abort(404, 'No questionnaire templates found. Please create a template first.');
         }
-        
+
         // Combine all questions from all templates
         $allQuestions = collect();
         $this->questionsByTemplate = [];
-        
+
         foreach ($allTemplates as $template) {
             $this->questionsByTemplate[$template->id] = [
                 'title' => $template->title,
@@ -140,7 +139,7 @@ class QuestionnaireForm extends Component
             ];
             $allQuestions = $allQuestions->concat($template->questions);
         }
-        
+
         // Create a virtual template structure to hold all questions
         $this->template = [
             'id' => 0, // Virtual ID for all templates combined
@@ -152,23 +151,23 @@ class QuestionnaireForm extends Component
             'templates_count' => $allTemplates->count(),
             'total_questions' => $allQuestions->count()
         ];
-        
+
         // Initialize collapsed sections (all expanded by default)
         foreach ($this->questionsByTemplate as $templateId => $templateData) {
             // Check if there's a saved state in session
             $this->collapsedSections[$templateId] = session()->get("collapsed_section_{$templateId}", false);
         }
-        
+
         // Log for debugging
         \Log::info('Loaded all questions from templates', [
             'total_templates' => $allTemplates->count(),
             'total_questions' => $allQuestions->count(),
             'templates' => $allTemplates->pluck('title')->toArray()
         ]);
-        
+
         // Initialize answers
         $this->initializeAnswers();
-        
+
         // Set rehab notes
         $this->rehabNotes = $this->rehabEncounter->rehab_notes ?? '';
     }
@@ -177,26 +176,26 @@ class QuestionnaireForm extends Component
     {
         // Reset answers array
         $this->answers = [];
-        
+
         // Get existing answers for this encounter
         $existingAnswers = $this->rehabEncounter->answers
             ->keyBy('rehab_template_question_id');
-        
+
         // Initialize answers for all questions
         foreach ($this->template['questions'] as $question) {
             $existingAnswer = $existingAnswers->get($question->id);
-            
+
             if ($existingAnswer) {
                 // Format existing answer based on type
                 $value = $this->formatAnswerForDisplay($existingAnswer->answer, $question->type);
-                
+
                 $this->answers[$question->id] = [
                     'id' => $existingAnswer->id,
                     'value' => $value,
                     'note' => $existingAnswer->note,
                     'template_id' => $question->rehab_questionnaire_template_id
                 ];
-                
+
                 // Update answered count for this template if answer is not empty
                 if (!empty($value) && $value !== '' && $value !== []) {
                     $templateId = $question->rehab_questionnaire_template_id;
@@ -214,7 +213,7 @@ class QuestionnaireForm extends Component
                 ];
             }
         }
-        
+
         // Debug logging
         \Log::info('Answers initialized', [
             'total_questions' => $this->template['questions']->count(),
@@ -238,7 +237,7 @@ class QuestionnaireForm extends Component
                     return in_array(strtolower($answer), ['1', 'true', 'yes']) ? '1' : '0';
                 }
                 return (string) $answer;
-            
+
             case 'checkbox':
                 if (is_array($answer)) {
                     return $answer;
@@ -247,7 +246,7 @@ class QuestionnaireForm extends Component
                     return json_decode($answer, true) ?? [];
                 }
                 return [];
-            
+
             case 'datetime':
                 if ($answer instanceof \Carbon\Carbon) {
                     return $answer->format('Y-m-d\TH:i');
@@ -260,104 +259,45 @@ class QuestionnaireForm extends Component
                     }
                 }
                 return '';
-            
+
             default:
                 return (string) $answer;
         }
     }
 
-    public function updated($propertyName)
-    {
-        // Check if the update is for an answer
-        if (str_starts_with($propertyName, 'answers.')) {
-            // Extract question ID and update answered count for its template
-            $parts = explode('.', $propertyName);
-            if (count($parts) >= 2) {
-                $questionId = $parts[1];
-                $question = RehabTemplateQuestion::find($questionId);
-                if ($question) {
-                    $templateId = $question->rehab_questionnaire_template_id;
-                    $answerData = $this->answers[$questionId] ?? null;
-                    
-                    if ($answerData && isset($this->questionsByTemplate[$templateId])) {
-                        // Recalculate answered count for this template
-                        $answered = 0;
-                        foreach ($this->questionsByTemplate[$templateId]['questions'] as $q) {
-                            $answer = $this->answers[$q->id]['value'] ?? null;
-                            if (!empty($answer) && $answer !== '' && $answer !== []) {
-                                $answered++;
-                            }
-                        }
-                        $this->questionsByTemplate[$templateId]['answered_count'] = $answered;
-                    }
-                }
-            }
-            
-            // Auto-save when answers change
-            if ($this->autoSaveEnabled) {
-                $this->saveProgress(showNotification: false);
-            }
-        }
-    }
-    
-    /**
-     * Toggle collapse/expand state for a template section
-     */
     public function toggleSection($templateId)
     {
         $this->collapsedSections[$templateId] = !$this->collapsedSections[$templateId];
-        
+
         // Save state to session to persist across page refreshes
         session()->put("collapsed_section_{$templateId}", $this->collapsedSections[$templateId]);
-        
-        // Optional: Show notification
-        $state = $this->collapsedSections[$templateId] ? 'collapsed' : 'expanded';
-        $this->dispatch('notify', [
-            'message' => "Section {$state}",
-            'type' => 'info'
-        ]);
     }
-    
-    /**
-     * Expand all sections
-     */
+
     public function expandAll()
     {
         foreach ($this->questionsByTemplate as $templateId => $templateData) {
             $this->collapsedSections[$templateId] = false;
             session()->put("collapsed_section_{$templateId}", false);
         }
-        
-        $this->dispatch('notify', [
-            'message' => 'All sections expanded',
-            'type' => 'success'
-        ]);
+
+        $this->dispatch('notify', 'All sections expanded', 'success');
     }
-    
-    /**
-     * Collapse all sections
-     */
+
     public function collapseAll()
     {
         foreach ($this->questionsByTemplate as $templateId => $templateData) {
             $this->collapsedSections[$templateId] = true;
             session()->put("collapsed_section_{$templateId}", true);
         }
-        
-        $this->dispatch('notify', [
-            'message' => 'All sections collapsed',
-            'type' => 'success'
-        ]);
+
+        $this->dispatch('notify', 'All sections collapsed', 'success');
     }
-    
-    /**
-     * Expand only sections with unanswered required questions
-     */
+
     public function expandUnansweredRequired()
     {
         foreach ($this->questionsByTemplate as $templateId => $templateData) {
             $hasUnansweredRequired = false;
-            
+
             foreach ($templateData['questions'] as $question) {
                 if ($question->is_required) {
                     $answer = $this->answers[$question->id]['value'] ?? null;
@@ -367,77 +307,13 @@ class QuestionnaireForm extends Component
                     }
                 }
             }
-            
+
             // Expand if has unanswered required questions
             $this->collapsedSections[$templateId] = !$hasUnansweredRequired;
             session()->put("collapsed_section_{$templateId}", $this->collapsedSections[$templateId]);
         }
-        
-        $this->dispatch('notify', [
-            'message' => 'Sections with unanswered required questions expanded',
-            'type' => 'success'
-        ]);
-    }
 
-    public function saveProgress($showNotification = true)
-    {
-        try {
-            DB::transaction(function () {
-                foreach ($this->answers as $questionId => $answerData) {
-                    $question = RehabTemplateQuestion::find($questionId);
-                    
-                    if (!$question) {
-                        continue;
-                    }
-                    
-                    // Format answer for storage
-                    $formattedAnswer = $this->formatAnswerForStorage(
-                        $answerData['value'], 
-                        $question->type
-                    );
-
-                    RehabQuestionnaireAnswer::updateOrCreate(
-                        [
-                            'rehab_encounter_id' => $this->rehabEncounter->id,
-                            'rehab_template_question_id' => $questionId,
-                        ],
-                        [
-                            'answer' => $formattedAnswer,
-                            'note' => $answerData['note'] ?? null,
-                        ]
-                    );
-                }
-
-                // Update rehab encounter
-                $this->rehabEncounter->update([
-                    'rehab_notes' => $this->rehabNotes,
-                    'status' => 'questionnaire_in_progress',
-                    'questionnaire_filled_by' => auth()->id(),
-                ]);
-            });
-
-            $this->lastSaved = now();
-
-            if ($showNotification) {
-                $this->dispatch('notify', [
-                    'message' => 'Progress saved successfully!',
-                    'type' => 'success'
-                ]);
-            }
-
-        } catch (\Exception $e) {
-            \Log::error('Failed to save rehab questionnaire: ' . $e->getMessage(), [
-                'rehab_encounter_id' => $this->rehabEncounter->id,
-                'error' => $e->getMessage()
-            ]);
-
-            if ($showNotification) {
-                $this->dispatch('notify', [
-                    'message' => 'Failed to save progress. Please try again.',
-                    'type' => 'error'
-                ]);
-            }
-        }
+        $this->dispatch('notify', 'Sections with unanswered required questions expanded', 'success');
     }
 
     private function formatAnswerForStorage($value, $type)
@@ -480,22 +356,19 @@ class QuestionnaireForm extends Component
         $missingRequired = collect($this->template['questions'])
             ->filter(function ($question) {
                 if (!$question->is_required) return false;
-                
+
                 $answer = $this->answers[$question->id]['value'] ?? null;
-                
+
                 if ($question->type === 'checkbox') {
                     return empty($answer);
                 }
-                
+
                 return $answer === null || $answer === '' || $answer === [];
             });
 
         if ($missingRequired->isNotEmpty()) {
             $firstMissing = $missingRequired->first();
-            $this->dispatch('notify', [
-                'message' => 'Please answer all required questions before submitting.',
-                'type' => 'error'
-            ]);
+            $this->dispatch('notify', 'Please answer all required questions before submitting.', 'error');
             $this->dispatch('scroll-to-question', questionId: $firstMissing->id);
             return;
         }
@@ -507,16 +380,16 @@ class QuestionnaireForm extends Component
     {
         try {
             DB::transaction(function () {
-                // Save all answers first
+                // Save all answers
                 foreach ($this->answers as $questionId => $answerData) {
                     $question = RehabTemplateQuestion::find($questionId);
-                    
+
                     if (!$question) {
                         continue;
                     }
-                    
+
                     $formattedAnswer = $this->formatAnswerForStorage(
-                        $answerData['value'], 
+                        $answerData['value'],
                         $question->type
                     );
 
@@ -542,10 +415,7 @@ class QuestionnaireForm extends Component
 
             $this->showConfirmModal = false;
 
-            $this->dispatch('notify', [
-                'message' => '✅ Questionnaire submitted successfully! The doctor will review it shortly.',
-                'type' => 'success'
-            ]);
+            $this->dispatch('notify', '✅ Questionnaire submitted successfully! The doctor will review it shortly.', 'success');
 
             // Redirect to queue after 2 seconds
             $this->dispatch('redirect-to-queue');
@@ -556,30 +426,16 @@ class QuestionnaireForm extends Component
                 'error' => $e->getMessage()
             ]);
 
-            $this->dispatch('notify', [
-                'message' => '❌ Failed to submit questionnaire. Please try again.',
-                'type' => 'error'
-            ]);
-            
+            $this->dispatch('notify', '❌ Failed to submit questionnaire. Please try again.', 'error');
             $this->showConfirmModal = false;
         }
-    }
-
-    public function toggleAutoSave()
-    {
-        $this->autoSaveEnabled = !$this->autoSaveEnabled;
-        
-        $this->dispatch('notify', [
-            'message' => $this->autoSaveEnabled ? 'Auto-save enabled' : 'Auto-save disabled',
-            'type' => 'info'
-        ]);
     }
 
     public function render()
     {
         // Get patient and ensure date_of_birth is a Carbon instance
         $patient = $this->rehabEncounter->encounter->patient;
-        
+
         // Parse date_of_birth if it's a string
         if ($patient && is_string($patient->date_of_birth)) {
             try {
