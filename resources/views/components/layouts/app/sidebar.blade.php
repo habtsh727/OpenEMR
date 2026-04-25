@@ -68,7 +68,7 @@
                     Cupping Payment
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.payment')" wire:navigate>
-                    Walk-in Customer Payment
+                    Walk-in Payment
                 </flux:sidebar.item>
             </flux:sidebar.group>
 
@@ -327,18 +327,22 @@
                     wire:navigate>
                     Custom Medications
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('inventory.consumables')" wire:navigate>
+                <flux:sidebar.item icon="document-text" :href="route('inventory.consumables')" wire:navigate>
                     Consumables
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.report.sales')" wire:navigate>
                     Sales Report
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.create')" wire:navigate>
-                    Walk-in Customer Order
+                <flux:sidebar.item icon="document-text" :href="route('pharmacy.walkin.create')" wire:navigate>
+                    Walk-in Order
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.dispense')"
+                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.walkin.dispense')"
                     wire:navigate>
-                    Walk-in Customer Dispense
+                    Walk-in Dispense
+                </flux:sidebar.item>
+                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.report')"
+                    wire:navigate>
+                    Walk-in Sales Report
                 </flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany

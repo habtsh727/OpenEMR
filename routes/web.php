@@ -14,6 +14,7 @@ use App\Livewire\Appointment\UpcomingAppointments;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
+use App\Livewire\Pharmacy\Walkin\WalkinSalesReport;
 use App\Livewire\Referral\ReferralQueue;
 use App\Livewire\Rehab\RehabTreatmentPage;
 use App\Livewire\Rehab\RehabTreatmentQueue;
@@ -405,5 +406,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pharmacy/walkin/create', PharmacistOrder::class)->name('pharmacy.walkin.create');
     Route::get('/pharmacy/walkin/payment', CashierPayment::class)->name('pharmacy.walkin.payment');
     Route::get('/pharmacy/walkin/dispense', PharmacistDispense::class)->name('pharmacy.walkin.dispense');
+    Route::get('/pharmacy/walkin/report', WalkinSalesReport::class)->name('pharmacy.walkin.report');
 });
 require __DIR__ . '/auth.php';
