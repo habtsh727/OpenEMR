@@ -221,6 +221,10 @@ class DoctorCuppingOrder extends Component
             // Calculate total amount
             $totalAmount = $this->cartTotal;
 
+            // Get all unique package IDs from cart
+            $packageIds = array_unique(array_column($this->cart, 'package_id'));
+            $primaryPackageId = count($packageIds) === 1 ? $packageIds[0] : null;
+
             // Create cupping therapy
             $therapy = CuppingTherapy::create([
                 'encounter_id' => $this->encounterId,
@@ -231,7 +235,7 @@ class DoctorCuppingOrder extends Component
                 'final_amount' => $totalAmount,
                 'total_sessions' => $this->totalSessions,
                 'status' => 'ordered',
-                'primary_package_id' => $this->cart[0]['package_id'] ?? null,
+                'primary_package_id' => $primaryPackageId, // Now properly set
             ]);
 
             $globalSessionCounter = 1;
@@ -274,7 +278,7 @@ class DoctorCuppingOrder extends Component
             $this->showConfirmModal = false;
 
             $this->showAlertMessage(
-                "✅ Cupping therapy ordered successfully! Total: ETB " . number_format($totalAmount, 2) . " for {$this->totalSessions} session(s). Patient has been sent to cashier queue.",
+                "✅ Cupping therapy ordered successfully! Total: ETB " . number_format($totalAmount, 2) . " for {$this->totalSessions} session(s).",
                 'success'
             );
 
