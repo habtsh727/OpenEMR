@@ -81,6 +81,9 @@ use App\Livewire\VitalTypes\Index;
 use App\Livewire\Forms\RehabPackageForm;
 use App\Livewire\Forms\RehabPackageList;
 use App\Livewire\Pharmacy\Report\SalesReport;
+use App\Livewire\Pharmacy\Walkin\CashierPayment;
+use App\Livewire\Pharmacy\Walkin\PharmacistDispense;
+use App\Livewire\Pharmacy\Walkin\PharmacistOrder;
 use App\Livewire\Rehab\BedManager\BedSelectionQueue;
 use App\Livewire\Rehab\BedQueue;
 use App\Livewire\Rehab\Cashier\RehabPaymentProcess;
@@ -396,5 +399,11 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/cupping-types', CuppingTypeManager::class)->name('admin.cupping.types');
     Route::get('/cupping-locations', CuppingLocationManager::class)->name('admin.cupping.locations');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/pharmacy/walkin/create', PharmacistOrder::class)->name('pharmacy.walkin.create');
+    Route::get('/pharmacy/walkin/payment', CashierPayment::class)->name('pharmacy.walkin.payment');
+    Route::get('/pharmacy/walkin/dispense', PharmacistDispense::class)->name('pharmacy.walkin.dispense');
 });
 require __DIR__ . '/auth.php';
