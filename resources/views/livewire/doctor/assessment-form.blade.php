@@ -1,4 +1,45 @@
-<div>
+<div x-data="{
+    showAlert: @entangle('showAlert'),
+    scrollToResults() {
+        setTimeout(() => {
+            const resultsSection = document.getElementById('current-diagnoses-section');
+            if (resultsSection && resultsSection.children.length > 0) {
+                resultsSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                    inline: 'nearest'
+                });
+                // Add highlight effect
+                resultsSection.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'transition-all', 'duration-300', 'shadow-xl');
+                setTimeout(() => {
+                    resultsSection.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'shadow-xl');
+                    resultsSection.classList.add('ring-2', 'ring-green-300');
+                    setTimeout(() => {
+                        resultsSection.classList.remove('ring-2', 'ring-green-300');
+                    }, 1000);
+                }, 2000);
+            }
+        }, 200);
+    },
+    scrollToForm() {
+        setTimeout(() => {
+            const formSection = document.getElementById('assessment-form-section');
+            if (formSection) {
+                formSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                formSection.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+                setTimeout(() => {
+                    formSection.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+                }, 2000);
+            }
+        }, 200);
+    }
+}"
+@this.on('scroll-to-results', 'scrollToResults()')
+@this.on('scroll-to-form', 'scrollToForm()')>
+
     {{-- Alert Notification --}}
     @if($showAlert)
     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
@@ -8,7 +49,7 @@
         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0" class="fixed top-6 right-6 z-50 max-w-sm w-full">
         <div class="rounded-xl shadow-xl overflow-hidden">
-            <div class="flex items-center justify-between p-4 
+            <div class="flex items-center justify-between p-4
                 @if($alertType === 'success') bg-gradient-to-r from-green-500 to-emerald-600
                 @elseif($alertType === 'error') bg-gradient-to-r from-red-500 to-rose-600
                 @elseif($alertType === 'warning') bg-gradient-to-r from-amber-500 to-orange-600
@@ -62,13 +103,13 @@
             </div>
             {{-- Progress bar --}}
             <div class="h-1 w-full bg-gray-200">
-                <div x-data="{ width: 100 }" x-init="width = 100; 
-                             let interval = setInterval(() => { 
-                                 width -= 2; 
-                                 if(width <= 0) { 
-                                     clearInterval(interval); 
-                                     show = false; 
-                                 } 
+                <div x-data="{ width: 100 }" x-init="width = 100;
+                             let interval = setInterval(() => {
+                                 width -= 2;
+                                 if(width <= 0) {
+                                     clearInterval(interval);
+                                     show = false;
+                                 }
                              }, 100)" :style="`width: ${width}%`"
                     class="h-full bg-white/40 transition-all duration-100">
                 </div>
@@ -87,8 +128,7 @@
                             <div class="relative">
                                 <div
                                     class="h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
-                                    <span class="text-white text-2xl font-bold">{{ substr($patient->name, 0, 1)
-                                        }}</span>
+                                    <span class="text-white text-2xl font-bold">{{ substr($patient->name, 0, 1) }}</span>
                                 </div>
                                 <div
                                     class="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-white flex items-center justify-center">
@@ -138,8 +178,22 @@
             </div>
         </div>
 
-        {{-- Assessment Form --}}
-        <div
+        {{-- View Results Button (shown when diagnoses exist) --}}
+        @if(count($diagnoses) > 0)
+        <div class="mb-4 flex justify-end">
+            <button type="button"
+                    onclick="document.getElementById('current-diagnoses-section').scrollIntoView({ behavior: 'smooth', block: 'start' })"
+                    class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all duration-200 flex items-center space-x-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+                <span>View {{ count($diagnoses) }} Diagnosis(es) Below</span>
+            </button>
+        </div>
+        @endif
+
+        {{-- Assessment Form Section --}}
+        <div id="assessment-form-section"
             class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
             {{-- Form Header --}}
             <div
@@ -356,61 +410,89 @@
             </div>
         </div>
 
-        {{-- Diagnosis List --}}
-        @if(count($diagnoses) > 0)
-        <div
-            class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
-            <div
-                class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-                <div class="flex items-center justify-between">
+        {{-- Diagnosis List / Results Section --}}
+        @php
+            $primaryCount = count(array_filter($diagnoses, fn($d) => $d['type'] === 'primary'));
+            $secondaryCount = count(array_filter($diagnoses, fn($d) => $d['type'] === 'secondary'));
+            $differentialCount = count(array_filter($diagnoses, fn($d) => $d['type'] === 'differential'));
+            $confirmedCount = count(array_filter($diagnoses, fn($d) => $d['certainty'] === 'confirmed'));
+        @endphp
+
+        <div id="current-diagnoses-section"
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-8 transition-all duration-300">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Current Diagnoses</h2>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ count($diagnoses) }} diagnosis(es)
-                            recorded</p>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Current Diagnoses</span>
+                            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ count($diagnoses) }} recorded)</span>
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Review and manage all recorded diagnoses</p>
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
-                        {{ count(array_filter($diagnoses, fn($d) => $d['type'] === 'primary')) }} primary
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
+                            Primary: {{ $primaryCount }}
+                        </span>
+                        <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
+                            Secondary: {{ $secondaryCount }}
+                        </span>
+                        <span class="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full">
+                            Differential: {{ $differentialCount }}
+                        </span>
+                        <span class="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-full">
+                            Confirmed: {{ $confirmedCount }}
+                        </span>
                     </div>
                 </div>
             </div>
 
+            @if(count($diagnoses) > 0)
             <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                @foreach($diagnoses as $diagnosis)
+                @foreach($diagnoses as $index => $diagnosis)
                 <div class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
-                            <div class="flex items-center space-x-3 mb-2">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{
-                                    $diagnosis['diagnosis'] }}</h3>
-                                <span
-                                    class="px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            {{ $diagnosis['type'] === 'primary' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                                               ($diagnosis['type'] === 'secondary' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                                               'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300') }}">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                    {{ $diagnosis['diagnosis'] }}
+                                </h3>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {{ $diagnosis['type'] === 'primary' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                                           ($diagnosis['type'] === 'secondary' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                                           'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300') }}">
                                     {{ ucfirst($diagnosis['type']) }}
                                 </span>
-                                <span
-                                    class="px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            {{ $diagnosis['certainty'] === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                                               'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' }}">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {{ $diagnosis['certainty'] === 'confirmed' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                                           'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' }}">
                                     {{ ucfirst($diagnosis['certainty']) }}
                                 </span>
                                 @if($diagnosis['is_custom'])
-                                <span
-                                    class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                                     Custom
+                                </span>
+                                @endif
+                                @if($index === array_key_last($diagnoses))
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 animate-pulse">
+                                    Newly Added
                                 </span>
                                 @endif
                             </div>
 
                             @if($diagnosis['notes'])
-                            <p class="text-gray-600 dark:text-gray-400 mt-2">{{ $diagnosis['notes'] }}</p>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2 text-sm border-l-4 border-gray-200 dark:border-gray-700 pl-3">
+                                {{ $diagnosis['notes'] }}
+                            </p>
                             @endif
                         </div>
 
                         <div class="flex items-center space-x-2 ml-4">
                             <button wire:click="editDiagnosis({{ $diagnosis['id'] }})"
-                                class="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg">
+                                class="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+                                title="Edit diagnosis">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
@@ -418,8 +500,9 @@
                                 </svg>
                             </button>
                             <button wire:click="deleteDiagnosis({{ $diagnosis['id'] }})"
-                                onclick="return confirm('Remove this diagnosis?')"
-                                class="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                                onclick="return confirm('Are you sure you want to remove this diagnosis?')"
+                                class="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+                                title="Delete diagnosis">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
@@ -431,98 +514,107 @@
                 </div>
                 @endforeach
             </div>
+            @else
+            <div class="p-12 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Diagnoses Recorded Yet</h3>
+                <p class="text-gray-500 dark:text-gray-400">Select from common diagnoses above or enter a custom diagnosis.</p>
+            </div>
+            @endif
         </div>
-        @endif
 
         {{-- Navigation Actions --}}
-       {{-- Navigation Actions --}}
-<div class="sticky bottom-6 z-10">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm bg-white/90 dark:bg-gray-800/90">
-        <div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-6">
-            {{-- Left: Navigation & Primary Actions --}}
-            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 flex-wrap">
-                {{-- Back Navigation --}}
-                <button type="button" wire:click="backToExamination"
-                    class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 flex items-center justify-center space-x-2 hover:shadow-md whitespace-nowrap">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                    <span>Back</span>
-                </button>
+        <div class="sticky bottom-6 z-10">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 backdrop-blur-sm bg-white/90 dark:bg-gray-800/90">
+                <div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-6">
+                    {{-- Left: Navigation & Primary Actions --}}
+                    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 flex-wrap">
+                        {{-- Back Navigation --}}
+                        <button type="button" wire:click="backToExamination"
+                            class="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 flex items-center justify-center space-x-2 hover:shadow-md whitespace-nowrap">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                            <span>Back to Examination</span>
+                        </button>
 
-                {{-- Primary Action Group --}}
-                <div class="flex flex-wrap items-center gap-3">
-                    <button type="button" wire:click="skipImaging"
-                        class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
-                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        <span>Order Medication</span>
-                    </button>
+                        {{-- Primary Action Group --}}
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button type="button" wire:click="skipImaging"
+                                class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <span>Order Medication</span>
+                            </button>
 
-                    {{-- Order Rehab Button --}}
-                    <button type="button" wire:click="orderRehabilitation"
-                        class="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 dark:from-teal-500 dark:to-cyan-600 dark:hover:from-teal-600 dark:hover:to-cyan-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
-                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                        </svg>
-                        <span>Order Rehabilitation</span>
-                    </button>
+                            {{-- Order Rehab Button --}}
+                            <button type="button" wire:click="orderRehabilitation"
+                                class="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 dark:from-teal-500 dark:to-cyan-600 dark:hover:from-teal-600 dark:hover:to-cyan-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                <span>Order Rehabilitation</span>
+                            </button>
 
-                    {{-- Order Cupping Button --}}
-                    <button type="button" wire:click="orderCupping"
-                        class="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 dark:from-amber-700 dark:to-orange-700 dark:hover:from-amber-800 dark:hover:to-orange-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
-                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 7H9L8 4zM6 13h12v4H6v-4z"></path>
-                        </svg>
-                        <span>Order Cupping</span>
-                    </button>
+                            {{-- Order Cupping Button --}}
+                            <button type="button" wire:click="orderCupping"
+                                class="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 dark:from-amber-700 dark:to-orange-700 dark:hover:from-amber-800 dark:hover:to-orange-800 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 7H9L8 4zM6 13h12v4H6v-4z"></path>
+                                </svg>
+                                <span>Order Cupping</span>
+                            </button>
 
-                    {{-- Order Referral Button --}}
-                    <button type="button" wire:click="orderReferral"
-                        class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
-                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                        </svg>
-                        <span>Order Referral</span>
-                    </button>
+                            {{-- Order Referral Button --}}
+                            <button type="button" wire:click="orderReferral"
+                                class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500 dark:hover:from-purple-600 dark:hover:to-pink-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                                <span>Order Referral</span>
+                            </button>
 
-                    {{-- Lab Orders Button --}}
-                    <button type="button" wire:click="nextToOrders"
-                        class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 transform hover:-translate-y-0.5 active:translate-y-0 min-w-[160px] whitespace-nowrap">
-                        <span>Lab Orders</span>
-                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
+                            {{-- Lab Orders Button --}}
+                            <button type="button" wire:click="nextToOrders"
+                                class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 transform hover:-translate-y-0.5 active:translate-y-0 min-w-[160px] whitespace-nowrap">
+                                <span>Lab Orders</span>
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
 
-                    {{-- Imaging Order Button --}}
-                    <button type="button" wire:click="imagingOrder"
-                        class="px-6 py-3 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl text-sm font-semibold text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-all duration-200 flex items-center justify-center space-x-2 hover:shadow-md whitespace-nowrap">
-                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        <span>Imaging Order</span>
-                    </button>
+                            {{-- Imaging Order Button --}}
+                            <button type="button" wire:click="imagingOrder"
+                                class="px-6 py-3 border-2 border-yellow-400 dark:border-yellow-600 rounded-xl text-sm font-semibold text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-all duration-200 flex items-center justify-center space-x-2 hover:shadow-md whitespace-nowrap">
+                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>Imaging Order</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Step Info --}}
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex flex-wrap items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <span class="inline-flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-yellow-500 dark:text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            Assessment is <span class="font-semibold text-yellow-600 dark:text-yellow-400 ml-1">optional</span>
+                        </span>
+                        <span class="mx-2 text-gray-400 dark:text-gray-600">•</span>
+                        <span>You can skip if no diagnosis needed or proceed to orders.</span>
+                    </div>
                 </div>
             </div>
         </div>
-
-        {{-- Step Info --}}
-        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <div class="flex flex-wrap items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <span class="inline-flex items-center">
-                    <svg class="w-4 h-4 mr-2 text-yellow-500 dark:text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                    Assessment is <span class="font-semibold text-yellow-600 dark:text-yellow-400 ml-1">optional</span>
-                </span>
-                <span class="mx-2 text-gray-400 dark:text-gray-600">•</span>
-                <span>You can skip if no diagnosis needed or proceed to orders.</span>
-            </div>
-        </div>
-    </div>
-</div>
     </div>
 
     <style>
@@ -535,12 +627,10 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
     </style>
-</div>
 </div>

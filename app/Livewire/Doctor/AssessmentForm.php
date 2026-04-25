@@ -8,7 +8,6 @@ use App\Models\EncounterAssessment;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 
-
 use App\Models\RehabEncounter;
 use App\Models\RehabQuestionnaireTemplate;
 use Illuminate\Support\Facades\DB;
@@ -159,6 +158,8 @@ class AssessmentForm extends Component
 
         if ($addedCount > 0) {
             $this->showAlert("Successfully added {$addedCount} diagnosis(es)", 'success');
+            // Dispatch scroll to results
+            $this->dispatchScrollToResults();
         } else {
             $this->showAlert('All selected diagnoses are already saved.', 'info');
         }
@@ -193,6 +194,8 @@ class AssessmentForm extends Component
         $this->resetForm();
         $this->loadDiagnoses();
         $this->showAlert('Custom diagnosis added successfully!', 'success');
+        // Dispatch scroll to results
+        $this->dispatchScrollToResults();
     }
 
     private function updateSingleDiagnosis()
@@ -228,6 +231,8 @@ class AssessmentForm extends Component
         $this->loadDiagnoses();
 
         $this->showAlert('Diagnosis updated successfully!', 'success');
+        // Dispatch scroll to results
+        $this->dispatchScrollToResults();
     }
 
     public function toggleTemplate($templateId)
@@ -278,6 +283,9 @@ class AssessmentForm extends Component
         $this->diagnosisType = $assessment->type;
         $this->diagnosisCertainty = $assessment->certainty;
         $this->diagnosisNotes = $assessment->notes;
+
+        // Dispatch scroll to form for editing
+        $this->dispatch('scroll-to-form');
     }
 
     public function deleteDiagnosis($id)
@@ -363,6 +371,8 @@ class AssessmentForm extends Component
             $this->resetForm();
             $this->loadDiagnoses();
             $this->showAlert('Assessment saved successfully!', 'success');
+            // Dispatch scroll to results
+            $this->dispatchScrollToResults();
         } else {
             // If nothing was saved but form is complete, just show message
             if (empty($this->selectedTemplateIds) && empty($this->customDiagnosis)) {
@@ -372,6 +382,7 @@ class AssessmentForm extends Component
             }
         }
     }
+
     public function imagingOrder()
     {
         return $this->redirect(route('doctor.imaging.order', $this->encounter), navigate: true);
@@ -381,10 +392,12 @@ class AssessmentForm extends Component
     {
         return $this->redirect(route('lab-orders.create', $this->encounter), navigate: true);
     }
+
     public function skipImaging()
     {
         return $this->redirect(route('doctor.medication.order', $this->encounter), navigate: true);
     }
+
     public function orderReferral()
     {
         return $this->redirect(route('referrals.create', $this->encounter), navigate: true);
@@ -480,10 +493,6 @@ class AssessmentForm extends Component
         $this->selectedTemplateIds = $this->ensureArray($value);
     }
 
-
-
-
-
     public function orderRehabilitation()
     {
         // Check if rehab encounter already exists for this encounter
@@ -494,9 +503,6 @@ class AssessmentForm extends Component
                 'Rehabilitation already ordered for this patient. Status: ' . $existingRehab->status_label,
                 'info'
             );
-
-            // Optional: Redirect to view the existing rehab encounter
-            // return $this->redirect(route('rehab.doctor.view', $existingRehab), navigate: true);
             return;
         }
 
@@ -572,10 +578,20 @@ class AssessmentForm extends Component
             $this->showAlert('❌ Failed to order rehabilitation.', 'error');
         }
     }
+
     public function orderCupping()
     {
-        return $this->redirect(route('doctor.cupping-order', ['encounter' => $this->encounter->id]),navigate: true);
+        return $this->redirect(route('doctor.cupping-order', ['encounter' => $this->encounter->id]), navigate: true);
     }
+
+    /**
+     * Dispatch event to scroll to results section
+     */
+    private function dispatchScrollToResults()
+    {
+        $this->dispatch('scroll-to-results');
+    }
+
     public function render()
     {
         return view('livewire.doctor.assessment-form', [
