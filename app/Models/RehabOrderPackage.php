@@ -17,7 +17,11 @@ class RehabOrderPackage extends Model
         'final_price',
         'notes',
     ];
-
+// In app/Models/RehabOrderPackage.php
+public function rehabPackage()
+{
+    return $this->belongsTo(RehabPackage::class, 'rehab_package_id');
+}
     public function order()
     {
         return $this->belongsTo(RehabOrder::class, 'rehab_order_id');

@@ -7,9 +7,9 @@
         x-transition:leave-end="opacity-0 translate-x-2" class="fixed top-4 right-4 z-50 max-w-md w-full">
         @if($showAlert)
         <div class="rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm">
-            <div class="flex items-center justify-between p-4 {{ 
-                    $alertType === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-600' : 
-                    ($alertType === 'error' ? 'bg-gradient-to-r from-red-500 to-rose-600' : 
+            <div class="flex items-center justify-between p-4 {{
+                    $alertType === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
+                    ($alertType === 'error' ? 'bg-gradient-to-r from-red-500 to-rose-600' :
                     'bg-gradient-to-r from-yellow-500 to-orange-600') }}">
                 <div class="flex items-center space-x-3">
                     <div class="h-8 w-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -155,25 +155,25 @@
                         </p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ $bedInfo['class'] }}</p>
                     </div>
-                   <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Length of Stay</p>
-    <p class="mt-1 font-semibold text-gray-900 dark:text-white">
-        @if($daysLeft)
-            @if($daysLeft['type'] === 'overdue')
-                <span class="text-orange-600 dark:text-orange-400">{{ $daysLeft['text'] }}</span>
-            @else
-                {{ $daysLeft['text'] }}
-            @endif
-        @else
-            Not started
-        @endif
-    </p>
-    @if($expectedEndDate && !$treatmentCompletedAt)
-        <p class="text-xs text-gray-500 dark:text-gray-400">
-            Expected: {{ $expectedEndDate->format('M d, Y') }}
-        </p>
-    @endif
-</div>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Length of Stay</p>
+                        <p class="mt-1 font-semibold text-gray-900 dark:text-white">
+                            @if($daysLeft)
+                            @if($daysLeft['type'] === 'overdue')
+                            <span class="text-orange-600 dark:text-orange-400">{{ $daysLeft['text'] }}</span>
+                            @else
+                            {{ $daysLeft['text'] }}
+                            @endif
+                            @else
+                            Not started
+                            @endif
+                        </p>
+                        @if($expectedEndDate && !$treatmentCompletedAt)
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Expected: {{ $expectedEndDate->format('M d, Y') }}
+                        </p>
+                        @endif
+                    </div>
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
                         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Rehab Staff</p>
                         <p class="mt-1 font-semibold text-gray-900 dark:text-white">{{ auth()->user()->name }}</p>
@@ -181,6 +181,188 @@
                 </div>
             </div>
         </div>
+        <!-- Order Package Details Card -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="p-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                </div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Ordered Treatment Packages</h2>
+            </div>
+            <button wire:click="togglePackageDetails"
+                class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1">
+                <span>{{ $showPackageDetails ? 'Hide' : 'Show' }} Details</span>
+                <svg class="w-4 h-4 transition-transform {{ $showPackageDetails ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    @if($showPackageDetails)
+    <div class="p-6">
+        @if(empty($packageDetails))
+            <div class="text-center py-8">
+                <svg class="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+                <p class="text-gray-500 dark:text-gray-400">No packages ordered for this patient.</p>
+            </div>
+        @else
+            <div class="space-y-6">
+                @foreach($packageDetails as $index => $package)
+                <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <!-- Package Header -->
+                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 px-5 py-3 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h3 class="font-semibold text-gray-900 dark:text-white">{{ $package['name'] }}</h3>
+                                <div class="flex flex-wrap items-center gap-3 mt-1">
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ count($package['items']) }} items</span>
+                                    @if($package['discount_value'] > 0)
+                                        <span class="text-xs text-green-600 dark:text-green-400">
+                                            Discount: {{ $package['discount_type'] === 'percentage' ? $package['discount_value'] . '%' : 'ETB ' . number_format($package['discount_value'], 2) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-500 dark:text-gray-400 line-through">ETB {{ number_format($package['base_price'], 2) }}</p>
+                                <p class="text-lg font-bold text-blue-600 dark:text-blue-400">ETB {{ number_format($package['final_price'], 2) }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Package Items -->
+                    <div class="p-5">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                                        <th class="text-left py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Item</th>
+                                        <th class="text-left py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Details</th>
+                                        <th class="text-right py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                    @foreach($package['items'] as $item)
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <td class="py-3">
+                                            <div class="flex items-center gap-2">
+                                                <div class="p-1.5 rounded-lg
+                                                    @if($item['type'] === 'standard_medication') bg-blue-100 dark:bg-blue-900/30
+                                                    @elseif($item['type'] === 'custom_medication') bg-purple-100 dark:bg-purple-900/30
+                                                    @elseif($item['type'] === 'service') bg-green-100 dark:bg-green-900/30
+                                                    @else bg-orange-100 dark:bg-orange-900/30 @endif">
+                                                    @if($item['type'] === 'standard_medication')
+                                                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                                        </svg>
+                                                    @elseif($item['type'] === 'custom_medication')
+                                                        <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                        </svg>
+                                                    @elseif($item['type'] === 'service')
+                                                        <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                        </svg>
+                                                    @else
+                                                        <svg class="w-4 h-4 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                                        </svg>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-gray-900 dark:text-white">{{ $item['name'] }}</div>
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400 capitalize">{{ str_replace('_', ' ', $item['type']) }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">
+                                            <div class="space-y-1 text-sm">
+                                                @if($item['dosage'])
+                                                    <div class="text-gray-600 dark:text-gray-400">Dosage: {{ $item['dosage'] }}</div>
+                                                @endif
+                                                @if($item['frequency'])
+                                                    <div class="text-gray-600 dark:text-gray-400">Frequency: {{ $item['frequency'] }}</div>
+                                                @endif
+                                                @if($item['duration'])
+                                                    <div class="text-gray-600 dark:text-gray-400">Duration: {{ $item['duration'] }}</div>
+                                                @endif
+                                                @if($item['quantity'])
+                                                    <div class="text-gray-600 dark:text-gray-400">Quantity: {{ $item['quantity'] }}</div>
+                                                @endif
+                                                @if($item['bed_duration_days'])
+                                                    <div class="text-gray-600 dark:text-gray-400">Bed Duration: {{ $item['bed_duration_days'] }} days</div>
+                                                @endif
+                                                @if($item['notes'])
+                                                    <div class="text-xs text-gray-500 dark:text-gray-500 italic">{{ $item['notes'] }}</div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="py-3 text-right">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">ETB {{ number_format($item['unit_price'], 2) }}</div>
+                                            @if($item['quantity'] && $item['quantity'] > 1)
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">x{{ $item['quantity'] }}</div>
+                                                <div class="text-xs font-medium text-gray-700 dark:text-gray-300">ETB {{ number_format($item['total_price'], 2) }}</div>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot>
+                                    <tr class="border-t border-gray-200 dark:border-gray-700">
+                                        <td colspan="2" class="pt-3 text-right font-medium text-gray-900 dark:text-white">Total:</td>
+                                        <td class="pt-3 text-right font-bold text-blue-600 dark:text-blue-400">ETB {{ number_format($package['final_price'], 2) }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        @if($package['notes'])
+                        <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                            <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                                <span class="font-medium">Note:</span> {{ $package['notes'] }}
+                            </p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+
+                <!-- Total Summary -->
+                @php
+                    $totalPackagePrice = array_sum(array_column($packageDetails, 'final_price'));
+                    $bedPrice = $bedInfo['bed'] !== 'Not assigned' ? ($encounter->bedSelections->first()->total_price ?? 0) : 0;
+                    $grandTotal = $totalPackagePrice + $bedPrice;
+                @endphp
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Package Cost</p>
+                            <p class="text-xl font-bold text-gray-900 dark:text-white">ETB {{ number_format($totalPackagePrice, 2) }}</p>
+                        </div>
+                        @if($bedPrice > 0)
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Bed Charge</p>
+                            <p class="text-xl font-bold text-gray-900 dark:text-white">ETB {{ number_format($bedPrice, 2) }}</p>
+                        </div>
+                        @endif
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Grand Total</p>
+                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">ETB {{ number_format($grandTotal, 2) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
+    @endif
+</div>
 
         <!-- Dynamic Treatment Entry Form -->
         @if($encounter->status === 'treatment_in_progress')
