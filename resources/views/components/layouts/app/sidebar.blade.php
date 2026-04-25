@@ -161,9 +161,9 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('rehab.cashier.queue')" wire:navigate>
                     Payment Queue
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="document-text" :href="route('cashier.rehab.payments')" wire:navigate>
+                {{-- <flux:sidebar.item icon="document-text" :href="route('cashier.rehab.payments')" wire:navigate>
                     Payment History
-                </flux:sidebar.item>
+                </flux:sidebar.item> --}}
                  <flux:sidebar.item icon="document-text" :href="route('rehab.finance.report')" wire:navigate>
                     Finance  History
                 </flux:sidebar.item>
