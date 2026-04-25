@@ -4,7 +4,6 @@ namespace App\Livewire\Rehab;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\RehabEncounter;
 use App\Models\RehabOrder;
 use App\Models\RehabPaymentInstallment;
 use App\Models\User;
@@ -18,8 +17,8 @@ class RehabFinanceReport extends Component
     // Filter properties
     public $dateFrom;
     public $dateTo;
-    public $paymentStatus = 'all'; // all, paid, partial, pending, overdue
-    public $paymentType = 'all'; // all, full, installment
+    public $paymentStatus = 'all';
+    public $paymentType = 'all';
     public $search = '';
     public $sortBy = 'created_at';
     public $sortDirection = 'desc';
@@ -28,6 +27,8 @@ class RehabFinanceReport extends Component
     // Summary totals
     public $totalOrders = 0;
     public $totalAmount = 0;
+    public $totalPackagesAmount = 0;
+    public $totalBedAmount = 0;
     public $totalPaid = 0;
     public $totalPending = 0;
     public $totalOverdue = 0;
@@ -38,6 +39,9 @@ class RehabFinanceReport extends Component
     public $statsByPaymentType = [];
     public $monthlyStats = [];
     public $installmentStats = [];
+
+    // Modal
+    public $selectedOrderForInstallments = null;
 
     // Export
     public $showFilters = false;
@@ -73,7 +77,13 @@ class RehabFinanceReport extends Component
         $orders = $query->get();
 
         $this->totalOrders = $orders->count();
-        $this->totalAmount = $orders->sum('total_amount');
+
+        // Calculate totals including bed costs
+        $this->totalPackagesAmount = $orders->sum('total_amount');
+        $this->totalBedAmount = $orders->sum(function($order) {
+            return $order->bedSelections->sum('total_price') ?? 0;
+        });
+        $this->totalAmount = $this->totalPackagesAmount + $this->totalBedAmount;
         $this->totalPaid = $orders->sum('paid_amount');
         $this->totalPending = $this->totalAmount - $this->totalPaid;
 
@@ -103,17 +113,23 @@ class RehabFinanceReport extends Component
         $this->statsByStatus = [
             'paid' => [
                 'count' => $orders->where('payment_status', 'paid')->count(),
-                'amount' => $orders->where('payment_status', 'paid')->sum('total_amount'),
+                'amount' => $orders->where('payment_status', 'paid')->sum(function($order) {
+                    return $order->total_amount + $order->bedSelections->sum('total_price');
+                }),
                 'paid' => $orders->where('payment_status', 'paid')->sum('paid_amount'),
             ],
             'partial' => [
                 'count' => $orders->where('payment_status', 'partial')->count(),
-                'amount' => $orders->where('payment_status', 'partial')->sum('total_amount'),
+                'amount' => $orders->where('payment_status', 'partial')->sum(function($order) {
+                    return $order->total_amount + $order->bedSelections->sum('total_price');
+                }),
                 'paid' => $orders->where('payment_status', 'partial')->sum('paid_amount'),
             ],
             'pending' => [
                 'count' => $orders->where('payment_status', 'pending')->count(),
-                'amount' => $orders->where('payment_status', 'pending')->sum('total_amount'),
+                'amount' => $orders->where('payment_status', 'pending')->sum(function($order) {
+                    return $order->total_amount + $order->bedSelections->sum('total_price');
+                }),
                 'paid' => $orders->where('payment_status', 'pending')->sum('paid_amount'),
             ],
             'overdue' => [
@@ -132,12 +148,16 @@ class RehabFinanceReport extends Component
         $this->statsByPaymentType = [
             'full' => [
                 'count' => $orders->where('payment_type', 'full')->count(),
-                'amount' => $orders->where('payment_type', 'full')->sum('total_amount'),
+                'amount' => $orders->where('payment_type', 'full')->sum(function($order) {
+                    return $order->total_amount + $order->bedSelections->sum('total_price');
+                }),
                 'paid' => $orders->where('payment_type', 'full')->sum('paid_amount'),
             ],
             'installment' => [
                 'count' => $orders->where('payment_type', 'installment')->count(),
-                'amount' => $orders->where('payment_type', 'installment')->sum('total_amount'),
+                'amount' => $orders->where('payment_type', 'installment')->sum(function($order) {
+                    return $order->total_amount + $order->bedSelections->sum('total_price');
+                }),
                 'paid' => $orders->where('payment_type', 'installment')->sum('paid_amount'),
             ],
         ];
@@ -156,12 +176,11 @@ class RehabFinanceReport extends Component
             'encounter.encounter.doctor',
             'paymentInstallments',
             'packages',
-            'bedSelections'
+            'bedSelections'  // Add this to load bed selections
         ])
         ->whereBetween('created_at', [$this->dateFrom . ' 00:00:00', $this->dateTo . ' 23:59:59'])
         ->when($this->paymentStatus !== 'all', function ($query) {
             if ($this->paymentStatus === 'overdue') {
-                // Overdue handled separately
                 return $query;
             }
             return $query->where('payment_status', $this->paymentStatus);
@@ -190,15 +209,21 @@ class RehabFinanceReport extends Component
             $monthStart = $date->copy()->startOfMonth();
             $monthEnd = $date->copy()->endOfMonth();
 
-            $orders = RehabOrder::whereBetween('created_at', [$monthStart, $monthEnd])->get();
+            $orders = RehabOrder::with('bedSelections')
+                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->get();
+
+            $totalAmount = $orders->sum(function($order) {
+                return $order->total_amount + $order->bedSelections->sum('total_price');
+            });
 
             $stats[] = [
                 'month' => $date->format('F Y'),
                 'total_orders' => $orders->count(),
-                'total_amount' => $orders->sum('total_amount'),
+                'total_amount' => $totalAmount,
                 'paid_amount' => $orders->sum('paid_amount'),
-                'collection_rate' => $orders->sum('total_amount') > 0
-                    ? round(($orders->sum('paid_amount') / $orders->sum('total_amount')) * 100, 2)
+                'collection_rate' => $totalAmount > 0
+                    ? round(($orders->sum('paid_amount') / $totalAmount) * 100, 2)
                     : 0,
             ];
         }
@@ -242,7 +267,7 @@ class RehabFinanceReport extends Component
                     ->isNotEmpty();
             })->pluck('id')->toArray();
 
-            $query = RehabOrder::whereIn('id', $orderIds);
+            $query = RehabOrder::with('bedSelections')->whereIn('id', $orderIds);
         }
 
         return $query->orderBy($this->sortBy, $this->sortDirection)
@@ -251,14 +276,24 @@ class RehabFinanceReport extends Component
 
     public function getPaymentProgress($order)
     {
-        if ($order->total_amount <= 0) return 0;
-        return round(($order->paid_amount / $order->total_amount) * 100, 1);
+        $totalWithBed = $order->total_amount + $order->bedSelections->sum('total_price');
+        if ($totalWithBed <= 0) return 0;
+        return round(($order->paid_amount / $totalWithBed) * 100, 1);
     }
 
-    public function getInstallmentProgress($installment)
+    public function viewInstallments($orderId)
     {
-        if ($installment->amount <= 0) return 0;
-        return round(($installment->paid_amount / $installment->amount) * 100, 1);
+        $this->selectedOrderForInstallments = RehabOrder::with([
+            'paymentInstallments',
+            'encounter.encounter.patient',
+            'bedSelections.bedClass',
+            'packages.orderItems'
+        ])->find($orderId);
+    }
+
+    public function closeInstallmentModal()
+    {
+        $this->selectedOrderForInstallments = null;
     }
 
     public function resetFilters()
@@ -286,6 +321,7 @@ class RehabFinanceReport extends Component
 
         return view('livewire.rehab.rehab-finance-report', [
             'orders' => $orders,
+            'selectedOrderForInstallments' => $this->selectedOrderForInstallments,
         ]);
     }
 }
