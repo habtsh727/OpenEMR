@@ -64,6 +64,7 @@ use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
 use App\Livewire\Cupping\DoctorCuppingOrder;
+use App\Livewire\Cupping\TreatmentCuppingQueue;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
 use App\Livewire\Doctor\RehabQueue;
@@ -389,4 +390,6 @@ Route::middleware(['auth'])->group(function () {
 Route::get('/cupping/doctor/order/{encounter}', DoctorCuppingOrder::class)->name('cupping.doctor.order');
 Route::get('/cupping/admin/packages', \App\Livewire\Cupping\AdminCuppingPackageManager::class)->name('cupping.admin.packages');
 Route::get('/cupping/cashier/queue', \App\Livewire\Cupping\CashierCuppingQueue::class)->name('cupping.cashier.queue');
+Route::get('/cupping/treatment/session/{session}', \App\Livewire\Cupping\TreatmentCuppingSession::class)->name('cupping.treatment.session');
+Route::get('cupping/treatment/queue', TreatmentCuppingQueue::class)->name('cupping.treatment.queue');
 require __DIR__ . '/auth.php';

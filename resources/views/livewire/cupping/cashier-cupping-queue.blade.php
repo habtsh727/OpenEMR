@@ -176,74 +176,100 @@
         </div>
 
         {{-- Session Selection Modal --}}
-        @if($showSessionSelectionModal && $selectedTherapy)
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+@if($showSessionSelectionModal && $selectedTherapy)
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+     x-data="{
+        selectAll: @entangle('selectAll'),
+        sessions: @entangle('sessionsList'),
+        updateSelectAll() {
+            let allSelected = this.sessions.every(s => s.selected);
+            if (this.selectAll !== allSelected) {
+                this.selectAll = allSelected;
+            }
+        },
+        toggleAll() {
+            this.sessions.forEach((session, index) => {
+                session.selected = this.selectAll;
+            });
+            $wire.set('sessionsList', this.sessions);
+            $wire.calculateSelectedTotal();
+        }
+     }"
+     x-init="updateSelectAll()"
+     x-on:select-all-changed.window="updateSelectAll()">
 
-                <div class="sticky top-0 bg-white dark:bg-gray-800 border-b px-6 py-4 flex justify-between items-center">
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Select Sessions to Pay</h3>
-                        <p class="text-sm text-gray-500">{{ $selectedTherapy->encounter->patient->name }}</p>
-                    </div>
-                    <button wire:click="closePaymentModal" class="text-gray-400 hover:text-gray-600">✕</button>
-                </div>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
 
-                <div class="p-6">
-                    {{-- Select All --}}
-                    <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                        <label class="flex items-center cursor-pointer">
-                            <input type="checkbox" wire:model="selectAll" class="w-4 h-4 text-blue-600 rounded">
-                            <span class="ml-2 font-medium">Select All Sessions</span>
-                        </label>
-                    </div>
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b px-6 py-4 flex justify-between items-center">
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Select Sessions to Pay</h3>
+                <p class="text-sm text-gray-500">{{ $selectedTherapy->encounter->patient->name }}</p>
+            </div>
+            <button wire:click="closePaymentModal" class="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
 
-                    {{-- Sessions List --}}
-                    <div class="space-y-3 max-h-96 overflow-y-auto mb-6">
-                        @foreach($sessionsList as $index => $session)
-                            <div class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30
-                                {{ $session['selected'] ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700' }}"
-                                wire:click="toggleSessionSelection({{ $index }})">
-                                <input type="checkbox" wire:model="sessionsList.{{ $index }}.selected" class="mt-1 mr-3">
-                                <div class="flex-1">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <span class="font-semibold">Session #{{ $session['session_number'] }}</span>
-                                            <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($session['session_date'])->format('l, F d, Y') }}</div>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="font-semibold">ETB {{ number_format($session['amount'], 2) }}</div>
-                                            @if($session['paid_amount'] > 0)
-                                                <div class="text-xs text-green-600">Paid: ETB {{ number_format($session['paid_amount'], 2) }}</div>
-                                                <div class="text-xs text-red-600">Due: ETB {{ number_format($session['remaining'], 2) }}</div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="text-xs text-blue-600 mt-1">Package: {{ $session['package_name'] }}</div>
+        <div class="p-6">
+            {{-- Select All --}}
+            <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                <label class="flex items-center cursor-pointer">
+                    <input type="checkbox"
+                        x-model="selectAll"
+                        @change="toggleAll()"
+                        class="w-4 h-4 text-blue-600 rounded">
+                    <span class="ml-2 font-medium">Select All Sessions</span>
+                </label>
+            </div>
+
+            {{-- Sessions List --}}
+            <div class="space-y-3 max-h-96 overflow-y-auto mb-6">
+                @foreach($sessionsList as $index => $session)
+                    <div class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30
+                        {{ $session['selected'] ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700' }}"
+                        wire:click="toggleSessionSelection({{ $index }})">
+                        <input type="checkbox"
+                            wire:model="sessionsList.{{ $index }}.selected"
+                            @change="$wire.calculateSelectedTotal(); $dispatch('select-all-changed')"
+                            class="mt-1 mr-3">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="font-semibold">Session #{{ $session['session_number'] }}</span>
+                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($session['session_date'])->format('l, F d, Y') }}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold">ETB {{ number_format($session['amount'], 2) }}</div>
+                                    @if($session['paid_amount'] > 0)
+                                        <div class="text-xs text-green-600">Paid: ETB {{ number_format($session['paid_amount'], 2) }}</div>
+                                        <div class="text-xs text-red-600">Due: ETB {{ number_format($session['remaining'], 2) }}</div>
+                                    @endif
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-
-                    {{-- Total Summary --}}
-                    <div class="border-t pt-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-lg font-semibold">Total Selected:</span>
-                            <span class="text-2xl font-bold text-blue-600">
-                                ETB {{ number_format(array_sum(array_column(array_filter($sessionsList, function($s) { return $s['selected']; }), 'remaining')), 2) }}
-                            </span>
-                        </div>
-
-                        <div class="flex gap-3">
-                            <button wire:click="closePaymentModal" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-                            <button wire:click="proceedToPayment" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold">
-                                Proceed to Payment
-                            </button>
+                            <div class="text-xs text-blue-600 mt-1">Package: {{ $session['package_name'] }}</div>
                         </div>
                     </div>
+                @endforeach
+            </div>
+
+            {{-- Total Summary --}}
+            <div class="border-t pt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-lg font-semibold">Total Selected:</span>
+                    <span class="text-2xl font-bold text-blue-600">
+                        ETB {{ number_format(array_sum(array_column(array_filter($sessionsList, function($s) { return $s['selected']; }), 'remaining')), 2) }}
+                    </span>
+                </div>
+
+                <div class="flex gap-3">
+                    <button wire:click="closePaymentModal" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button wire:click="proceedToPayment" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold">
+                        Proceed to Payment
+                    </button>
                 </div>
             </div>
         </div>
-        @endif
+    </div>
+</div>
+@endif
 
         {{-- Payment Modal --}}
         @if($showPaymentModal && $selectedTherapy)

@@ -54,7 +54,7 @@ class CashierCuppingQueue extends Component
     {
         $this->selectedTherapy = CuppingTherapy::with([
             'encounter.patient',
-            'sessions' => function($query) {
+            'sessions' => function ($query) {
                 $query->orderBy('session_number');
             },
             'sessions.therapyPackage',
@@ -120,7 +120,6 @@ class CashierCuppingQueue extends Component
 
         $this->calculateSelectedTotal();
     }
-
     public function calculateSelectedTotal()
     {
         $total = 0;
@@ -253,7 +252,6 @@ class CashierCuppingQueue extends Component
             $this->showAlertMessage($message, 'success');
             $this->closePaymentModal();
             $this->dispatch('refreshQueue');
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Payment failed: ' . $e->getMessage());
@@ -296,7 +294,7 @@ class CashierCuppingQueue extends Component
             'sessions.therapyPackage',
             'primaryPackage'
         ])
-        ->whereIn('status', ['ordered', 'partial_paid']);
+            ->whereIn('status', ['ordered', 'partial_paid']);
 
         if ($this->statusFilter === 'pending_payment') {
             $query->where('status', 'ordered');
@@ -305,10 +303,10 @@ class CashierCuppingQueue extends Component
         }
 
         if ($this->search) {
-            $query->whereHas('encounter.patient', function($q) {
+            $query->whereHas('encounter.patient', function ($q) {
                 $q->where('first_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('card_number', 'like', '%' . $this->search . '%');
+                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('card_number', 'like', '%' . $this->search . '%');
             });
         }
 

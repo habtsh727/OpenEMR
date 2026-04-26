@@ -45,10 +45,10 @@ class CuppingSession extends Model
     const TREATMENT_COMPLETED = 'completed';
 
     // Relationships
-    public function cuppingTherapy(): BelongsTo
-    {
-        return $this->belongsTo(CuppingTherapy::class);
-    }
+   public function cuppingTherapy()
+{
+    return $this->belongsTo(CuppingTherapy::class, 'cupping_therapy_id');
+}
 
     public function items(): HasMany
     {
@@ -114,6 +114,10 @@ class CuppingSession extends Model
         $this->cuppingTherapy->updateStatus();
     }
 
+    public function therapy()
+{
+    return $this->belongsTo(CuppingTherapy::class, 'cupping_therapy_id');
+}
     public function addToTreatmentQueue(): void
     {
         $lastPosition = CuppingQueue::where('queue_type', 'treatment')
@@ -146,6 +150,7 @@ class CuppingSession extends Model
 
         $this->cuppingTherapy->updateStatus();
     }
+
 
     public function completeTreatment(string $reportText, ?string $observations, ?string $recommendations, int $userId): void
     {

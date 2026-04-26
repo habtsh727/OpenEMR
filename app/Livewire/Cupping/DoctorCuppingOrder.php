@@ -5,9 +5,10 @@ namespace App\Livewire\Cupping;
 use Livewire\Component;
 use App\Models\CuppingPackage;
 use App\Models\CuppingTherapy;
+use App\Models\CuppingTherapyPackage;
+use App\Models\CuppingSession;
 use App\Models\Encounter;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DoctorCuppingOrder extends Component
 {
@@ -15,36 +16,27 @@ class DoctorCuppingOrder extends Component
     public $encounter;
     public $patient;
 
-    // Package selection
     public $packages = [];
     public $selectedPackageId = null;
     public $selectedPackage = null;
 
-    // Order details
     public $notes = '';
-
-    // Session schedule
     public $sessions = [];
     public $minDate;
     public $maxDate;
 
-    // Package preview
     public $showPackagePreview = false;
     public $packageTreatments = [];
     public $packageMaterials = [];
     public $packageTotalPrice = 0;
 
-    // Cart
     public $cart = [];
     public $cartTotal = 0;
     public $totalSessions = 0;
 
-    // Alert properties
     public $showAlert = false;
     public $alertMessage = '';
     public $alertType = 'success';
-
-    // Confirmation modal
     public $showConfirmModal = false;
     public $generatedTherapyId = null;
 
@@ -60,7 +52,6 @@ class DoctorCuppingOrder extends Component
         $this->encounterId = $encounter->id;
         $this->patient = $encounter->patient;
 
-        // Security check - only assigned doctor can order
         if ($encounter->doctor_id != auth()->id()) {
             abort(403, 'You are not authorized to order for this patient.');
         }
@@ -69,11 +60,9 @@ class DoctorCuppingOrder extends Component
             abort(400, 'Patient is not in consultation.');
         }
 
-        // Set min/max dates
-        $this->minDate = Carbon::today()->format('Y-m-d');
-        $this->maxDate = Carbon::today()->addMonths(3)->format('Y-m-d');
+        $this->minDate = now()->format('Y-m-d');
+        $this->maxDate = now()->addMonths(3)->format('Y-m-d');
 
-        // Load active packages
         $this->loadPackages();
     }
 
@@ -93,8 +82,6 @@ class DoctorCuppingOrder extends Component
 
         $this->loadPackagePreview();
         $this->showPackagePreview = true;
-
-        // Initialize sessions with 1 session by default
         $this->sessions = [];
         $this->addSession();
     }
@@ -103,7 +90,7 @@ class DoctorCuppingOrder extends Component
     {
         if (!$this->selectedPackage) return;
 
-        $this->packageTreatments = $this->selectedPackage->treatments->map(function ($treatment) {
+        $this->packageTreatments = $this->selectedPackage->treatments->map(function($treatment) {
             return [
                 'type_name' => $treatment->cuppingType->name ?? 'N/A',
                 'location_name' => $treatment->cuppingLocation->name ?? 'N/A',
@@ -111,7 +98,7 @@ class DoctorCuppingOrder extends Component
             ];
         });
 
-        $this->packageMaterials = $this->selectedPackage->materials->map(function ($material) {
+        $this->packageMaterials = $this->selectedPackage->materials->map(function($material) {
             return [
                 'item_name' => $material->pharmacyItem->name ?? 'N/A',
                 'quantity' => $material->quantity_required,
@@ -126,7 +113,7 @@ class DoctorCuppingOrder extends Component
     public function addSession()
     {
         $sessionNumber = count($this->sessions) + 1;
-        $defaultDate = Carbon::today()->addDays($sessionNumber - 1)->format('Y-m-d');
+        $defaultDate = now()->addDays($sessionNumber - 1)->format('Y-m-d');
 
         $this->sessions[] = [
             'id' => uniqid(),
@@ -140,7 +127,6 @@ class DoctorCuppingOrder extends Component
         unset($this->sessions[$index]);
         $this->sessions = array_values($this->sessions);
 
-        // Renumber sessions
         foreach ($this->sessions as $i => $session) {
             $this->sessions[$i]['session_number'] = $i + 1;
         }
@@ -155,10 +141,8 @@ class DoctorCuppingOrder extends Component
             return;
         }
 
-        // Calculate total amount
         $totalAmount = $this->selectedPackage->total_price * count($this->sessions);
 
-        // Add to cart with session dates
         $this->cart[] = [
             'package_id' => $this->selectedPackage->id,
             'package_name' => $this->selectedPackage->name,
@@ -166,27 +150,25 @@ class DoctorCuppingOrder extends Component
             'sessions' => $this->sessions,
             'session_count' => count($this->sessions),
             'total_amount' => $totalAmount,
-            'treatments' => $this->packageTreatments,
-            'materials' => $this->packageMaterials,
+            'treatments' => $this->packageTreatments->toArray(),
+            'materials' => $this->packageMaterials->toArray(),
         ];
 
-        // Reset selection
         $this->selectedPackageId = null;
         $this->selectedPackage = null;
         $this->showPackagePreview = false;
         $this->sessions = [];
 
         $this->calculateCartTotal();
-        $this->showAlertMessage('Package added to order with ' . count($this->sessions) . ' session(s)!', 'success');
+        $this->showAlertMessage('Package added to order!', 'success');
     }
 
     public function calculateCartTotal()
     {
         $this->cartTotal = array_sum(array_column($this->cart, 'total_amount'));
-        $this->totalSessions = array_sum(array_map(function ($item) {
-            return count($item['sessions']);
-        }, $this->cart));
+        $this->totalSessions = array_sum(array_column($this->cart, 'session_count'));
     }
+
     public function removeFromCart($index)
     {
         unset($this->cart[$index]);
@@ -218,14 +200,11 @@ class DoctorCuppingOrder extends Component
         DB::beginTransaction();
 
         try {
-            // Calculate total amount
             $totalAmount = $this->cartTotal;
 
-            // Get all unique package IDs from cart
             $packageIds = array_unique(array_column($this->cart, 'package_id'));
             $primaryPackageId = count($packageIds) === 1 ? $packageIds[0] : null;
 
-            // Create cupping therapy
             $therapy = CuppingTherapy::create([
                 'encounter_id' => $this->encounterId,
                 'doctor_id' => auth()->id(),
@@ -235,28 +214,52 @@ class DoctorCuppingOrder extends Component
                 'final_amount' => $totalAmount,
                 'total_sessions' => $this->totalSessions,
                 'status' => 'ordered',
-                'primary_package_id' => $primaryPackageId, // Now properly set
+                'primary_package_id' => $primaryPackageId,
             ]);
 
             $globalSessionCounter = 1;
 
-            // Create therapy packages and sessions
             foreach ($this->cart as $cartItem) {
+                $originalPackage = CuppingPackage::with(['treatments.cuppingType', 'treatments.cuppingLocation', 'materials.pharmacyItem'])
+                    ->find($cartItem['package_id']);
+
+                if (!$originalPackage) {
+                    throw new \Exception("Package not found: {$cartItem['package_id']}");
+                }
+
+                $treatmentSnapshot = [];
+                foreach ($originalPackage->treatments as $treatment) {
+                    $treatmentSnapshot[] = [
+                        'type_name' => $treatment->cuppingType->name ?? 'Unknown',
+                        'location_name' => $treatment->cuppingLocation->name ?? 'Unknown',
+                        'price' => $treatment->treatment_price,
+                    ];
+                }
+
+                $materialsSnapshot = [];
+                foreach ($originalPackage->materials as $material) {
+                    $materialsSnapshot[] = [
+                        'item_name' => $material->pharmacyItem->name ?? 'Unknown',
+                        'quantity' => $material->quantity_required,
+                        'pharmacy_item_id' => $material->pharmacy_item_id,
+                        'price' => $material->unit_price_snapshot,
+                        'total' => $material->total_material_cost,
+                    ];
+                }
+
                 foreach ($cartItem['sessions'] as $sessionData) {
-                    // Create therapy package record
-                    $therapyPackage = \App\Models\CuppingTherapyPackage::create([
+                    $therapyPackage = CuppingTherapyPackage::create([
                         'cupping_therapy_id' => $therapy->id,
                         'cupping_package_id' => $cartItem['package_id'],
                         'session_number' => $globalSessionCounter,
                         'package_name_snapshot' => $cartItem['package_name'],
                         'package_price_snapshot' => $cartItem['package_price'],
-                        'treatment_snapshot' => json_encode($cartItem['treatments']),
-                        'materials_snapshot' => json_encode($cartItem['materials']),
+                        'treatment_snapshot' => json_encode($treatmentSnapshot),
+                        'materials_snapshot' => json_encode($materialsSnapshot),
                         'status' => 'pending',
                     ]);
 
-                    // Create session record with doctor-specified date
-                    \App\Models\CuppingSession::create([
+                    $session = CuppingSession::create([
                         'cupping_therapy_id' => $therapy->id,
                         'cupping_therapy_package_id' => $therapyPackage->id,
                         'session_number' => $globalSessionCounter,
@@ -267,6 +270,12 @@ class DoctorCuppingOrder extends Component
                         'treatment_status' => 'pending',
                         'notes' => "Session #{$globalSessionCounter} - {$cartItem['package_name']} - Scheduled for {$sessionData['session_date']}",
                     ]);
+
+                    // Permanent fix - ensure the ID is saved
+                    if (!$session->cupping_therapy_package_id) {
+                        $session->cupping_therapy_package_id = $therapyPackage->id;
+                        $session->save();
+                    }
 
                     $globalSessionCounter++;
                 }
@@ -282,11 +291,10 @@ class DoctorCuppingOrder extends Component
                 'success'
             );
 
-            // Reset form
             $this->reset(['cart', 'cartTotal', 'notes', 'selectedPackageId', 'showPackagePreview', 'totalSessions']);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Failed to create cupping order: ' . $e->getMessage());
             $this->showAlertMessage('Error creating order: ' . $e->getMessage(), 'error');
             $this->showConfirmModal = false;
         }
