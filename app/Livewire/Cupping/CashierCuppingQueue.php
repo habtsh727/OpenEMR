@@ -18,22 +18,19 @@ class CashierCuppingQueue extends Component
     public $statusFilter = 'all';
     public $perPage = 10;
 
-    // Payment modal
     public $showPaymentModal = false;
     public $selectedTherapy = null;
     public $unpaidSessions = [];
-    public $selectedSessions = []; // Selected sessions to pay
+    public $selectedSessions = [];
     public $paymentMethod = 'cash';
     public $paymentAmount = 0;
     public $changeAmount = 0;
     public $transactionId = '';
 
-    // Installment/Session selection
     public $showSessionSelectionModal = false;
     public $sessionsList = [];
     public $selectAll = false;
 
-    // Alert
     public $showAlert = false;
     public $alertMessage = '';
     public $alertType = 'success';
@@ -66,7 +63,6 @@ class CashierCuppingQueue extends Component
             return;
         }
 
-        // Get unpaid sessions
         $this->unpaidSessions = $this->selectedTherapy->sessions
             ->where('payment_status', '!=', 'paid')
             ->values();
@@ -76,7 +72,6 @@ class CashierCuppingQueue extends Component
             return;
         }
 
-        // Initialize session selection
         $this->sessionsList = [];
         foreach ($this->unpaidSessions as $session) {
             $remainingAmount = $session->session_amount - $session->paid_amount;
@@ -108,7 +103,6 @@ class CashierCuppingQueue extends Component
     {
         $this->sessionsList[$index]['selected'] = !$this->sessionsList[$index]['selected'];
 
-        // Check if all are selected
         $allSelected = true;
         foreach ($this->sessionsList as $session) {
             if (!$session['selected']) {
@@ -117,9 +111,9 @@ class CashierCuppingQueue extends Component
             }
         }
         $this->selectAll = $allSelected;
-
         $this->calculateSelectedTotal();
     }
+
     public function calculateSelectedTotal()
     {
         $total = 0;
@@ -170,7 +164,6 @@ class CashierCuppingQueue extends Component
             return;
         }
 
-        // Calculate total due for selected sessions
         $totalDue = 0;
         $selectedSessionsData = [];
 
@@ -192,7 +185,6 @@ class CashierCuppingQueue extends Component
             $amountPaid = 0;
             $remainingAmount = $this->paymentAmount;
 
-            // Apply payment to selected sessions
             foreach ($selectedSessionsData as $sessionData) {
                 if ($remainingAmount <= 0) break;
 
@@ -205,14 +197,13 @@ class CashierCuppingQueue extends Component
                 $newPaidAmount = $session->paid_amount + $paymentForSession;
                 $isFullyPaid = $newPaidAmount >= $session->session_amount;
 
-                // Update session payment
+                // ONLY update this session's payment status
                 $session->update([
                     'paid_amount' => $newPaidAmount,
                     'payment_status' => $isFullyPaid ? 'paid' : 'partial',
                     'paid_at' => $isFullyPaid ? now() : null,
                 ]);
 
-                // Create payment record
                 CuppingPayment::create([
                     'cupping_session_id' => $session->id,
                     'cupping_therapy_id' => $this->selectedTherapy->id,
@@ -227,31 +218,25 @@ class CashierCuppingQueue extends Component
                 $remainingAmount -= $paymentForSession;
             }
 
-            // Update therapy payment status
+            // DO NOT update therapy status here - leave it as 'partial_paid'
+            // Only mark as fully_paid if ALL sessions are paid
             $totalPaid = $this->selectedTherapy->sessions->sum('paid_amount');
             $totalAmount = $this->selectedTherapy->sessions->sum('session_amount');
 
-            $therapyStatus = 'ordered';
+            // Only change therapy status if ALL sessions are fully paid
             if ($totalPaid >= $totalAmount) {
-                $therapyStatus = 'fully_paid';
+                $this->selectedTherapy->update(['status' => 'fully_paid']);
             } elseif ($totalPaid > 0) {
-                $therapyStatus = 'partial_paid';
+                $this->selectedTherapy->update(['status' => 'partial_paid']);
             }
-
-            $this->selectedTherapy->update([
-                'status' => $therapyStatus,
-                'final_amount' => $totalAmount,
-            ]);
 
             DB::commit();
 
-            $message = $totalPaid >= $totalAmount ?
-                "✅ Full payment completed! All sessions are paid." :
-                "✅ Payment processed successfully! Amount: ETB " . number_format($amountPaid, 2);
-
+            $message = "✅ Payment processed successfully! Amount: ETB " . number_format($amountPaid, 2);
             $this->showAlertMessage($message, 'success');
             $this->closePaymentModal();
             $this->dispatch('refreshQueue');
+
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Payment failed: ' . $e->getMessage());
@@ -288,19 +273,16 @@ class CashierCuppingQueue extends Component
 
     public function render()
     {
+        // Show therapies that have sessions needing payment
         $query = CuppingTherapy::with([
             'encounter.patient',
             'sessions',
             'sessions.therapyPackage',
             'primaryPackage'
         ])
-            ->whereIn('status', ['ordered', 'partial_paid']);
-
-        if ($this->statusFilter === 'pending_payment') {
-            $query->where('status', 'ordered');
-        } elseif ($this->statusFilter === 'partial_paid') {
-            $query->where('status', 'partial_paid');
-        }
+        ->whereHas('sessions', function ($q) {
+            $q->where('payment_status', '!=', 'paid');
+        });
 
         if ($this->search) {
             $query->whereHas('encounter.patient', function ($q) {
@@ -312,13 +294,11 @@ class CashierCuppingQueue extends Component
 
         $therapies = $query->orderBy('created_at', 'asc')->paginate($this->perPage);
 
-        // Calculate pending amounts
         foreach ($therapies as $therapy) {
             $totalAmount = $therapy->sessions->sum('session_amount');
             $totalPaid = $therapy->sessions->sum('paid_amount');
             $therapy->pending_amount = $totalAmount - $totalPaid;
 
-            // Group packages for display
             $therapyPackages = CuppingTherapyPackage::where('cupping_therapy_id', $therapy->id)->get();
             $therapy->groupedPackages = $therapyPackages->groupBy('cupping_package_id');
         }

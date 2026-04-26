@@ -59,10 +59,8 @@ class TreatmentCuppingQueue extends Component
             'cuppingTherapy.encounter.patient',
             'therapyPackage'
         ])
-        ->whereHas('cuppingTherapy', function ($q) {
-            $q->whereIn('status', ['partial_paid', 'fully_paid', 'in_progress']);
-        })
-        ->where('payment_status', 'paid');
+            ->where('payment_status', 'paid')
+            ->where('treatment_status', '!=', 'completed');
 
         if ($this->statusFilter === 'pending') {
             $query->where('treatment_status', 'pending');
