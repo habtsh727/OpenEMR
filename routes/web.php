@@ -392,4 +392,5 @@ Route::get('/cupping/admin/packages', \App\Livewire\Cupping\AdminCuppingPackageM
 Route::get('/cupping/cashier/queue', \App\Livewire\Cupping\CashierCuppingQueue::class)->name('cupping.cashier.queue');
 Route::get('/cupping/treatment/session/{session}', \App\Livewire\Cupping\TreatmentCuppingSession::class)->name('cupping.treatment.session');
 Route::get('cupping/treatment/queue', TreatmentCuppingQueue::class)->name('cupping.treatment.queue');
+Route::get('/cupping/results', \App\Livewire\Cupping\CuppingResult::class)->name('cupping.results');
 require __DIR__ . '/auth.php';
