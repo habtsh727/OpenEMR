@@ -90,7 +90,7 @@ class DoctorCuppingOrder extends Component
     {
         if (!$this->selectedPackage) return;
 
-        $this->packageTreatments = $this->selectedPackage->treatments->map(function($treatment) {
+        $this->packageTreatments = $this->selectedPackage->treatments->map(function ($treatment) {
             return [
                 'type_name' => $treatment->cuppingType->name ?? 'N/A',
                 'location_name' => $treatment->cuppingLocation->name ?? 'N/A',
@@ -98,7 +98,7 @@ class DoctorCuppingOrder extends Component
             ];
         });
 
-        $this->packageMaterials = $this->selectedPackage->materials->map(function($material) {
+        $this->packageMaterials = $this->selectedPackage->materials->map(function ($material) {
             return [
                 'item_name' => $material->pharmacyItem->name ?? 'N/A',
                 'quantity' => $material->quantity_required,
@@ -292,7 +292,6 @@ class DoctorCuppingOrder extends Component
             );
 
             $this->reset(['cart', 'cartTotal', 'notes', 'selectedPackageId', 'showPackagePreview', 'totalSessions']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->showAlertMessage('Error creating order: ' . $e->getMessage(), 'error');

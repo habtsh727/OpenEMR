@@ -54,57 +54,57 @@ class TreatmentCuppingSession extends Component
         $this->loadExistingReport();
     }
 
-   public function loadMaterials()
-{
-    if (!$this->therapyPackage) {
-        $this->materials = [];
-        $this->totalMaterialsCount = 0;
-        $this->allMaterialsCollected = true;
-        return;
-    }
-
-    $materialsSnapshot = json_decode($this->therapyPackage->materials_snapshot ?? '[]', true);
-
-    // Get consumed materials from session
-    $consumedMaterials = [];
-    if ($this->session->materials_consumed) {
-        $consumedMaterials = json_decode($this->session->materials_consumed, true);
-    }
-
-    $consumedMap = [];
-    foreach ($consumedMaterials as $consumed) {
-        $consumedMap[$consumed['item_name']] = $consumed;
-    }
-
-    foreach ($materialsSnapshot as $index => $material) {
-        $pharmacyItemId = $material['pharmacy_item_id'] ?? null;
-
-        $availableStock = 0;
-        if ($pharmacyItemId) {
-            $availableStock = PharmacyBatch::where('medicine_id', $pharmacyItemId)
-                ->where('quantity', '>', 0)
-                ->where('expiry_date', '>', now())
-                ->sum('quantity');
+    public function loadMaterials()
+    {
+        if (!$this->therapyPackage) {
+            $this->materials = [];
+            $this->totalMaterialsCount = 0;
+            $this->allMaterialsCollected = true;
+            return;
         }
 
-        $isCollected = isset($consumedMap[$material['item_name']]) &&
-                       ($consumedMap[$material['item_name']]['collected_quantity'] ?? 0) >= $material['quantity'];
+        $materialsSnapshot = json_decode($this->therapyPackage->materials_snapshot ?? '[]', true);
 
-        $this->materials[] = [
-            'id' => $index,
-            'item_name' => $material['item_name'],
-            'quantity' => $material['quantity'],
-            'pharmacy_item_id' => $pharmacyItemId,
-            'available_stock' => $availableStock,
-            'is_collected' => $isCollected,
-            'can_collect' => $availableStock >= $material['quantity'],
-            'collected_quantity' => $isCollected ? ($consumedMap[$material['item_name']]['collected_quantity'] ?? $material['quantity']) : 0,
-        ];
+        // Get consumed materials from session
+        $consumedMaterials = [];
+        if ($this->session->materials_consumed) {
+            $consumedMaterials = json_decode($this->session->materials_consumed, true);
+        }
+
+        $consumedMap = [];
+        foreach ($consumedMaterials as $consumed) {
+            $consumedMap[$consumed['item_name']] = $consumed;
+        }
+
+        foreach ($materialsSnapshot as $index => $material) {
+            $pharmacyItemId = $material['pharmacy_item_id'] ?? null;
+
+            $availableStock = 0;
+            if ($pharmacyItemId) {
+                $availableStock = PharmacyBatch::where('medicine_id', $pharmacyItemId)
+                    ->where('quantity', '>', 0)
+                    ->where('expiry_date', '>', now())
+                    ->sum('quantity');
+            }
+
+            $isCollected = isset($consumedMap[$material['item_name']]) &&
+                ($consumedMap[$material['item_name']]['collected_quantity'] ?? 0) >= $material['quantity'];
+
+            $this->materials[] = [
+                'id' => $index,
+                'item_name' => $material['item_name'],
+                'quantity' => $material['quantity'],
+                'pharmacy_item_id' => $pharmacyItemId,
+                'available_stock' => $availableStock,
+                'is_collected' => $isCollected,
+                'can_collect' => $availableStock >= $material['quantity'],
+                'collected_quantity' => $isCollected ? ($consumedMap[$material['item_name']]['collected_quantity'] ?? $material['quantity']) : 0,
+            ];
+        }
+
+        $this->totalMaterialsCount = count($this->materials);
+        $this->updateMaterialsCollectedCount();
     }
-
-    $this->totalMaterialsCount = count($this->materials);
-    $this->updateMaterialsCollectedCount();
-}
     public function loadExistingReport()
     {
         $report = CuppingReport::where('cupping_session_id', $this->session->id)->first();
@@ -127,44 +127,43 @@ class TreatmentCuppingSession extends Component
     }
 
     public function toggleMaterialCollected($index)
-{
-    $material = $this->materials[$index];
+    {
+        $material = $this->materials[$index];
 
-    if (!$material['can_collect'] && !$material['is_collected']) {
-        $this->showAlertMessage(
-            "Insufficient stock for {$material['item_name']}. Available: {$material['available_stock']}, Required: {$material['quantity']}",
-            'error'
-        );
-        return;
-    }
-
-    DB::beginTransaction();
-
-    try {
-        if (!$material['is_collected']) {
-            // Deduct from stock
-            $this->deductMaterialStock($material);
-            $this->materials[$index]['is_collected'] = true;
-            $this->materials[$index]['collected_quantity'] = $material['quantity'];
-
-            // Immediately update the session materials_consumed
-            $this->updateSessionMaterialsConsumed();
-
-            $this->showAlertMessage("{$material['item_name']} collected and stock deducted", 'success');
-        } else {
-            $this->showAlertMessage("Cannot undo material collection", 'warning');
-            DB::rollBack();
+        if (!$material['can_collect'] && !$material['is_collected']) {
+            $this->showAlertMessage(
+                "Insufficient stock for {$material['item_name']}. Available: {$material['available_stock']}, Required: {$material['quantity']}",
+                'error'
+            );
             return;
         }
 
-        DB::commit();
-        $this->updateMaterialsCollectedCount();
+        DB::beginTransaction();
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        $this->showAlertMessage('Error processing material: ' . $e->getMessage(), 'error');
+        try {
+            if (!$material['is_collected']) {
+                // Deduct from stock
+                $this->deductMaterialStock($material);
+                $this->materials[$index]['is_collected'] = true;
+                $this->materials[$index]['collected_quantity'] = $material['quantity'];
+
+                // Immediately update the session materials_consumed
+                $this->updateSessionMaterialsConsumed();
+
+                $this->showAlertMessage("{$material['item_name']} collected and stock deducted", 'success');
+            } else {
+                $this->showAlertMessage("Cannot undo material collection", 'warning');
+                DB::rollBack();
+                return;
+            }
+
+            DB::commit();
+            $this->updateMaterialsCollectedCount();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->showAlertMessage('Error processing material: ' . $e->getMessage(), 'error');
+        }
     }
-}
 
     private function deductMaterialStock($material)
     {
@@ -200,7 +199,7 @@ class TreatmentCuppingSession extends Component
                 'transaction_type' => 'dispense',
                 'quantity' => -$deductQuantity,
                 'unit_price' => $batch->selling_price,
-                'total_price' => -($deductQuantity * $batch->selling_price),
+                'total_price' => - ($deductQuantity * $batch->selling_price),
                 'reference_type' => 'CuppingSession',
                 'reference_id' => $this->session->id,
                 'notes' => "Cupping session #{$this->session->session_number} - {$material['item_name']} consumed",
@@ -209,28 +208,28 @@ class TreatmentCuppingSession extends Component
         }
     }
 
-   private function updateSessionMaterialsConsumed()
-{
-    $consumedMaterials = [];
-    foreach ($this->materials as $material) {
-        if ($material['is_collected']) {
-            $consumedMaterials[] = [
-                'item_name' => $material['item_name'],
-                'quantity' => $material['quantity'],
-                'collected_quantity' => $material['collected_quantity'],
-                'collected_at' => now()->toDateTimeString(),
-            ];
+    private function updateSessionMaterialsConsumed()
+    {
+        $consumedMaterials = [];
+        foreach ($this->materials as $material) {
+            if ($material['is_collected']) {
+                $consumedMaterials[] = [
+                    'item_name' => $material['item_name'],
+                    'quantity' => $material['quantity'],
+                    'collected_quantity' => $material['collected_quantity'],
+                    'collected_at' => now()->toDateTimeString(),
+                ];
+            }
         }
+
+        // Force update with a direct database call to ensure it saves
+        CuppingSession::where('id', $this->session->id)->update([
+            'materials_consumed' => json_encode($consumedMaterials),
+        ]);
+
+        // Also update the local session object
+        $this->session->materials_consumed = json_encode($consumedMaterials);
     }
-
-    // Force update with a direct database call to ensure it saves
-    CuppingSession::where('id', $this->session->id)->update([
-        'materials_consumed' => json_encode($consumedMaterials),
-    ]);
-
-    // Also update the local session object
-    $this->session->materials_consumed = json_encode($consumedMaterials);
-}
 
     private function markExistingMaterialsAsCollected($consumedMaterials)
     {
@@ -272,7 +271,6 @@ class TreatmentCuppingSession extends Component
             }
 
             $this->showAlertMessage('Treatment started successfully!', 'success');
-
         } catch (\Exception $e) {
             $this->showAlertMessage('Error starting treatment: ' . $e->getMessage(), 'error');
         }
@@ -329,7 +327,6 @@ class TreatmentCuppingSession extends Component
             $this->showAlertMessage('Treatment completed successfully!', 'success');
 
             $this->dispatch('redirect-to-queue');
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->showAlertMessage('Error completing treatment: ' . $e->getMessage(), 'error');

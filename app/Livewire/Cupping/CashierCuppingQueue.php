@@ -236,7 +236,6 @@ class CashierCuppingQueue extends Component
             $this->showAlertMessage($message, 'success');
             $this->closePaymentModal();
             $this->dispatch('refreshQueue');
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Payment failed: ' . $e->getMessage());
@@ -280,9 +279,9 @@ class CashierCuppingQueue extends Component
             'sessions.therapyPackage',
             'primaryPackage'
         ])
-        ->whereHas('sessions', function ($q) {
-            $q->where('payment_status', '!=', 'paid');
-        });
+            ->whereHas('sessions', function ($q) {
+                $q->where('payment_status', '!=', 'paid');
+            });
 
         if ($this->search) {
             $query->whereHas('encounter.patient', function ($q) {
