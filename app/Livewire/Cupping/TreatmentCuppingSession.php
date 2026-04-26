@@ -54,52 +54,57 @@ class TreatmentCuppingSession extends Component
         $this->loadExistingReport();
     }
 
-    public function loadMaterials()
-    {
-        if (!$this->therapyPackage) {
-            $this->materials = [];
-            $this->totalMaterialsCount = 0;
-            $this->allMaterialsCollected = true;
-            return;
-        }
-
-        $materialsSnapshot = json_decode($this->therapyPackage->materials_snapshot ?? '[]', true);
-        $consumedMaterials = json_decode($this->session->materials_consumed ?? '[]', true);
-        $consumedMap = [];
-
-        foreach ($consumedMaterials as $consumed) {
-            $consumedMap[$consumed['item_name']] = $consumed;
-        }
-
-        foreach ($materialsSnapshot as $index => $material) {
-            $pharmacyItemId = $material['pharmacy_item_id'] ?? null;
-
-            $availableStock = 0;
-            if ($pharmacyItemId) {
-                $availableStock = PharmacyBatch::where('medicine_id', $pharmacyItemId)
-                    ->where('quantity', '>', 0)
-                    ->where('expiry_date', '>', now())
-                    ->sum('quantity');
-            }
-
-            $isCollected = isset($consumedMap[$material['item_name']]);
-
-            $this->materials[] = [
-                'id' => $index,
-                'item_name' => $material['item_name'],
-                'quantity' => $material['quantity'],
-                'pharmacy_item_id' => $pharmacyItemId,
-                'available_stock' => $availableStock,
-                'is_collected' => $isCollected,
-                'can_collect' => $availableStock >= $material['quantity'],
-                'collected_quantity' => $isCollected ? ($consumedMap[$material['item_name']]['collected_quantity'] ?? $material['quantity']) : 0,
-            ];
-        }
-
-        $this->totalMaterialsCount = count($this->materials);
-        $this->updateMaterialsCollectedCount();
+   public function loadMaterials()
+{
+    if (!$this->therapyPackage) {
+        $this->materials = [];
+        $this->totalMaterialsCount = 0;
+        $this->allMaterialsCollected = true;
+        return;
     }
 
+    $materialsSnapshot = json_decode($this->therapyPackage->materials_snapshot ?? '[]', true);
+
+    // Get consumed materials from session
+    $consumedMaterials = [];
+    if ($this->session->materials_consumed) {
+        $consumedMaterials = json_decode($this->session->materials_consumed, true);
+    }
+
+    $consumedMap = [];
+    foreach ($consumedMaterials as $consumed) {
+        $consumedMap[$consumed['item_name']] = $consumed;
+    }
+
+    foreach ($materialsSnapshot as $index => $material) {
+        $pharmacyItemId = $material['pharmacy_item_id'] ?? null;
+
+        $availableStock = 0;
+        if ($pharmacyItemId) {
+            $availableStock = PharmacyBatch::where('medicine_id', $pharmacyItemId)
+                ->where('quantity', '>', 0)
+                ->where('expiry_date', '>', now())
+                ->sum('quantity');
+        }
+
+        $isCollected = isset($consumedMap[$material['item_name']]) &&
+                       ($consumedMap[$material['item_name']]['collected_quantity'] ?? 0) >= $material['quantity'];
+
+        $this->materials[] = [
+            'id' => $index,
+            'item_name' => $material['item_name'],
+            'quantity' => $material['quantity'],
+            'pharmacy_item_id' => $pharmacyItemId,
+            'available_stock' => $availableStock,
+            'is_collected' => $isCollected,
+            'can_collect' => $availableStock >= $material['quantity'],
+            'collected_quantity' => $isCollected ? ($consumedMap[$material['item_name']]['collected_quantity'] ?? $material['quantity']) : 0,
+        ];
+    }
+
+    $this->totalMaterialsCount = count($this->materials);
+    $this->updateMaterialsCollectedCount();
+}
     public function loadExistingReport()
     {
         $report = CuppingReport::where('cupping_session_id', $this->session->id)->first();
@@ -122,41 +127,44 @@ class TreatmentCuppingSession extends Component
     }
 
     public function toggleMaterialCollected($index)
-    {
-        $material = $this->materials[$index];
+{
+    $material = $this->materials[$index];
 
-        if (!$material['can_collect'] && !$material['is_collected']) {
-            $this->showAlertMessage(
-                "Insufficient stock for {$material['item_name']}. Available: {$material['available_stock']}, Required: {$material['quantity']}",
-                'error'
-            );
+    if (!$material['can_collect'] && !$material['is_collected']) {
+        $this->showAlertMessage(
+            "Insufficient stock for {$material['item_name']}. Available: {$material['available_stock']}, Required: {$material['quantity']}",
+            'error'
+        );
+        return;
+    }
+
+    DB::beginTransaction();
+
+    try {
+        if (!$material['is_collected']) {
+            // Deduct from stock
+            $this->deductMaterialStock($material);
+            $this->materials[$index]['is_collected'] = true;
+            $this->materials[$index]['collected_quantity'] = $material['quantity'];
+
+            // Immediately update the session materials_consumed
+            $this->updateSessionMaterialsConsumed();
+
+            $this->showAlertMessage("{$material['item_name']} collected and stock deducted", 'success');
+        } else {
+            $this->showAlertMessage("Cannot undo material collection", 'warning');
+            DB::rollBack();
             return;
         }
 
-        DB::beginTransaction();
+        DB::commit();
+        $this->updateMaterialsCollectedCount();
 
-        try {
-            if (!$material['is_collected']) {
-                $this->deductMaterialStock($material);
-                $this->materials[$index]['is_collected'] = true;
-                $this->materials[$index]['collected_quantity'] = $material['quantity'];
-                $this->showAlertMessage("{$material['item_name']} collected and stock deducted", 'success');
-            } else {
-                $this->showAlertMessage("Cannot undo material collection", 'warning');
-                DB::rollBack();
-                return;
-            }
-
-            $this->updateSessionMaterialsConsumed();
-
-            DB::commit();
-            $this->updateMaterialsCollectedCount();
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $this->showAlertMessage('Error processing material: ' . $e->getMessage(), 'error');
-        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        $this->showAlertMessage('Error processing material: ' . $e->getMessage(), 'error');
     }
+}
 
     private function deductMaterialStock($material)
     {
@@ -201,24 +209,28 @@ class TreatmentCuppingSession extends Component
         }
     }
 
-    private function updateSessionMaterialsConsumed()
-    {
-        $consumedMaterials = [];
-        foreach ($this->materials as $material) {
-            if ($material['is_collected']) {
-                $consumedMaterials[] = [
-                    'item_name' => $material['item_name'],
-                    'quantity' => $material['quantity'],
-                    'collected_quantity' => $material['collected_quantity'],
-                    'collected_at' => now()->toDateTimeString(),
-                ];
-            }
+   private function updateSessionMaterialsConsumed()
+{
+    $consumedMaterials = [];
+    foreach ($this->materials as $material) {
+        if ($material['is_collected']) {
+            $consumedMaterials[] = [
+                'item_name' => $material['item_name'],
+                'quantity' => $material['quantity'],
+                'collected_quantity' => $material['collected_quantity'],
+                'collected_at' => now()->toDateTimeString(),
+            ];
         }
-
-        $this->session->update([
-            'materials_consumed' => json_encode($consumedMaterials),
-        ]);
     }
+
+    // Force update with a direct database call to ensure it saves
+    CuppingSession::where('id', $this->session->id)->update([
+        'materials_consumed' => json_encode($consumedMaterials),
+    ]);
+
+    // Also update the local session object
+    $this->session->materials_consumed = json_encode($consumedMaterials);
+}
 
     private function markExistingMaterialsAsCollected($consumedMaterials)
     {
