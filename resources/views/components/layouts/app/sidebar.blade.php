@@ -119,7 +119,9 @@
                 <flux:sidebar.item icon="beaker" :href="route('cupping.types')" wire:navigate>
                     Cupping Type
                 </flux:sidebar.item>
-
+                <flux:sidebar.item icon="beaker" :href="route('cupping.sales-report')" wire:navigate>
+                  Cupping Sales Report
+                </flux:sidebar.item>
             </flux:sidebar.group>
             @endif
 
@@ -422,6 +424,9 @@
                 </flux:sidebar.item>
                 <flux:sidebar.item icon="home-modern" :href="route('reports.bed-payments')" wire:navigate>
                     Bed Payments Report
+                </flux:sidebar.item>
+                 <flux:sidebar.item icon="beaker" :href="route('cupping.sales-report')" wire:navigate>
+                  Cupping Sales Report
                 </flux:sidebar.item>
 
             </flux:sidebar.group>

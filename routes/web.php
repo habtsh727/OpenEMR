@@ -397,6 +397,6 @@ Route::get('cupping/treatment/queue', TreatmentCuppingQueue::class)->name('cuppi
 Route::get('/cupping/results', \App\Livewire\Cupping\CuppingResult::class)->name('cupping.results');
 Route::get('/cupping/types', CuppingTypeManager::class)->name('cupping.types');
 Route::get('/cupping/locations', CuppingLocationManager::class)->name('cupping.locations');
-
+Route::get('/cupping/sales-report', \App\Livewire\Cupping\CuppingSalesReport::class)->name('cupping.sales-report');
 
 require __DIR__ . '/auth.php';
