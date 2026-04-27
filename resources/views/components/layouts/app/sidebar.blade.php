@@ -39,7 +39,6 @@
         </flux:sidebar.group>
         @endcanany
 
-
         <flux:sidebar.nav>
 
             {{-- ========================= PATIENTS ========================= --}}
@@ -47,389 +46,311 @@
             <flux:sidebar.item icon="users" :href="route('patients')" wire:navigate>Patients</flux:sidebar.item>
             @endcanany
 
-            {{-- ========================= PAYMENTS ========================= --}}
+            {{-- ========================= PAYMENTS (CASHIER ONLY) ========================= --}}
+            @canany(['manage_card_fee','view_lab_payments','view_imaging_payments','view_cashier_medication_orders','process_walkin_payment','view_rehab_cashier_queue','process_cupping_payment'])
+            <flux:sidebar.group expandable :expanded="false" heading="Payments" class="grid">
 
-            @canany(['super-admin', 'receive_payment'])
-            <flux:sidebar.group expandable :expanded="false" heading="Payment" class="grid">
-                @canany(['create_invoice','view_invoice','receive_payment','refund_payment'])
-                <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Register Payments
-                </flux:sidebar.item>
+                @canany(['manage_card_fee','create_invoice','view_invoice','receive_payment','refund_payment'])
+                <flux:sidebar.item icon="currency-dollar" :href="route('payments')" wire:navigate>Card Payments</flux:sidebar.item>
                 @endcanany
-                <flux:sidebar.item icon="currency-dollar" :href="route('lab-orders.payments')" wire:navigate>
-                    Lab Payment
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.imaging')" wire:navigate>
-                    Imaging Payment
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
-                    Pharmacy Payment
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.payment')"
-                    wire:navigate>
-                    Walk-in Payment
-                </flux:sidebar.item>
-            </flux:sidebar.group>
 
+                @can('view_lab_payments')
+                <flux:sidebar.item icon="beaker" :href="route('lab-orders.payments')" wire:navigate>Lab Payments</flux:sidebar.item>
+                @endcan
+
+                @can('view_imaging_payments')
+                <flux:sidebar.item icon="camera" :href="route('cashier.imaging')" wire:navigate>Imaging Payments</flux:sidebar.item>
+                @endcan
+
+                @can('view_cashier_medication_orders')
+                <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>Pharmacy Payments</flux:sidebar.item>
+                @endcan
+
+                @can('process_walkin_payment')
+                <flux:sidebar.item icon="shopping-cart" :href="route('pharmacy.walkin.payment')" wire:navigate>Walk-in Payments</flux:sidebar.item>
+                @endcan
+
+                @canany(['view_rehab_cashier_queue','process_rehab_cashier_payment'])
+                <flux:sidebar.item icon="heart" :href="route('rehab.cashier.queue')" wire:navigate>Rehab Payments</flux:sidebar.item>
+                @endcanany
+
+                @can('process_cupping_payment')
+                <flux:sidebar.item icon="fire" :href="route('cupping.cashier.queue')" wire:navigate>Cupping Payments</flux:sidebar.item>
+                @endcan
+            </flux:sidebar.group>
             @endcanany
+
             {{-- ========================= CLINICAL ========================= --}}
-            @if(auth()->user()->hasRole(['doctor', 'nurse', 'clinician', 'rehab', 'super-admin']))
+            @canany(['record_vitals','update_vitals','view_doctor_queue'])
             <flux:sidebar.group expandable :expanded="false" heading="Clinical" class="grid">
 
-                @if(auth()->user()->hasRole(['nurse','super-admin']))
-                <flux:sidebar.item icon="home-modern" :href="route('triage.encounters')" wire:navigate>Triage
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('vital-types.index')" wire:navigate>Vital Types
-                </flux:sidebar.item>
-                @endif
+                @canany(['record_vitals','update_vitals','manage_vital_types'])
+                <flux:sidebar.item icon="clipboard" :href="route('triage.encounters')" wire:navigate>Triage</flux:sidebar.item>
+                <flux:sidebar.item icon="heart" :href="route('vital-types.index')" wire:navigate>Vital Types</flux:sidebar.item>
+                @endcanany
 
-                @if(auth()->user()->hasRole(['doctor', 'clinician']))
-                <flux:sidebar.item icon="home-modern" :href="route('doctor.queue')" wire:navigate>Doctor
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="paper-airplane" :href="route('referrals.queue')" wire:navigate>
-                    Referral
-                </flux:sidebar.item>
-                @endif
-            </flux:sidebar.group>
-            @endif
-
-            {{-- //cupping --}}
-            @if(auth()->user()->hasRole(['doctor', 'nurse', 'clinician', 'rehab', 'super-admin']))
-            <flux:sidebar.group expandable :expanded="false" heading="Cupping" class="grid">
-
-                <flux:sidebar.item icon="currency-dollar" :href="route('cupping.cashier.queue')" wire:navigate>
-                    Payment Queue
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="clock" :href="route('cupping.treatment.queue')" wire:navigate>
-                    Treatment Queue
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="clipboard-document-check" :href="route('cupping.results')" wire:navigate>
-                    Cupping Results
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="archive-box" :href="route('cupping.admin.packages')" wire:navigate>
-                    Package Manager
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="map-pin" :href="route('cupping.locations')" wire:navigate>
-                    Cupping Location
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="beaker" :href="route('cupping.types')" wire:navigate>
-                    Cupping Type
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="beaker" :href="route('cupping.sales-report')" wire:navigate>
-                  Cupping Sales Report
-                </flux:sidebar.item>
-            </flux:sidebar.group>
-            @endif
-
-
-
-
-            {{-- rehab sidebar-start--}}
-            @if(auth()->user()->hasRole(['doctor', 'nurse', 'bed_manager', 'cashier',
-            'super-admin']))
-            <flux:sidebar.group expandable :expanded="false" heading="Rehabilitation" class="grid">
-
-                <!-- Doctor Routes -->
-                @if(auth()->user()->hasRole(['doctor', 'nurse', 'super-admin']))
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.rehab.queue')" wire:navigate>
-                    Rehab Reviews
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="archive-box" :href="route('rehab.packages.index')" wire:navigate>
-                    Rehab Packages
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="clock" :href="route('rehab.treatment.queue')" wire:navigate>
-                    Treatment Queue
-                </flux:sidebar.item>
-                @endif
-
-                <!-- Rehab Staff Routes -->
-                @if(auth()->user()->hasRole(['rehab', 'super-admin','nurse']))
-                @if(auth()->user()->hasRole(['rehab', 'super-admin','cashier','nurse']))
-                <flux:sidebar.item icon="clipboard-document-check" :href="route('rehab.queue')" wire:navigate>
-                    Patient Queue
-                </flux:sidebar.item>
-                @endif
-                <flux:sidebar.item icon="rectangle-group" :href="route('rehab.templates.index')" wire:navigate>
-                    Question Templates
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="beaker" :href="route('rehab.treatment-types')" wire:navigate>
-                    Treatment Types
-                </flux:sidebar.item>
-                @endif
-
-                <!-- Bed Manager Routes -->
-                @if(auth()->user()->hasRole(['bed_manager', 'super-admin','nurse']))
-                <flux:sidebar.item icon="home-modern" :href="route('rehab.bed-manager.queue')" wire:navigate>
-                    Bed Selection Queue
-                </flux:sidebar.item>
-                @endif
-
-                <!-- Cashier Routes -->
-                @if(auth()->user()->hasRole(['cashier', 'super-admin']))
-                <flux:sidebar.item icon="currency-dollar" :href="route('rehab.cashier.queue')" wire:navigate>
-                    Payment Queue
-                </flux:sidebar.item>
-                {{-- <flux:sidebar.item icon="document-text" :href="route('cashier.rehab.payments')" wire:navigate>
-                    Payment History
-                </flux:sidebar.item> --}}
-                <flux:sidebar.item icon="document-text" :href="route('rehab.finance.report')" wire:navigate>
-                    Finance History
-                </flux:sidebar.item>
-
-                @endif
-
-                <!-- Admin/Manager Routes (only super-admin) -->
-                @if(auth()->user()->hasRole(['super-admin']))
-                <flux:sidebar.item icon="cube" :href="route('rehab.packages.create')" wire:navigate>
-                    Create Package
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="pencil-square" :href="route('rehab.templates.create')" wire:navigate>
-                    Create Template
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="document-chart-bar" :href="route('reports.rehab-payments')" wire:navigate>
-                    Rehab Reports
-                </flux:sidebar.item>
-                {{-- <flux:sidebar.item icon="document-chart-bar" :href="route('rehab.payment.reports')" wire:navigate>
-                    Rehab Payment Reports
-                </flux:sidebar.item> --}}
-                @endif
-
-            </flux:sidebar.group>
-            @endif
-            {{-- rehabitation end --}}
-
-
-            {{-- Appointment Sidebar Group --}}
-            @if(auth()->user()->hasAnyRole(['doctor', 'clinician', 'admin', 'reception', 'super-admin']))
-            <flux:sidebar.group expandable :expanded="false" heading="Appointments" class="grid">
-                @if(auth()->user()->hasAnyRole(['doctor', 'clinician', 'super-admin']))
-                <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.today')" wire:navigate>
-                    Today's Schedule
-                    @php
-                    $todayCount = App\Models\Appointment::forToday()
-                    ->where('doctor_id', auth()->id())
-                    ->where('status', 'scheduled')
-                    ->count();
-                    @endphp
-                    @if($todayCount > 0)
-                    <flux:badge size="sm" color="emerald" class="ml-auto">{{ $todayCount }}</flux:badge>
-                    @endif
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.calendar')" wire:navigate>
-                    Calendar View
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="calendar-days" :href="route('doctor.appointments.upcoming')" wire:navigate>
-                    Upcoming
-                    @php
-                    $upcomingCount = App\Models\Appointment::where('doctor_id', auth()->id())
-                    ->whereIn('status', ['scheduled', 'rescheduled'])
-                    ->whereDate('appointment_date', '>=', now())
-                    ->count();
-                    @endphp
-                    @if($upcomingCount > 0)
-                    <flux:badge size="sm" color="blue" class="ml-auto">{{ $upcomingCount }}</flux:badge>
-                    @endif
-                </flux:sidebar.item>
-
-                <flux:sidebar.item icon="plus-circle" :href="route('doctor.appointments.create')" wire:navigate>
-                    New Appointment
-                </flux:sidebar.item>
-                @endif
-
-                <!-- Reception & Admin Routes (Full Access) -->
-                @if(auth()->user()->hasAnyRole(['admin','super-admin']))
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.appointments.all')"
-                    wire:navigate>
-                    All Appointments
-                    @php
-                    $allCount = App\Models\Appointment::count();
-                    @endphp
-                    @if($allCount > 0)
-                    <flux:badge size="sm" color="gray" class="ml-auto">{{ $allCount }}</flux:badge>
-                    @endif
-                </flux:sidebar.item>
-
-
-
-                <flux:sidebar.item icon="chart-bar" :href="route('doctor.appointments.reports')" wire:navigate>
-                    Reports & Analytics
-                </flux:sidebar.item>
-                @endif
-
-                <!-- Doctor's Personal View (Even without admin) -->
-                @if(auth()->user()->hasRole('doctor') && !auth()->user()->hasAnyRole(['admin', 'super-admin']))
-                <flux:sidebar.item icon="clipboard-document-list"
-                    :href="route('doctor.appointments.all', ['doctor_id' => auth()->id()])" wire:navigate>
-                    My History
-                    @php
-                    $myHistoryCount = App\Models\Appointment::where('doctor_id', auth()->id())->count();
-                    @endphp
-                    @if($myHistoryCount > 0)
-                    <flux:badge size="sm" color="gray" class="ml-auto">{{ $myHistoryCount }}</flux:badge>
-                    @endif
-                </flux:sidebar.item>
-                @endif
-
-                <!-- Admin Only Routes -->
-
-
-            </flux:sidebar.group>
-            @endif
-
-            {{-- ========================= LABORATORY ========================= --}}
-            @canany(['view_lab_result','view_lab_order','enter_lab_result','verify_lab_result'])
-            <flux:sidebar.group expandable :expanded="false" heading="Labratory" class="grid">
-                @can('enter_lab_result')
-                <flux:sidebar.item icon="tag" :href="route('lab.dashboard')" wire:navigate>Laboratory Dashboard
-                </flux:sidebar.item>
-                @endcan
-                <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>
-                    Laboratory Results
-                </flux:sidebar.item>
-                @can('view_lab_tests')
-                <flux:sidebar.item icon="beaker" :href="route('lab-tests.index')" wire:navigate>
-                    Laboratory Tests
-                </flux:sidebar.item>
+                @can('view_doctor_queue')
+                <flux:sidebar.item icon="credit-card" :href="route('doctor.queue')" wire:navigate>Doctor Queue</flux:sidebar.item>
                 @endcan
             </flux:sidebar.group>
             @endcanany
-            {{-- ========================= Radiology ========================= --}}
-            @canany([ 'view_imaging_order','upload_imaging_result',])
+
+            {{-- ========================= CUPPING ========================= --}}
+            @canany(['create_cupping_order','view_cupping_treatment_queue','manage_cupping_treatment','view_cupping_results','manage_cupping_admin_packages','manage_cupping_locations','manage_cupping_types','view_cupping_sales_report'])
+            <flux:sidebar.group expandable :expanded="false" heading="Cupping Therapy" class="grid">
+
+                {{-- @can('create_cupping_order')
+                <flux:sidebar.item icon="plus-circle" :href="route('cupping.doctor.order', ['encounter' => 0])" wire:navigate>New Cupping Order</flux:sidebar.item>
+                @endcan --}}
+
+                @can('view_cupping_treatment_queue')
+                <flux:sidebar.item icon="clock" :href="route('cupping.treatment.queue')" wire:navigate>Treatment Queue</flux:sidebar.item>
+                @endcan
+
+                @can('view_cupping_results')
+                <flux:sidebar.item icon="clipboard-document-check" :href="route('cupping.results')" wire:navigate>Cupping Results</flux:sidebar.item>
+                @endcan
+
+                @canany(['manage_cupping_admin_packages','manage_cupping_packages'])
+                <flux:sidebar.item icon="archive-box" :href="route('cupping.admin.packages')" wire:navigate>Package Manager</flux:sidebar.item>
+                @endcanany
+
+                @can('manage_cupping_locations')
+                <flux:sidebar.item icon="map-pin" :href="route('cupping.locations')" wire:navigate>Cupping Locations</flux:sidebar.item>
+                @endcan
+
+                @can('manage_cupping_types')
+                <flux:sidebar.item icon="beaker" :href="route('cupping.types')" wire:navigate>Cupping Types</flux:sidebar.item>
+                @endcan
+
+                @can('view_cupping_sales_report')
+                <flux:sidebar.item icon="chart-bar" :href="route('cupping.sales-report')" wire:navigate>Sales Report</flux:sidebar.item>
+                @endcan
+            </flux:sidebar.group>
+            @endcanany
+
+            {{-- ========================= REHABILITATION ========================= --}}
+            @canany(['view_rehab_queue','fill_rehab_questionnaire','view_rehab_treatment_queue','manage_rehab_treatment','view_rehab_packages','view_rehab_finance_report','manage_rehab_bed_selection'])
+            <flux:sidebar.group expandable :expanded="false" heading="Rehabilitation" class="grid">
+
+                @canany(['create_rehab_order','review_rehab_order'])
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.rehab.queue')" wire:navigate>Rehab Reviews</flux:sidebar.item>
+                @endcanany
+
+                @canany(['view_rehab_packages','manage_rehab_packages'])
+                <flux:sidebar.item icon="archive-box" :href="route('rehab.packages.index')" wire:navigate>Rehab Packages</flux:sidebar.item>
+                @endcanany
+
+                @can('view_rehab_treatment_queue')
+                <flux:sidebar.item icon="clock" :href="route('rehab.treatment.queue')" wire:navigate>Treatment Queue</flux:sidebar.item>
+                @endcan
+
+                @can('view_rehab_queue')
+                <flux:sidebar.item icon="users" :href="route('rehab.queue')" wire:navigate>Patient Queue</flux:sidebar.item>
+                @endcan
+
+                @can('fill_rehab_questionnaire')
+                <flux:sidebar.item icon="clipboard-document-check" :href="route('rehab.questionnaire', ['id' => 0])" wire:navigate>Questionnaire</flux:sidebar.item>
+                @endcan
+
+                @canany(['view_rehab_templates','manage_rehab_templates'])
+                <flux:sidebar.item icon="rectangle-group" :href="route('rehab.templates.index')" wire:navigate>Question Templates</flux:sidebar.item>
+                @endcanany
+
+                @can('manage_rehab_treatment_types')
+                <flux:sidebar.item icon="beaker" :href="route('rehab.treatment-types')" wire:navigate>Treatment Types</flux:sidebar.item>
+                @endcan
+
+                @can('manage_rehab_bed_selection')
+                <flux:sidebar.item icon="credit-card" :href="route('rehab.bed-manager.queue')" wire:navigate>Bed Selection</flux:sidebar.item>
+                @endcan
+
+                @can('view_rehab_finance_report')
+                <flux:sidebar.item icon="document-text" :href="route('rehab.finance.report')" wire:navigate>Finance Report</flux:sidebar.item>
+                @endcan
+            </flux:sidebar.group>
+            @endcanany
+
+            {{-- ========================= APPOINTMENTS ========================= --}}
+            @canany(['create_appointment','view_today_appointments','view_appointment_calendar'])
+            <flux:sidebar.group expandable :expanded="false" heading="Appointments" class="grid">
+
+                @can('view_today_appointments')
+                <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.today')" wire:navigate>Today's Schedule</flux:sidebar.item>
+                @endcan
+
+                @can('view_appointment_calendar')
+                <flux:sidebar.item icon="calendar" :href="route('doctor.appointments.calendar')" wire:navigate>Calendar View</flux:sidebar.item>
+                @endcan
+
+                @can('view_upcoming_appointments')
+                <flux:sidebar.item icon="calendar-days" :href="route('doctor.appointments.upcoming')" wire:navigate>Upcoming</flux:sidebar.item>
+                @endcan
+
+                @can('create_appointment')
+                <flux:sidebar.item icon="plus-circle" :href="route('doctor.appointments.create')" wire:navigate>New Appointment</flux:sidebar.item>
+                @endcan
+
+                @can('view_all_appointments')
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('doctor.appointments.all')" wire:navigate>All Appointments</flux:sidebar.item>
+                @endcan
+            </flux:sidebar.group>
+            @endcanany
+
+            {{-- ========================= LABORATORY ========================= --}}
+            @canany(['view_lab_dashboard','view_lab_results','manage_lab_tests'])
+            <flux:sidebar.group expandable :expanded="false" heading="Laboratory" class="grid">
+
+                @canany(['collect_lab_sample','report_lab_result'])
+                <flux:sidebar.item icon="credit-card" :href="route('lab.dashboard')" wire:navigate>Lab Dashboard</flux:sidebar.item>
+                @endcanany
+
+                @can('view_lab_results')
+                <flux:sidebar.item icon="beaker" :href="route('doctor.lab-results')" wire:navigate>Lab Results</flux:sidebar.item>
+                @endcan
+
+                @can('manage_lab_tests')
+                <flux:sidebar.item icon="list-bullet" :href="route('lab-tests.index')" wire:navigate>Lab Tests</flux:sidebar.item>
+                @endcan
+            </flux:sidebar.group>
+            @endcanany
+
+            {{-- ========================= RADIOLOGY ========================= --}}
+            @canany(['view_radiology_dashboard','upload_imaging_result','view_imaging_results'])
             <flux:sidebar.group expandable :expanded="false" heading="Radiology" class="grid">
 
-                <flux:sidebar.item icon="tag" :href="route('radiology.dashboard')" wire:navigate>Radiology
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body parts
-                </flux:sidebar.item>
+                @can('view_radiology_dashboard')
+                <flux:sidebar.item icon="camera" :href="route('radiology.dashboard')" wire:navigate>Radiology Dashboard</flux:sidebar.item>
+                @endcan
 
-            </flux:sidebar.group>
-            @endcan
-            {{-- ========================= Bed Management: ========================= --}}
-            @canany([
-            'view_beds',
-            'create_bed',
-            'update_bed',
-            'delete_bed',
-            'assign_bed',
-            'transfer_bed',
-            'discharge_bed'
-            ])
-            <flux:sidebar.group expandable :expanded="false" heading="Bed Management" class="grid">
-                <flux:sidebar.item icon="banknotes" :href="route('beds.index')" wire:navigate>
-                    Bed Dashboard
-                </flux:sidebar.item>
+                @can('upload_imaging_result')
+                <flux:sidebar.item icon="cloud-arrow-up" :href="route('radiology.dashboard')" wire:navigate>Upload Results</flux:sidebar.item>
+                @endcan
+
+                @can('manage_imaging_types')
+                <flux:sidebar.item icon="tag" :href="route('admin.imaging-types')" wire:navigate>Imaging Types</flux:sidebar.item>
+                @endcan
+
+                @can('manage_body_parts')
+                <flux:sidebar.item icon="tag" :href="route('admin.body-parts')" wire:navigate>Body Parts</flux:sidebar.item>
+                @endcan
             </flux:sidebar.group>
             @endcanany
 
             {{-- ========================= PHARMACY ========================= --}}
-            @canany(['view_prescription','dispense_drug','manage_drugs'])
+            @canany(['view_pharmacy_dashboard','view_pharmacy_items','view_pharmacy_batches','manage_custom_medications','create_walkin_order','dispense_walkin_medication','view_pharmacy_sales_report'])
             <flux:sidebar.group expandable :expanded="false" heading="Pharmacy" class="grid">
-                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.masters')" wire:navigate>
-                    Pharmacy
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')" wire:navigate>Batches / Stock
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.dashboard')" wire:navigate>
-                    pharmacy Queue
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.custom-medications')"
-                    wire:navigate>
-                    Custom Medications
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="document-text" :href="route('inventory.consumables')" wire:navigate>
-                    Consumables
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.report.sales')" wire:navigate>
-                    Sales Report
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="document-text" :href="route('pharmacy.walkin.create')" wire:navigate>
-                    Walk-in Order
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="arrow-top-right-on-square" :href="route('pharmacy.walkin.dispense')"
-                    wire:navigate>
-                    Walk-in Dispense
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.report')" wire:navigate>
-                    Walk-in Sales Report
-                </flux:sidebar.item>
+
+                @canany(['view_pharmacy_items','view_pharmacy_masters'])
+                <flux:sidebar.item icon="beaker" :href="route('pharmacy.masters')" wire:navigate>Pharmacy Items</flux:sidebar.item>
+                @endcanany
+
+                @canany(['view_pharmacy_batches','manage_pharmacy_batches'])
+                <flux:sidebar.item icon="document-text" :href="route('pharmacy.batches')" wire:navigate>Batches / Stock</flux:sidebar.item>
+                @endcanany
+
+                @can('view_pharmacy_dashboard')
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.dashboard')" wire:navigate>Pharmacy Queue</flux:sidebar.item>
+                @endcan
+
+                @can('manage_custom_medications')
+                <flux:sidebar.item icon="beaker" :href="route('pharmacy.custom-medications')" wire:navigate>Custom Medications</flux:sidebar.item>
+                @endcan
+
+                @can('manage_consumables')
+                <flux:sidebar.item icon="credit-card" :href="route('inventory.consumables')" wire:navigate>Consumables</flux:sidebar.item>
+                @endcan
+
+                @can('view_pharmacy_sales_report')
+                <flux:sidebar.item icon="chart-bar" :href="route('pharmacy.report.sales')" wire:navigate>Sales Report</flux:sidebar.item>
+                @endcan
+
+                @can('create_walkin_order')
+                <flux:sidebar.item icon="shopping-cart" :href="route('pharmacy.walkin.create')" wire:navigate>Walk-in Order</flux:sidebar.item>
+                @endcan
+
+                @can('dispense_walkin_medication')
+                <flux:sidebar.item icon="truck" :href="route('pharmacy.walkin.dispense')" wire:navigate>Walk-in Dispense</flux:sidebar.item>
+                @endcan
+
+                @can('view_walkin_sales_report')
+                <flux:sidebar.item icon="document-chart-bar" :href="route('pharmacy.walkin.report')" wire:navigate>Walk-in Sales Report</flux:sidebar.item>
+                @endcan
+            </flux:sidebar.group>
+            @endcanany
+
+            {{-- ========================= BED MANAGEMENT ========================= --}}
+            @canany(['view_beds','create_bed','update_bed','delete_bed','assign_bed'])
+            <flux:sidebar.group expandable :expanded="false" heading="Bed Management" class="grid">
+                <flux:sidebar.item icon="credit-card" :href="route('beds.index')" wire:navigate>Bed Dashboard</flux:sidebar.item>
             </flux:sidebar.group>
             @endcanany
 
             {{-- ========================= CONFIGURATION ========================= --}}
-            @canany(['manage_medical_history_templates', 'manage_chief_complaint_templates',
-            'manage_examination_templates', 'manage_assessment_templates'])
+            @canany(['manage_medical_history_templates','manage_chief_complaint_templates','manage_examination_templates','manage_assessment_templates'])
             <flux:sidebar.group expandable :expanded="false" heading="Configuration" class="grid">
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('config.medical-history-templates')"
-                    wire:navigate>
-                    Medical History
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="exclamation-triangle" :href="route('config.chief-complaint-templates')"
-                    wire:navigate>
-                    Chief Complaint
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="document-magnifying-glass" :href="route('examination-templates')"
-                    wire:navigate>
-                    Examination
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-check" :href="route('config.assessment-templates')"
-                    wire:navigate>
-                    Assessment
-                </flux:sidebar.item>
+
+                @can('manage_medical_history_templates')
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('config.medical-history-templates')" wire:navigate>Medical History</flux:sidebar.item>
+                @endcan
+
+                @can('manage_chief_complaint_templates')
+                <flux:sidebar.item icon="exclamation-triangle" :href="route('config.chief-complaint-templates')" wire:navigate>Chief Complaint</flux:sidebar.item>
+                @endcan
+
+                @can('manage_examination_templates')
+                <flux:sidebar.item icon="document-magnifying-glass" :href="route('examination-templates')" wire:navigate>Examination</flux:sidebar.item>
+                @endcan
+
+                @can('manage_assessment_templates')
+                <flux:sidebar.item icon="clipboard-document-check" :href="route('config.assessment-templates')" wire:navigate>Assessment</flux:sidebar.item>
+                @endcan
             </flux:sidebar.group>
             @endcanany
-            {{-- ========================= SETTINGS ========================= --}}
-            @canany(['view_reports','export_reports','manage_inventory','manage_services'])
+
+            {{-- ========================= SETTINGS (ADMIN ONLY) ========================= --}}
+            @canany(['manage_service_categories','manage_services'])
             <flux:sidebar.group expandable :expanded="false" heading="Settings" class="grid">
 
-                @canany(['manage_services'])
-                <flux:sidebar.item icon="document-text" :href="route('service-category')" wire:navigate>Services
-                    Categories
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="server-stack" :href="route('services')" wire:navigate>Services
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="cog" :href="route('card-fee')" wire:navigate>Card Fee</flux:sidebar.item>
-                @endcanany
+                <flux:sidebar.item icon="folder" :href="route('service-category')" wire:navigate>Service Categories</flux:sidebar.item>
+                <flux:sidebar.item icon="server-stack" :href="route('services')" wire:navigate>Services</flux:sidebar.item>
+                <flux:sidebar.item icon="credit-card" :href="route('card-fee')" wire:navigate>Card Fee</flux:sidebar.item>
             </flux:sidebar.group>
-
-
             @endcanany
 
-            <flux:sidebar.group expandable :expanded="false" heading="Financial Management" class="grid">
+            {{-- ========================= FINANCIAL REPORTS ========================= --}}
+            @canany(['view_registration_payment_report','view_lab_payment_report','view_imaging_payment_report','view_pharmacy_payment_report','view_rehab_payment_report','view_bed_payment_report','view_cupping_sales_report'])
+            <flux:sidebar.group expandable :expanded="false" heading="Financial Reports" class="grid">
 
-                <flux:sidebar.item icon="currency-dollar" :href="route('reports.registration-payments')" wire:navigate>
-                    Registration Payments
-                </flux:sidebar.item>
+                @can('view_registration_payment_report')
+                <flux:sidebar.item icon="credit-card" :href="route('reports.registration-payments')" wire:navigate>Registration Payments</flux:sidebar.item>
+                @endcan
 
+                @can('view_lab_payment_report')
+                <flux:sidebar.item icon="beaker" :href="route('reports.lab-payments')" wire:navigate>Laboratory Payments</flux:sidebar.item>
+                @endcan
 
-                <flux:sidebar.item icon="beaker" :href="route('reports.lab-payments')" wire:navigate>
-                    Laboratory Payments
-                </flux:sidebar.item>
+                @can('view_imaging_payment_report')
+                <flux:sidebar.item icon="camera" :href="route('reports.imaging-payments')" wire:navigate>Radiology Payments</flux:sidebar.item>
+                @endcan
 
-                <flux:sidebar.item icon="camera" :href="route('reports.imaging-payments')" wire:navigate>
-                    Radiology Payments
-                </flux:sidebar.item>
+                @can('view_pharmacy_payment_report')
+                <flux:sidebar.item icon="currency-dollar" :href="route('reports.pharmacy-payments')" wire:navigate>Pharmacy Payments</flux:sidebar.item>
+                @endcan
 
-                <flux:sidebar.item icon="beaker" :href="route('reports.pharmacy-payments')" wire:navigate>
-                    Pharmacy Payments
-                </flux:sidebar.item>
+                @can('view_rehab_payment_report')
+                <flux:sidebar.item icon="heart" :href="route('reports.rehab-payments')" wire:navigate>Rehabilitation Payments</flux:sidebar.item>
+                @endcan
 
-                <flux:sidebar.item icon="heart" :href="route('reports.rehab-payments')" wire:navigate>
-                    Rehabilitation Payments
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="home-modern" :href="route('reports.bed-payments')" wire:navigate>
-                    Bed Payments Report
-                </flux:sidebar.item>
-                 <flux:sidebar.item icon="beaker" :href="route('cupping.sales-report')" wire:navigate>
-                  Cupping Sales Report
-                </flux:sidebar.item>
+                @can('view_bed_payment_report')
+                <flux:sidebar.item icon="credit-card" :href="route('reports.bed-payments')" wire:navigate>Bed Payments</flux:sidebar.item>
+                @endcan
 
+                @can('view_cupping_sales_report')
+                <flux:sidebar.item icon="fire" :href="route('cupping.sales-report')" wire:navigate>Cupping Sales</flux:sidebar.item>
+                @endcan
             </flux:sidebar.group>
+            @endcanany
 
         </flux:sidebar.nav>
 
@@ -445,8 +366,7 @@
                     <div class="p-0 text-sm font-normal">
                         <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                <span
-                                    class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                <span class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
                                     {{ auth()->user()->initials() }}
                                 </span>
                             </span>
@@ -464,8 +384,6 @@
                 <flux:menu.radio.group>
                     <flux:menu.item href="/settings/profile" icon="cog" wire:navigate>Settings</flux:menu.item>
                 </flux:menu.radio.group>
-
-            
 
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
@@ -491,8 +409,7 @@
                     <div class="p-0 text-sm font-normal">
                         <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                <span
-                                    class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
+                                <span class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
                                     {{ auth()->user()->initials() }}
                                 </span>
                             </span>
