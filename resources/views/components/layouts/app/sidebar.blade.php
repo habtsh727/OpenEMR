@@ -112,11 +112,11 @@
                     Package Manager
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="map-pin" :href="route('referrals.queue')" wire:navigate>
+                <flux:sidebar.item icon="map-pin" :href="route('cupping.locations')" wire:navigate>
                     Cupping Location
                 </flux:sidebar.item>
 
-                <flux:sidebar.item icon="beaker" :href="route('referrals.queue')" wire:navigate>
+                <flux:sidebar.item icon="beaker" :href="route('cupping.types')" wire:navigate>
                     Cupping Type
                 </flux:sidebar.item>
 

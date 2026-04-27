@@ -63,6 +63,8 @@ use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
+use App\Livewire\Cupping\CuppingLocationManager;
+use App\Livewire\Cupping\CuppingTypeManager;
 use App\Livewire\Cupping\DoctorCuppingOrder;
 use App\Livewire\Cupping\TreatmentCuppingQueue;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
@@ -393,6 +395,8 @@ Route::get('/cupping/cashier/queue', \App\Livewire\Cupping\CashierCuppingQueue::
 Route::get('/cupping/treatment/session/{session}', \App\Livewire\Cupping\TreatmentCuppingSession::class)->name('cupping.treatment.session');
 Route::get('cupping/treatment/queue', TreatmentCuppingQueue::class)->name('cupping.treatment.queue');
 Route::get('/cupping/results', \App\Livewire\Cupping\CuppingResult::class)->name('cupping.results');
+Route::get('/cupping/types', CuppingTypeManager::class)->name('cupping.types');
+Route::get('/cupping/locations', CuppingLocationManager::class)->name('cupping.locations');
 
 
 require __DIR__ . '/auth.php';
