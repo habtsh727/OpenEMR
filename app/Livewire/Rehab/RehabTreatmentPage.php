@@ -10,6 +10,7 @@ use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+
 class RehabTreatmentPage extends Component
 {
     public RehabEncounter $encounter;
@@ -26,54 +27,171 @@ class RehabTreatmentPage extends Component
     public $answers = [];
     public $notes = '';
 
+    // Package details
+    public $packageDetails = [];
+    public $showPackageDetails = false;
+
     // Alert properties
     public $showAlert = false;
     public $alertMessage = '';
     public $alertType = 'success';
 
     public function mount($id)
-    {
-        $this->encounter = RehabEncounter::with([
-            'encounter.patient',
-            'encounter.doctor',
-            'rehabOrders.orderPackages.orderItems',
-            'bedSelections.bed.room.ward',
-            'bedSelections.bedClass',
-            'rehabOrders' => function ($query) {
-                $query->latest();
-            }
-        ])->findOrFail($id);
-
-        // Load treatment dates
-        $this->treatmentStartedAt = $this->encounter->treatment_started_at
-            ? Carbon::parse($this->encounter->treatment_started_at)
-            : null;
-
-        $this->treatmentCompletedAt = $this->encounter->completed_at
-            ? Carbon::parse($this->encounter->completed_at)
-            : null;
-
-        // Load active treatment types
-        $this->treatmentTypes = RehabTreatmentType::where('is_active', true)
-            ->orderBy('order')
-            ->get();
-
-        // Calculate expected end date
-        $this->calculateExpectedEndDate();
-
-        // Calculate length of stay
-        $this->calculateLengthOfStay();
-    }
- public function getDaysLeftProperty()
 {
-    if (!$this->treatmentStartedAt) {
-        return null;
+    $this->encounter = RehabEncounter::with([
+        'encounter.patient',
+        'encounter.doctor',
+        'rehabOrders.orderPackages.orderItems',
+        'rehabOrders.orderPackages' => function ($query) {
+            $query->with(['orderItems']); // Remove 'package' relationship - it doesn't exist
+        },
+        'bedSelections.bed.room.ward',
+        'bedSelections.bedClass',
+        'rehabOrders' => function ($query) {
+            $query->latest();
+        }
+    ])->findOrFail($id);
+
+    // Load package details
+    $this->loadPackageDetails();
+
+    // Load treatment dates
+    $this->treatmentStartedAt = $this->encounter->treatment_started_at
+        ? Carbon::parse($this->encounter->treatment_started_at)
+        : null;
+
+    $this->treatmentCompletedAt = $this->encounter->completed_at
+        ? Carbon::parse($this->encounter->completed_at)
+        : null;
+
+    // Load active treatment types
+    $this->treatmentTypes = RehabTreatmentType::where('is_active', true)
+        ->orderBy('order')
+        ->get();
+
+    // Calculate expected end date
+    $this->calculateExpectedEndDate();
+
+    // Calculate length of stay
+    $this->calculateLengthOfStay();
+}
+
+    /**
+     * Load package details for this encounter
+     */
+   /**
+ * Load package details for this encounter
+ */
+private function loadPackageDetails()
+{
+    $this->packageDetails = [];
+
+    foreach ($this->encounter->rehabOrders as $order) {
+        foreach ($order->orderPackages as $orderPackage) {
+            $package = [
+                'id' => $orderPackage->id,
+                'name' => $orderPackage->package_name,
+                'base_price' => $orderPackage->base_price,
+                'discount_type' => $orderPackage->discount_type,
+                'discount_value' => $orderPackage->discount_value,
+                'final_price' => $orderPackage->final_price,
+                'items' => [],
+                'notes' => $orderPackage->notes,
+            ];
+
+            // Load package items
+            foreach ($orderPackage->orderItems as $item) {
+                $package['items'][] = [
+                    'type' => $item->item_type,
+                    'name' => $item->item_name,
+                    'dosage' => $item->dosage,
+                    'frequency' => $item->frequency,
+                    'duration' => $item->duration,
+                    'quantity' => $item->quantity,
+                    'bed_duration_days' => $item->bed_duration_days,
+                    'unit_price' => $item->unit_price,
+                    'total_price' => $item->total_price,
+                    'notes' => $item->notes,
+                ];
+            }
+
+            $this->packageDetails[] = $package;
+        }
     }
-    
-    if ($this->treatmentCompletedAt) {
-        $totalDays = $this->treatmentStartedAt->diffInDays($this->treatmentCompletedAt);
-        $totalHours = $this->treatmentStartedAt->diffInHours($this->treatmentCompletedAt) % 24;
-        
+}
+    public function getDaysLeftProperty()
+    {
+        if (!$this->treatmentStartedAt) {
+            return null;
+        }
+
+        if ($this->treatmentCompletedAt) {
+            $totalDays = $this->treatmentStartedAt->diffInDays($this->treatmentCompletedAt);
+            $totalHours = $this->treatmentStartedAt->diffInHours($this->treatmentCompletedAt) % 24;
+
+            $parts = [];
+            if ($totalDays > 0) {
+                $parts[] = $totalDays . ' ' . Str::plural('day', $totalDays);
+            }
+            if ($totalHours > 0) {
+                $parts[] = $totalHours . ' ' . Str::plural('hour', $totalHours);
+            }
+
+            return [
+                'type' => 'completed',
+                'text' => implode(' ', $parts) . ' total'
+            ];
+        }
+
+        if ($this->expectedEndDate) {
+            $now = now();
+            $remainingDays = (int) $now->diffInDays($this->expectedEndDate);
+            $remainingHours = (int) $now->diffInHours($this->expectedEndDate) % 24;
+            $remainingMinutes = (int) $now->diffInMinutes($this->expectedEndDate) % 60;
+
+            if ($remainingDays > 0 || $remainingHours > 0) {
+                $parts = [];
+                if ($remainingDays > 0) {
+                    $parts[] = $remainingDays . ' ' . Str::plural('day', $remainingDays);
+                }
+                if ($remainingHours > 0) {
+                    $parts[] = $remainingHours . ' ' . Str::plural('hour', $remainingHours);
+                }
+                if ($remainingDays == 0 && $remainingHours == 0 && $remainingMinutes > 0) {
+                    $parts[] = $remainingMinutes . ' ' . Str::plural('minute', $remainingMinutes);
+                }
+
+                return [
+                    'type' => 'remaining',
+                    'text' => implode(' ', $parts) . ' left'
+                ];
+            } elseif ($remainingDays < 0 || $remainingHours < 0) {
+                $overdueDays = abs($now->diffInDays($this->expectedEndDate));
+                $overdueHours = abs($now->diffInHours($this->expectedEndDate)) % 24;
+
+                $parts = [];
+                if ($overdueDays > 0) {
+                    $parts[] = $overdueDays . ' ' . Str::plural('day', $overdueDays);
+                }
+                if ($overdueHours > 0) {
+                    $parts[] = $overdueHours . ' ' . Str::plural('hour', $overdueHours);
+                }
+
+                return [
+                    'type' => 'overdue',
+                    'text' => 'Overdue by ' . implode(' ', $parts)
+                ];
+            } else {
+                return [
+                    'type' => 'due_today',
+                    'text' => 'Due today'
+                ];
+            }
+        }
+
+        $totalDays = $this->treatmentStartedAt->diffInDays(now());
+        $totalHours = $this->treatmentStartedAt->diffInHours(now()) % 24;
+
         $parts = [];
         if ($totalDays > 0) {
             $parts[] = $totalDays . ' ' . Str::plural('day', $totalDays);
@@ -81,75 +199,12 @@ class RehabTreatmentPage extends Component
         if ($totalHours > 0) {
             $parts[] = $totalHours . ' ' . Str::plural('hour', $totalHours);
         }
-        
+
         return [
-            'type' => 'completed',
-            'text' => implode(' ', $parts) . ' total'
+            'type' => 'in_progress',
+            'text' => implode(' ', $parts) . ' so far'
         ];
     }
-    
-    if ($this->expectedEndDate) {
-        $now = now();
-        $remainingDays = (int) $now->diffInDays($this->expectedEndDate);
-        $remainingHours = (int) $now->diffInHours($this->expectedEndDate) % 24;
-        $remainingMinutes = (int) $now->diffInMinutes($this->expectedEndDate) % 60;
-        
-        if ($remainingDays > 0 || $remainingHours > 0) {
-            $parts = [];
-            if ($remainingDays > 0) {
-                $parts[] = $remainingDays . ' ' . Str::plural('day', $remainingDays);
-            }
-            if ($remainingHours > 0) {
-                $parts[] = $remainingHours . ' ' . Str::plural('hour', $remainingHours);
-            }
-            if ($remainingDays == 0 && $remainingHours == 0 && $remainingMinutes > 0) {
-                $parts[] = $remainingMinutes . ' ' . Str::plural('minute', $remainingMinutes);
-            }
-            
-            return [
-                'type' => 'remaining',
-                'text' => implode(' ', $parts) . ' left'
-            ];
-        } elseif ($remainingDays < 0 || $remainingHours < 0) {
-            $overdueDays = abs($now->diffInDays($this->expectedEndDate));
-            $overdueHours = abs($now->diffInHours($this->expectedEndDate)) % 24;
-            
-            $parts = [];
-            if ($overdueDays > 0) {
-                $parts[] = $overdueDays . ' ' . Str::plural('day', $overdueDays);
-            }
-            if ($overdueHours > 0) {
-                $parts[] = $overdueHours . ' ' . Str::plural('hour', $overdueHours);
-            }
-            
-            return [
-                'type' => 'overdue',
-                'text' => 'Overdue by ' . implode(' ', $parts)
-            ];
-        } else {
-            return [
-                'type' => 'due_today',
-                'text' => 'Due today'
-            ];
-        }
-    }
-    
-    $totalDays = $this->treatmentStartedAt->diffInDays(now());
-    $totalHours = $this->treatmentStartedAt->diffInHours(now()) % 24;
-    
-    $parts = [];
-    if ($totalDays > 0) {
-        $parts[] = $totalDays . ' ' . Str::plural('day', $totalDays);
-    }
-    if ($totalHours > 0) {
-        $parts[] = $totalHours . ' ' . Str::plural('hour', $totalHours);
-    }
-    
-    return [
-        'type' => 'in_progress',
-        'text' => implode(' ', $parts) . ' so far'
-    ];
-}
 
     public function selectType($typeId)
     {
@@ -160,6 +215,11 @@ class RehabTreatmentPage extends Component
         $this->notes = '';
     }
 
+    public function togglePackageDetails()
+    {
+        $this->showPackageDetails = !$this->showPackageDetails;
+    }
+
     private function calculateExpectedEndDate()
     {
         $bedDuration = $this->getBedDuration();
@@ -168,92 +228,43 @@ class RehabTreatmentPage extends Component
         }
     }
 
-    /**
-     * Calculate the length of stay
-     */
-    public function getDaysLeftAttribute()
-{
-    if (!$this->treatmentStartedAt) {
-        return null;
-    }
-    
-    if ($this->treatmentCompletedAt) {
-        $totalDays = $this->treatmentStartedAt->diffInDays($this->treatmentCompletedAt);
-        return [
-            'type' => 'completed',
-            'days' => $totalDays,
-            'text' => $totalDays . ' ' . Str::plural('day', $totalDays) . ' total'
-        ];
-    }
-    
-    if ($this->expectedEndDate) {
-        $remainingDays = now()->diffInDays($this->expectedEndDate, false);
-        
-        if ($remainingDays > 0) {
-            return [
-                'type' => 'remaining',
-                'days' => $remainingDays,
-                'text' => $remainingDays . ' ' . Str::plural('day', $remainingDays) . ' left'
-            ];
-        } elseif ($remainingDays < 0) {
-            return [
-                'type' => 'overdue',
-                'days' => abs($remainingDays),
-                'text' => 'Overdue by ' . abs($remainingDays) . ' ' . Str::plural('day', abs($remainingDays))
-            ];
-        } else {
-            return [
-                'type' => 'due_today',
-                'text' => 'Due today'
-            ];
+    private function calculateLengthOfStay()
+    {
+        if (!$this->treatmentStartedAt) {
+            $this->lengthOfStay = 'Not started';
+            return;
         }
-    }
-    
-    $totalDays = $this->treatmentStartedAt->diffInDays(now());
-    return [
-        'type' => 'in_progress',
-        'days' => $totalDays,
-        'text' => $totalDays . ' ' . Str::plural('day', $totalDays) . ' so far'
-    ];
-}
-   private function calculateLengthOfStay()
-{
-    if (!$this->treatmentStartedAt) {
-        $this->lengthOfStay = 'Not started';
-        return;
-    }
 
-    $endDate = $this->treatmentCompletedAt ?? now();
-    $start = $this->treatmentStartedAt;
-    
-    // Get total minutes
-    $totalMinutes = (int) $start->diffInMinutes($endDate);
-    
-    if ($totalMinutes < 1) {
-        $this->lengthOfStay = 'Less than a minute' . ($this->treatmentCompletedAt ? '' : ' (ongoing)');
-        return;
+        $endDate = $this->treatmentCompletedAt ?? now();
+        $start = $this->treatmentStartedAt;
+
+        $totalMinutes = (int) $start->diffInMinutes($endDate);
+
+        if ($totalMinutes < 1) {
+            $this->lengthOfStay = 'Less than a minute' . ($this->treatmentCompletedAt ? '' : ' (ongoing)');
+            return;
+        }
+
+        $days = floor($totalMinutes / (24 * 60));
+        $hours = floor(($totalMinutes % (24 * 60)) / 60);
+        $minutes = $totalMinutes % 60;
+
+        $parts = [];
+
+        if ($days > 0) {
+            $parts[] = $days . 'd';
+        }
+
+        if ($hours > 0) {
+            $parts[] = $hours . 'h';
+        }
+
+        if ($minutes > 0 && $days == 0) {
+            $parts[] = $minutes . 'm';
+        }
+
+        $this->lengthOfStay = implode(' ', $parts) . ($this->treatmentCompletedAt ? '' : ' (ongoing)');
     }
-    
-    $days = floor($totalMinutes / (24 * 60));
-    $hours = floor(($totalMinutes % (24 * 60)) / 60);
-    $minutes = $totalMinutes % 60;
-    
-    $parts = [];
-    
-    if ($days > 0) {
-        $parts[] = $days . 'd';
-    }
-    
-    if ($hours > 0) {
-        $parts[] = $hours . 'h';
-    }
-    
-    if ($minutes > 0 && $days == 0) { // Only show minutes if less than a day
-        $parts[] = $minutes . 'm';
-    }
-    
-    $this->lengthOfStay = implode(' ', $parts) . ($this->treatmentCompletedAt ? '' : ' (ongoing)');
-}
 
     private function getBedDuration(): int
     {
@@ -413,31 +424,32 @@ class RehabTreatmentPage extends Component
         $this->showAlert = false;
     }
 
-  public function render()
-{
-    $bedInfo = $this->getBedInfo();
-    $patient = $this->encounter->encounter->patient;
-    $doctor = $this->encounter->encounter->doctor;
-    
-    // Calculate age
-    $age = $patient->date_of_birth 
-        ? Carbon::parse($patient->date_of_birth)->age 
-        : 'N/A';
+    public function render()
+    {
+        $bedInfo = $this->getBedInfo();
+        $patient = $this->encounter->encounter->patient;
+        $doctor = $this->encounter->encounter->doctor;
 
-    $statusColors = [
-        'sent_to_rehab' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-        'treatment_in_progress' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        'completed' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    ];
+        // Calculate age
+        $age = $patient->date_of_birth
+            ? Carbon::parse($patient->date_of_birth)->age
+            : 'N/A';
 
-    return view('livewire.rehab.rehab-treatment-page', [
-        'patient' => $patient,
-        'doctor' => $doctor,
-        'age' => $age,
-        'bedInfo' => $bedInfo,
-        'statusColor' => $statusColors[$this->encounter->status] ?? 'bg-gray-100 text-gray-800',
-        'treatmentEntries' => $this->treatmentEntries,
-        'daysLeft' => $this->daysLeft, // Add this line
-    ]);
-}
+        $statusColors = [
+            'sent_to_rehab' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+            'treatment_in_progress' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+            'completed' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        ];
+
+        return view('livewire.rehab.rehab-treatment-page', [
+            'patient' => $patient,
+            'doctor' => $doctor,
+            'age' => $age,
+            'bedInfo' => $bedInfo,
+            'statusColor' => $statusColors[$this->encounter->status] ?? 'bg-gray-100 text-gray-800',
+            'treatmentEntries' => $this->treatmentEntries,
+            'daysLeft' => $this->daysLeft,
+            'packageDetails' => $this->packageDetails,
+        ]);
+    }
 }

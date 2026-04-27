@@ -73,7 +73,7 @@ class RehabPaymentQueue extends Component
                 // FIXED: Use first_name and last_name instead of name
                 $patientName = trim(
                     ($installment->rehabOrder->encounter->encounter->patient->first_name ?? '') . ' ' .
-                    ($installment->rehabOrder->encounter->encounter->patient->last_name ?? '')
+                        ($installment->rehabOrder->encounter->encounter->patient->last_name ?? '')
                 );
 
                 $this->paymentReminders[] = [
@@ -97,7 +97,7 @@ class RehabPaymentQueue extends Component
             // FIXED: Use first_name and last_name instead of name
             $patientName = trim(
                 ($installment->rehabOrder->encounter->encounter->patient->first_name ?? '') . ' ' .
-                ($installment->rehabOrder->encounter->encounter->patient->last_name ?? '')
+                    ($installment->rehabOrder->encounter->encounter->patient->last_name ?? '')
             );
 
             $this->paymentReminders[] = [
@@ -438,8 +438,12 @@ class RehabPaymentQueue extends Component
                 $totalPaid = $this->paymentOrder->paymentInstallments()->sum('paid_amount');
                 $this->paymentOrder->paid_amount = $totalPaid;
 
-                // Check if this is the first installment
-                $isFirstInstallment = $this->selectedInstallment->installment_number === 1;
+                // Get the rehab encounter
+                $rehabEncounter = $this->paymentOrder->encounter;
+
+                // FIXED: Get treatment status from encounter
+                $encounterStatus = $rehabEncounter ? $rehabEncounter->status : null;
+                $isTreatmentStarted = in_array($encounterStatus, ['treatment_in_progress', 'completed']);
 
                 // Check if all installments are paid
                 $pendingInstallments = $this->paymentOrder->paymentInstallments()
@@ -453,11 +457,9 @@ class RehabPaymentQueue extends Component
                     $this->paymentOrder->payment_method = $this->paymentMethod;
                     $this->paymentOrder->paid_at = now();
 
-                    // Update rehab encounter status to send to treatment
-                    if ($this->paymentOrder->encounter) {
-                        $this->paymentOrder->encounter->update([
-                            'status' => 'sent_to_rehab' // This sends patient to start treatment
-                        ]);
+                    // FIXED: Only update rehab encounter if treatment hasn't started
+                    if ($rehabEncounter && !$isTreatmentStarted) {
+                        $rehabEncounter->update(['status' => 'sent_to_rehab']);
                     }
 
                     // If there's a bed selection, update bed status
@@ -470,19 +472,18 @@ class RehabPaymentQueue extends Component
                     }
 
                     $this->showAlertMessage(
-                        "Full payment completed! Patient sent to rehabilitation.",
+                        "Full payment completed! " . ($isTreatmentStarted ? "Treatment continues." : "Patient sent to rehabilitation."),
                         'success'
                     );
-                } elseif ($isFirstInstallment && $installmentStatus === 'paid') {
-                    // FIRST INSTALLMENT FULLY PAID - Send to treatment
+                } elseif ($this->selectedInstallment->installment_number === 1 && $installmentStatus === 'paid') {
+                    // FIRST INSTALLMENT FULLY PAID - Send to treatment if not started
                     $this->paymentOrder->payment_status = 'partial';
-                    $this->paymentOrder->status = 'paid'; // Change to paid to allow treatment start
+                    $this->paymentOrder->status = 'paid';
+                    $this->paymentOrder->payment_method = $this->paymentMethod;
 
-                    // Update rehab encounter status to send to treatment
-                    if ($this->paymentOrder->encounter) {
-                        $this->paymentOrder->encounter->update([
-                            'status' => 'sent_to_rehab' // This sends patient to start treatment
-                        ]);
+                    // FIXED: Only update rehab encounter if treatment hasn't started
+                    if ($rehabEncounter && !$isTreatmentStarted) {
+                        $rehabEncounter->update(['status' => 'sent_to_rehab']);
                     }
 
                     // Update bed status if exists
@@ -504,12 +505,12 @@ class RehabPaymentQueue extends Component
                     }
 
                     $this->showAlertMessage(
-                        "First installment paid! Patient sent to rehabilitation. Next payment due: " .
-                            ($nextInstallment ? $nextInstallment->due_date->format('M d, Y') : 'N/A'),
+                        "First installment paid! " . ($isTreatmentStarted ? "Treatment continues." : "Patient sent to rehabilitation.") .
+                            " Next payment due: " . ($nextInstallment ? $nextInstallment->due_date->format('M d, Y') : 'N/A'),
                         'success'
                     );
                 } else {
-                    // PARTIAL PAYMENT ON ANY INSTALLMENT - Keep in cashier queue
+                    // PARTIAL OR SUBSEQUENT INSTALLMENT PAYMENT - Keep status as is
                     $nextInstallment = $this->paymentOrder->paymentInstallments()
                         ->where('status', 'pending')
                         ->orderBy('installment_number')
@@ -522,9 +523,14 @@ class RehabPaymentQueue extends Component
                     $this->paymentOrder->payment_status = 'partial';
                     $this->paymentOrder->status = 'sent_to_cashier'; // Keep in cashier queue
 
+                    // FIXED: DO NOT change rehab encounter status - preserve current
+                    if ($rehabEncounter && $isTreatmentStarted) {
+                        \Log::info('Keeping treatment status: ' . $encounterStatus);
+                    }
+
                     $this->showAlertMessage(
-                        "Partial payment received. Please complete the remaining amount.",
-                        'warning'
+                        "Payment received successfully!",
+                        'success'
                     );
                 }
 
@@ -542,7 +548,6 @@ class RehabPaymentQueue extends Component
             $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
         }
     }
-
     public function getUpcomingPayments()
     {
         $upcomingPayments = RehabPaymentInstallment::with([
@@ -619,25 +624,23 @@ class RehabPaymentQueue extends Component
         if ($this->tab === 'pending') {
             // Orders with no payments yet
             $query->whereIn('status', ['sent_to_cashier', 'bed_selected'])
-                  ->where(function($q) {
-                      $q->where('payment_status', 'pending')
+                ->where(function ($q) {
+                    $q->where('payment_status', 'pending')
                         ->orWhereNull('payment_status');
-                  });
-
+                });
         } elseif ($this->tab === 'partial') {
             // Orders with partial payments - check payment_status, NOT status
             $query->where('payment_status', 'partial')
-                  ->whereIn('status', ['sent_to_cashier', 'paid']); // Include both for now
+                ->whereIn('status', ['sent_to_cashier', 'paid']); // Include both for now
 
         } elseif ($this->tab === 'overdue') {
             // Overdue payments
             $query->where('payment_status', 'overdue')
-                  ->whereIn('status', ['sent_to_cashier', 'paid']);
-
+                ->whereIn('status', ['sent_to_cashier', 'paid']);
         } elseif ($this->tab === 'processed') {
             // FULLY PAID and completed orders
             $query->where('status', 'paid')
-                  ->where('payment_status', 'paid');
+                ->where('payment_status', 'paid');
         }
 
         // Apply search filter - FIXED: Using first_name, last_name, and card_number
@@ -645,8 +648,8 @@ class RehabPaymentQueue extends Component
             $searchTerm = '%' . $this->search . '%';
             $query->whereHas('encounter.encounter.patient', function ($patient) use ($searchTerm) {
                 $patient->where('first_name', 'like', $searchTerm)
-                        ->orWhere('last_name', 'like', $searchTerm)
-                        ->orWhere('card_number', 'like', $searchTerm);
+                    ->orWhere('last_name', 'like', $searchTerm)
+                    ->orWhere('card_number', 'like', $searchTerm);
             });
         }
 

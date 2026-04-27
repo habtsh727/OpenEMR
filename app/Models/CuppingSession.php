@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class CuppingSession extends Model
 {
     protected $table = 'cupping_sessions';
-    
+
     protected $fillable = [
         'cupping_therapy_id',
         'session_number',
@@ -45,10 +45,10 @@ class CuppingSession extends Model
     const TREATMENT_COMPLETED = 'completed';
 
     // Relationships
-    public function cuppingTherapy(): BelongsTo
-    {
-        return $this->belongsTo(CuppingTherapy::class);
-    }
+   public function cuppingTherapy()
+{
+    return $this->belongsTo(CuppingTherapy::class, 'cupping_therapy_id');
+}
 
     public function items(): HasMany
     {
@@ -59,6 +59,10 @@ class CuppingSession extends Model
     {
         return $this->hasMany(CuppingPayment::class);
     }
+    public function therapyPackage()
+{
+    return $this->belongsTo(CuppingTherapyPackage::class, 'cupping_therapy_package_id');
+}
 
     public function report(): HasOne
     {
@@ -80,14 +84,14 @@ class CuppingSession extends Model
     public function markPaymentComplete(float $amount, string $paymentMethod, int $userId): void
     {
         $this->paid_amount += $amount;
-        
+
         if ($this->paid_amount >= $this->session_amount) {
             $this->payment_status = self::PAYMENT_PAID;
             $this->paid_at = now();
         } else {
             $this->payment_status = self::PAYMENT_PARTIAL;
         }
-        
+
         $this->save();
 
         // Create payment record
@@ -110,6 +114,10 @@ class CuppingSession extends Model
         $this->cuppingTherapy->updateStatus();
     }
 
+    public function therapy()
+{
+    return $this->belongsTo(CuppingTherapy::class, 'cupping_therapy_id');
+}
     public function addToTreatmentQueue(): void
     {
         $lastPosition = CuppingQueue::where('queue_type', 'treatment')
@@ -142,6 +150,7 @@ class CuppingSession extends Model
 
         $this->cuppingTherapy->updateStatus();
     }
+
 
     public function completeTreatment(string $reportText, ?string $observations, ?string $recommendations, int $userId): void
     {

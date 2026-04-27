@@ -2,8 +2,6 @@
 
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Livewire\Employees\Manage;
-use App\Livewire\Admin\CuppingLocationManager;
-use App\Livewire\Admin\CuppingTypeManager;
 use App\Livewire\Appointment\AppointmentIndex;
 use App\Livewire\Appointment\AppointmentRequests;
 use App\Livewire\Appointment\CalendarView;
@@ -14,6 +12,7 @@ use App\Livewire\Appointment\UpcomingAppointments;
 use App\Livewire\Doctor\RehabReview;
 use App\Livewire\Encounters\TriageIndex;
 use App\Livewire\OrderLab\LabDashboard;
+use App\Livewire\Pharmacy\Walkin\WalkinSalesReport;
 use App\Livewire\Referral\ReferralQueue;
 use App\Livewire\Rehab\RehabTreatmentPage;
 use App\Livewire\Rehab\RehabTreatmentQueue;
@@ -62,14 +61,12 @@ use App\Livewire\Appointment\AppointmentDetail;
 use App\Livewire\Appointment\AppointmentReports;
 use App\Livewire\Bed\BedIndex;
 use App\Livewire\Cashier\CashierOrderQueueComponent;
-use App\Livewire\Cashier\CuppingPaymentForm;
-use App\Livewire\Cashier\CuppingPaymentQueue;
 use App\Livewire\Cashier\OrderQueueComponent;
 use App\Livewire\Consumables\ConsumableManager;
-use App\Livewire\CuppingDepartment\CuppingReportForm;
-use App\Livewire\CuppingDepartment\TreatmentQueue;
-use App\Livewire\Doctor\CuppingOrderForm;
-use App\Livewire\Doctor\CuppingReports;
+use App\Livewire\Cupping\CuppingLocationManager;
+use App\Livewire\Cupping\CuppingTypeManager;
+use App\Livewire\Cupping\DoctorCuppingOrder;
+use App\Livewire\Cupping\TreatmentCuppingQueue;
 use App\Livewire\Doctor\CustomMedicationFormComponent;
 use App\Livewire\Doctor\DoctorMedicationOrderComponent;
 use App\Livewire\Doctor\RehabQueue;
@@ -80,6 +77,10 @@ use App\Livewire\Referral\SubmitResultModal;
 use App\Livewire\VitalTypes\Index;
 use App\Livewire\Forms\RehabPackageForm;
 use App\Livewire\Forms\RehabPackageList;
+use App\Livewire\Pharmacy\Report\SalesReport;
+use App\Livewire\Pharmacy\Walkin\CashierPayment;
+use App\Livewire\Pharmacy\Walkin\PharmacistDispense;
+use App\Livewire\Pharmacy\Walkin\PharmacistOrder;
 use App\Livewire\Rehab\BedManager\BedSelectionQueue;
 use App\Livewire\Rehab\BedQueue;
 use App\Livewire\Rehab\Cashier\RehabPaymentProcess;
@@ -87,6 +88,7 @@ use App\Livewire\Rehab\Cashier\RehabPaymentQueue;
 use App\Livewire\Rehab\DoctorRehabOrder;
 use App\Livewire\Rehab\QuestionnaireForm;
 use App\Livewire\Rehab\Queue;
+use App\Livewire\Rehab\RehabFinanceReport;
 use App\Livewire\Rehab\RehabPackagesComponent;
 use App\Livewire\Rehab\Template\Index as TemplateIndex;
 use App\Livewire\Rehab\Template\Form as TemplateForm;
@@ -132,6 +134,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cashier/rehab/payment/{rehabOrder}', RehabPaymentProcess::class)->name('cashier.rehab.payment');
     Route::get('/payment-details/{orderId}', App\Livewire\Rehab\Cashier\PatientPaymentDetails::class)->name('rehab.cashier.payment-details');
     Route::get('rehab/reports', App\Livewire\Rehab\Cashier\PaymentReports::class)->name('rehab.payment.reports');
+    Route::get('/rehab/finance-report', RehabFinanceReport::class)->name('rehab.finance.report');
 });
 
 Route::get('/', function () {
@@ -291,6 +294,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/pharmacy/custom-medications', \App\Livewire\Pharmacy\CustomMedicationComponent::class)
         ->name('pharmacy.custom-medications');
+    Route::get('/pharmacy/report/sales', SalesReport::class)->name('pharmacy.report.sales');
 });
 
 // routes/web.php (add these routes)
@@ -369,30 +373,30 @@ Route::middleware(['auth'])->prefix('doctor')->name('doctor.')->group(function (
 
 
 
-
-
-
-
 Route::middleware(['auth'])->group(function () {
-
-    // Doctor Routes
-    Route::get('/doctor/encounter/{encounter}/cupping-order', CuppingOrderForm::class)
-        ->name('doctor.cupping-order');
-
-    // Cashier Routes
-    Route::get('/cashier/payment-queue', CuppingPaymentQueue::class)
-        ->name('cashier.queue');
-
-    // Cupping Department Routes
-    Route::get('/cupping-department/treatment-queue', TreatmentQueue::class)
-        ->name('cupping.queue');
-
-    Route::get('/doctor/cupping-reports', CuppingReports::class)
-        ->name('doctor.cupping-reports');
+    Route::get('/pharmacy/walkin/create', PharmacistOrder::class)->name('pharmacy.walkin.create');
+    Route::get('/pharmacy/walkin/payment', CashierPayment::class)->name('pharmacy.walkin.payment');
+    Route::get('/pharmacy/walkin/dispense', PharmacistDispense::class)->name('pharmacy.walkin.dispense');
+    Route::get('/pharmacy/walkin/report', WalkinSalesReport::class)->name('pharmacy.walkin.report');
 });
 
-Route::middleware(['auth'])->prefix('admin')->group(function () {
-    Route::get('/cupping-types', CuppingTypeManager::class)->name('admin.cupping.types');
-    Route::get('/cupping-locations', CuppingLocationManager::class)->name('admin.cupping.locations');
-});
+// Route::prefix('cupping')->name('cupping.')->middleware(['auth'])->group(function () {
+
+//     // Doctor Routes
+//     Route::prefix('doctor')->name('doctor.')->group(function () {
+//         Route::get('/order/{encounter}', DoctorCuppingOrder::class)->name('order');
+//     });
+
+
+// });
+Route::get('/cupping/doctor/order/{encounter}', DoctorCuppingOrder::class)->name('cupping.doctor.order');
+Route::get('/cupping/admin/packages', \App\Livewire\Cupping\AdminCuppingPackageManager::class)->name('cupping.admin.packages');
+Route::get('/cupping/cashier/queue', \App\Livewire\Cupping\CashierCuppingQueue::class)->name('cupping.cashier.queue');
+Route::get('/cupping/treatment/session/{session}', \App\Livewire\Cupping\TreatmentCuppingSession::class)->name('cupping.treatment.session');
+Route::get('cupping/treatment/queue', TreatmentCuppingQueue::class)->name('cupping.treatment.queue');
+Route::get('/cupping/results', \App\Livewire\Cupping\CuppingResult::class)->name('cupping.results');
+Route::get('/cupping/types', CuppingTypeManager::class)->name('cupping.types');
+Route::get('/cupping/locations', CuppingLocationManager::class)->name('cupping.locations');
+Route::get('/cupping/sales-report', \App\Livewire\Cupping\CuppingSalesReport::class)->name('cupping.sales-report');
+
 require __DIR__ . '/auth.php';
