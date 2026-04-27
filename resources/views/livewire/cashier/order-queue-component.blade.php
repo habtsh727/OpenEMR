@@ -22,7 +22,7 @@
                     <p class="text-sm font-medium">{{ $toastMessage }}</p>
                 </div>
                 <div class="ml-4 flex-shrink-0 flex">
-                    <button onclick="document.getElementById('toast-message').remove()" 
+                    <button onclick="document.getElementById('toast-message').remove()"
                             class="inline-flex text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -32,7 +32,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Auto-hide script -->
     <script>
         setTimeout(function() {
@@ -46,7 +46,7 @@
         }, 5000);
     </script>
     @endif
-    
+
         <!-- The rest of your existing code... -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900">
         <!-- Header -->
@@ -60,7 +60,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="relative">
-                        <input type="text" 
+                        <input type="text"
                                wire:model.live.debounce.300ms="search"
                                placeholder="Search patient, order ID..."
                                class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400">
@@ -70,7 +70,7 @@
                             </svg>
                         </div>
                     </div>
-                    <select wire:model.live="status" 
+                    <select wire:model.live="status"
                             class="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                         <option value="ordered">Pending Payment</option>
                         <option value="paid">Paid Orders</option>
@@ -99,7 +99,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Paid Orders -->
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                     <div class="flex items-center">
@@ -116,7 +116,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Pending Amount -->
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                     <div class="flex items-center">
@@ -133,7 +133,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Collected Amount -->
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
                     <div class="flex items-center">
@@ -192,16 +192,16 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full 
-                                {{ $order->status === 'ordered' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' : 
-                                   ($order->status === 'paid' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                {{ $order->status === 'ordered' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                                   ($order->status === 'paid' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
                                    'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200') }}">
                                 {{ ucfirst($order->status) }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             @if($order->status === 'ordered')
-                            <button wire:click="selectOrder({{ $order->id }})" 
+                            <button wire:click="selectOrder({{ $order->id }})"
                                  class="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 dark:from-green-600 dark:to-emerald-700 dark:hover:from-green-500 dark:hover:to-emerald-600 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 flex items-center shadow-sm hover:shadow">
                                   <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -209,14 +209,14 @@
                                 Process Payment
                             </button>
                             @endif
-                            
+
                             @if($order->status === 'paid')
-                            <button wire:click="viewReceipt({{ $order->id }})" 
+                            <button wire:click="viewReceipt({{ $order->id }})"
                                     class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 mr-3 transition-colors">
                                 View Receipt
                             </button>
                             @endif
-                         
+
                         </td>
                     </tr>
                     @empty
@@ -257,7 +257,7 @@
                                 <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100" id="modal-title">
                                     Process Payment
                                 </h3>
-                            
+
                             <form wire:submit.prevent="processPayment" class="mt-4 space-y-4">
                                 <!-- Order Details -->
                                 @php
@@ -299,7 +299,7 @@
                                 <div>
                                     <div class="flex justify-between items-center">
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Additional Discount (ETB)</label>
-                                        <button type="button" wire:click="applyAdditionalDiscount" 
+                                        <button type="button" wire:click="applyAdditionalDiscount"
                                                 class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
                                             Apply Discount
                                         </button>
@@ -308,7 +308,7 @@
                                            class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:text-sm"
                                            placeholder="Optional">
                                     @error('paymentDiscount') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
-                                    
+
                                     @if($paymentDiscount > 0)
                                     <div class="mt-1 text-sm text-green-600 dark:text-green-400">
                                         Final Amount:ETB{{ number_format($paymentAmount - $paymentDiscount, 2) }}
@@ -331,7 +331,7 @@
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
         </label>
-        
+
         <label class="relative flex cursor-pointer rounded-lg border {{ $paymentMethod === 'bank' ? 'border-blue-500 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' }} p-4 shadow-sm focus:outline-none">
             <input type="radio" wire:model.live="paymentMethod" value="card" class="sr-only">
             <span class="flex flex-1">
@@ -343,7 +343,7 @@
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
         </label>
-        
+
         <label class="relative flex cursor-pointer rounded-lg border {{ $paymentMethod === 'insurance' ? 'border-blue-500 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' }} p-4 shadow-sm focus:outline-none">
             <input type="radio" wire:model.live="paymentMethod" value="insurance" class="sr-only">
             <span class="flex flex-1">
@@ -396,7 +396,7 @@
                                         <span wire:loading.remove>Confirm & Process Payment</span>
                                         <span wire:loading>Processing...</span>
                                     </button>
-                                    <button type="button" 
+                                    <button type="button"
                                             wire:click="$set('showPaymentModal', false)"
                                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                                         Cancel
@@ -423,14 +423,14 @@
                     <div id="printable-receipt" class="p-6">
                         <!-- Receipt Header -->
                         <div class="text-center border-b-2 border-gray-800 dark:border-gray-600 pb-4 mb-6">
-                            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">MEDICAL HOSPITAL</h1>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">123 Hospital Street, Medical City</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Phone: (123) 456-7890 | Email: billing@medicalhospital.com</p>
+                            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Firdos Cultural Medical Center</h1>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Addis Ababa Ethiopia, Medical Center</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Phone: 0930-316631 | Email: billing@firdowusmedicalcenter.com/</p>
                         </div>
-                        
+
                         <!-- Receipt Title -->
                         <h2 class="text-xl font-bold text-center underline mb-6 text-gray-900 dark:text-gray-100">PAYMENT RECEIPT</h2>
-                        
+
                         <!-- Receipt Information -->
                         <div class="grid grid-cols-2 gap-8 mb-8">
                             <div>
@@ -450,7 +450,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Items Table -->
                         <div class="mb-8">
                             <table class="min-w-full border border-gray-300 dark:border-gray-600">
@@ -479,7 +479,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <!-- Payment Summary -->
                         <div class="mb-8">
                             <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
@@ -508,7 +508,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Payment Details -->
                         <div class="mb-8 grid grid-cols-2 gap-6">
                             <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
@@ -531,7 +531,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Footer -->
                         <div class="border-t-2 border-gray-800 dark:border-gray-600 pt-6 text-center text-sm text-gray-600 dark:text-gray-400">
                             <p class="font-bold mb-2">Thank you for your payment!</p>
@@ -539,15 +539,15 @@
                             <p class="mt-1">For any queries, please contact billing@medicalhospital.com</p>
                         </div>
                     </div>
-                    
+
                     <!-- Actions -->
                     <div class="mt-6 bg-gray-50 dark:bg-gray-900 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="button" 
+                        <button type="button"
                                 onclick="printReceipt()"
                                 class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 dark:bg-blue-700 text-base font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                             Print Receipt
                         </button>
-                        <button type="button" 
+                        <button type="button"
                                 wire:click="closeReceiptModal"
                                 class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
                             Close
@@ -573,20 +573,20 @@
             @this.set('toastType', '');
         }, 5000);
     });
-    
+
     // Print receipt function
     window.printReceipt = function() {
         const printContent = document.getElementById('printable-receipt').innerHTML;
         const originalContent = document.body.innerHTML;
-        
+
         document.body.innerHTML = `
             <div class="p-8">
                 ${printContent}
             </div>
         `;
-        
+
         window.print();
-        
+
         // Restore content and reinitialize Livewire
         document.body.innerHTML = originalContent;
         Livewire.rescan();

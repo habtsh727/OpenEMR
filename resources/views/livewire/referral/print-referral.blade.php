@@ -514,15 +514,15 @@
         @if($letterhead === 'hospital' || $letterhead === 'clinic')
         <div class="{{ $letterhead === 'hospital' ? 'letterhead' : 'clinic-letterhead' }} no-break">
             @if($letterhead === 'hospital')
-            <h1>CITY GENERAL HOSPITAL</h1>
+            <h1>Firdos Cultural Medical Center</h1>
             <p>Department of Medical Services</p>
-            <p>123 Medical Center Drive, City, State 12345</p>
-            <p>Phone: (555) 123-4567 • Fax: (555) 123-4568</p>
+            <p>Addis Ababa Ethiopia</p>
+            <p>Phone: (251) 930-316631</p>
             @else
-            <h1>MEDICAL SPECIALISTS CLINIC</h1>
-            <p>Referral Center</p>
-            <p>456 Health Plaza, City, State 12345</p>
-            <p>Phone: (555) 987-6543 • Email: referrals@clinic.com</p>
+            <h1>Firdos Cultural Medical Center</h1>
+            <p>Department of Medical Services</p>
+            <p>Addis Ababa Ethiopia</p>
+            <p>Phone: (251) 930-316631</p>
             @endif
         </div>
         @endif
@@ -1230,16 +1230,16 @@
         document.addEventListener('DOMContentLoaded', function() {
             generatePreview();
         });
-        
+
         function generatePreview() {
             const previewContainer = document.querySelector('.max-w-4xl.mx-auto.p-6');
             const printableContent = document.getElementById('printableContent').innerHTML;
-            
+
             // Extract just the document content (without the hidden wrapper)
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = printableContent;
             const documentContent = tempDiv.querySelector('.printable-document').outerHTML;
-            
+
             // Create preview with theme compatibility
             previewContainer.innerHTML = `
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow dark:shadow-gray-900/50 overflow-hidden">
@@ -1250,17 +1250,17 @@
                 </div>
             `;
         }
-        
+
         function printReferral() {
             const printableContent = document.getElementById('printableContent').innerHTML;
-            
+
             // Create a new window for printing
             const printWindow = window.open('', '_blank', 'width=800,height=600');
-            
+
             // Write the content
             printWindow.document.write(printableContent);
             printWindow.document.close();
-            
+
             // Wait for content to load, then print
             printWindow.onload = function() {
                 printWindow.focus();
