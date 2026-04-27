@@ -87,7 +87,7 @@ class Dashboard extends Component
         $this->loadLabSales($startDate, $endDate);
 
         $this->totalSales = $this->cardSales + $this->pharmacySales + $this->cuppingSales +
-                           $this->rehabSales + $this->bedSales + $this->radiologySales + $this->labSales;
+            $this->rehabSales + $this->bedSales + $this->radiologySales + $this->labSales;
 
         $this->loadPatientStats();
         $this->loadBedOccupancy();
@@ -97,24 +97,36 @@ class Dashboard extends Component
     private function getStartDate()
     {
         switch ($this->dateRange) {
-            case 'today': return now()->startOfDay();
-            case 'yesterday': return now()->subDay()->startOfDay();
-            case 'this_week': return now()->startOfWeek();
-            case 'this_month': return now()->startOfMonth();
-            case 'custom': return Carbon::parse($this->selectedDate)->startOfDay();
-            default: return now()->startOfDay();
+            case 'today':
+                return now()->startOfDay();
+            case 'yesterday':
+                return now()->subDay()->startOfDay();
+            case 'this_week':
+                return now()->startOfWeek();
+            case 'this_month':
+                return now()->startOfMonth();
+            case 'custom':
+                return Carbon::parse($this->selectedDate)->startOfDay();
+            default:
+                return now()->startOfDay();
         }
     }
 
     private function getEndDate()
     {
         switch ($this->dateRange) {
-            case 'today': return now()->endOfDay();
-            case 'yesterday': return now()->subDay()->endOfDay();
-            case 'this_week': return now()->endOfWeek();
-            case 'this_month': return now()->endOfMonth();
-            case 'custom': return Carbon::parse($this->selectedDate)->endOfDay();
-            default: return now()->endOfDay();
+            case 'today':
+                return now()->endOfDay();
+            case 'yesterday':
+                return now()->subDay()->endOfDay();
+            case 'this_week':
+                return now()->endOfWeek();
+            case 'this_month':
+                return now()->endOfMonth();
+            case 'custom':
+                return Carbon::parse($this->selectedDate)->endOfDay();
+            default:
+                return now()->endOfDay();
         }
     }
 
@@ -153,20 +165,20 @@ class Dashboard extends Component
             ->sum('total_price') ?? 0;
     }
 
-  private function loadRadiologySales($startDate, $endDate)
-{
-    $this->radiologySales = ImagingOrder::where('status', 'paid')
-        ->whereBetween('order_date', [$startDate, $endDate])
-        ->sum('amount') ?? 0;
-}
+    private function loadRadiologySales($startDate, $endDate)
+    {
+        $this->radiologySales = ImagingOrder::where('status', 'paid')
+            ->whereBetween('order_date', [$startDate, $endDate])
+            ->sum('amount') ?? 0;
+    }
 
-  private function loadLabSales($startDate, $endDate)
-{
-    $this->labSales = LabOrder::where('lab_orders.payment_status', 'paid')
-        ->whereBetween('lab_orders.created_at', [$startDate, $endDate])
-        ->join('lab_tests', 'lab_orders.lab_test_id', '=', 'lab_tests.id')
-        ->sum('lab_tests.price') ?? 0;
-}
+    private function loadLabSales($startDate, $endDate)
+    {
+        $this->labSales = LabOrder::where('lab_orders.payment_status', 'paid')
+            ->whereBetween('lab_orders.created_at', [$startDate, $endDate])
+            ->join('lab_tests', 'lab_orders.lab_test_id', '=', 'lab_tests.id')
+            ->sum('lab_tests.price') ?? 0;
+    }
 
     private function loadPatientStats()
     {
@@ -186,10 +198,10 @@ class Dashboard extends Component
         // Bed class breakdown
         $bedClasses = BedClass::all();
         foreach ($bedClasses as $class) {
-            $totalClassBeds = Bed::whereHas('room', function($q) use ($class) {
+            $totalClassBeds = Bed::whereHas('room', function ($q) use ($class) {
                 $q->where('bed_class_id', $class->id);
             })->count();
-            $occupiedClassBeds = Bed::whereHas('room', function($q) use ($class) {
+            $occupiedClassBeds = Bed::whereHas('room', function ($q) use ($class) {
                 $q->where('bed_class_id', $class->id);
             })->where('status', 'occupied')->count();
 
@@ -210,70 +222,74 @@ class Dashboard extends Component
     }
 
     private function loadRecentActivities()
-{
-    $this->recentPatients = Patient::latest()->take(5)->get();
+    {
+        $this->recentPatients = Patient::latest()->take(5)->get();
 
-    $this->recentSales = collect();
+        $this->recentSales = collect();
 
-    // Card payments
-    $cardPayments = CardPayment::with('patient')->latest()->take(2)->get()->map(function($item) {
-        return (object)[
-            'type' => 'Card Fee', 'icon' => 'credit-card',
-            'patient_name' => $item->patient->first_name . ' ' . $item->patient->last_name,
-            'amount' => $item->amount,
-            'date' => $item->payment_date,
-        ];
-    });
-
-    // Pharmacy
-    $pharmacySales = PharmacyStockTransaction::where('transaction_type', 'dispense')
-        ->latest()
-        ->take(2)
-        ->get()
-        ->map(function($item) {
+        // Card payments
+        $cardPayments = CardPayment::with('patient')->latest()->take(2)->get()->map(function ($item) {
             return (object)[
-                'type' => 'Pharmacy', 'icon' => 'pill',
-                'patient_name' => 'Walk-in / Prescription',
-                'amount' => abs($item->total_price),
-                'date' => $item->created_at->toDateString(),
-            ];
-        });
-
-    // Radiology - Fixed: removed paid_at, using order_date instead
-    $radiologySales = ImagingOrder::with('encounter.patient')
-        ->where('status', 'paid')
-        ->latest('order_date')
-        ->take(2)
-        ->get()
-        ->map(function($item) {
-            return (object)[
-                'type' => 'Radiology', 'icon' => 'camera',
-                'patient_name' => $item->encounter->patient->first_name ?? 'N/A',
+                'type' => 'Card Fee',
+                'icon' => 'credit-card',
+                'patient_name' => $item->patient->first_name . ' ' . $item->patient->last_name,
                 'amount' => $item->amount,
-                'date' => $item->order_date->toDateString(),
+                'date' => $item->payment_date,
             ];
         });
 
-   $labSales = LabOrder::with('order.encounter.patient', 'labTest')
-    ->where('lab_orders.payment_status', 'paid')
-    ->latest('lab_orders.created_at')
-    ->take(2)
-    ->get()
-    ->map(function($item) {
-        return (object)[
-            'type' => 'Laboratory', 'icon' => 'flask',
-            'patient_name' => $item->order->encounter->patient->first_name ?? 'N/A',
-            'amount' => $item->labTest->price ?? 0,
-            'date' => $item->created_at->toDateString(),
-        ];
-    });
+        // Pharmacy
+        $pharmacySales = PharmacyStockTransaction::where('transaction_type', 'dispense')
+            ->latest()
+            ->take(2)
+            ->get()
+            ->map(function ($item) {
+                return (object)[
+                    'type' => 'Pharmacy',
+                    'icon' => 'pill',
+                    'patient_name' => 'Walk-in / Prescription',
+                    'amount' => abs($item->total_price),
+                    'date' => $item->created_at->toDateString(),
+                ];
+            });
 
-    $this->recentSales = $cardPayments->concat($pharmacySales)
-        ->concat($radiologySales)
-        ->concat($labSales)
-        ->sortByDesc('date')
-        ->take(6);
-}
+        // Radiology - Fixed: removed paid_at, using order_date instead
+        $radiologySales = ImagingOrder::with('encounter.patient')
+            ->where('status', 'paid')
+            ->latest('order_date')
+            ->take(2)
+            ->get()
+            ->map(function ($item) {
+                return (object)[
+                    'type' => 'Radiology',
+                    'icon' => 'camera',
+                    'patient_name' => $item->encounter->patient->first_name ?? 'N/A',
+                    'amount' => $item->amount,
+                    'date' => $item->order_date->toDateString(),
+                ];
+            });
+
+        $labSales = LabOrder::with('order.encounter.patient', 'labTest')
+            ->where('lab_orders.payment_status', 'paid')
+            ->latest('lab_orders.created_at')
+            ->take(2)
+            ->get()
+            ->map(function ($item) {
+                return (object)[
+                    'type' => 'Laboratory',
+                    'icon' => 'flask',
+                    'patient_name' => $item->order->encounter->patient->first_name ?? 'N/A',
+                    'amount' => $item->labTest->price ?? 0,
+                    'date' => $item->created_at->toDateString(),
+                ];
+            });
+
+        $this->recentSales = $cardPayments->concat($pharmacySales)
+            ->concat($radiologySales)
+            ->concat($labSales)
+            ->sortByDesc('date')
+            ->take(6);
+    }
 
     public function render()
     {
@@ -296,24 +312,24 @@ class Dashboard extends Component
         return $labels;
     }
 
-   private function getSalesChartData()
-{
-    $data = [];
-    for ($i = 6; $i >= 0; $i--) {
-        $date = now()->subDays($i);
-        $data[] = [
-            'card' => CardPayment::whereDate('payment_date', $date)->sum('amount') ?? 0,
-            'pharmacy' => PharmacyStockTransaction::where('transaction_type', 'dispense')->whereDate('created_at', $date)->sum(DB::raw('ABS(total_price)')) ?? 0,
-            'cupping' => CuppingSession::whereDate('paid_at', $date)->sum('session_amount') ?? 0,
-            'rehab' => RehabOrder::whereDate('paid_at', $date)->sum('total_amount') ?? 0,
-            'bed' => RehabBedSelection::whereDate('selected_at', $date)->sum('total_price') ?? 0,
-            'radiology' => ImagingOrder::where('status', 'paid')->whereDate('order_date', $date)->sum('amount') ?? 0,
-           'lab' => LabOrder::where('lab_orders.payment_status', 'paid')
-    ->whereDate('lab_orders.created_at', $date)
-    ->join('lab_tests', 'lab_orders.lab_test_id', '=', 'lab_tests.id')
-    ->sum('lab_tests.price') ?? 0,
-        ];
+    private function getSalesChartData()
+    {
+        $data = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $data[] = [
+                'card' => CardPayment::whereDate('payment_date', $date)->sum('amount') ?? 0,
+                'pharmacy' => PharmacyStockTransaction::where('transaction_type', 'dispense')->whereDate('created_at', $date)->sum(DB::raw('ABS(total_price)')) ?? 0,
+                'cupping' => CuppingSession::whereDate('paid_at', $date)->sum('session_amount') ?? 0,
+                'rehab' => RehabOrder::whereDate('paid_at', $date)->sum('total_amount') ?? 0,
+                'bed' => RehabBedSelection::whereDate('selected_at', $date)->sum('total_price') ?? 0,
+                'radiology' => ImagingOrder::where('status', 'paid')->whereDate('order_date', $date)->sum('amount') ?? 0,
+                'lab' => LabOrder::where('lab_orders.payment_status', 'paid')
+                    ->whereDate('lab_orders.created_at', $date)
+                    ->join('lab_tests', 'lab_orders.lab_test_id', '=', 'lab_tests.id')
+                    ->sum('lab_tests.price') ?? 0,
+            ];
+        }
+        return $data;
     }
-    return $data;
-}
 }
