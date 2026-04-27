@@ -142,11 +142,11 @@ Route::get('/', function () {
 })
     ->middleware('auth')
     ->name('home');
+Route::get('/dashboard', \App\Livewire\Dashboard::class)->middleware('auth')->name('dashboard');
 
-
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+// Route::view('dashboard', 'dashboard')
+//     ->middleware(['auth', 'verified'])
+//     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
 
