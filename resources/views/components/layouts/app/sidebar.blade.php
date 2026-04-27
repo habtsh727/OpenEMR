@@ -64,7 +64,8 @@
                 <flux:sidebar.item icon="currency-dollar" :href="route('cashier.medication.orders')" wire:navigate>
                     Pharmacy Payment
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.payment')" wire:navigate>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.payment')"
+                    wire:navigate>
                     Walk-in Payment
                 </flux:sidebar.item>
             </flux:sidebar.group>
@@ -88,6 +89,37 @@
                     Referral
                 </flux:sidebar.item>
                 @endif
+            </flux:sidebar.group>
+            @endif
+
+            {{-- //cupping --}}
+            @if(auth()->user()->hasRole(['doctor', 'nurse', 'clinician', 'rehab', 'super-admin']))
+            <flux:sidebar.group expandable :expanded="false" heading="Cupping" class="grid">
+
+                <flux:sidebar.item icon="currency-dollar" :href="route('cupping.cashier.queue')" wire:navigate>
+                    Payment Queue
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="clock" :href="route('cupping.treatment.queue')" wire:navigate>
+                    Treatment Queue
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="clipboard-document-check" :href="route('cupping.results')" wire:navigate>
+                    Cupping Results
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="archive-box" :href="route('cupping.admin.packages')" wire:navigate>
+                    Package Manager
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="map-pin" :href="route('referrals.queue')" wire:navigate>
+                    Cupping Location
+                </flux:sidebar.item>
+
+                <flux:sidebar.item icon="beaker" :href="route('referrals.queue')" wire:navigate>
+                    Cupping Type
+                </flux:sidebar.item>
+
             </flux:sidebar.group>
             @endif
 
@@ -142,8 +174,8 @@
                 {{-- <flux:sidebar.item icon="document-text" :href="route('cashier.rehab.payments')" wire:navigate>
                     Payment History
                 </flux:sidebar.item> --}}
-                 <flux:sidebar.item icon="document-text" :href="route('rehab.finance.report')" wire:navigate>
-                    Finance  History
+                <flux:sidebar.item icon="document-text" :href="route('rehab.finance.report')" wire:navigate>
+                    Finance History
                 </flux:sidebar.item>
 
                 @endif
@@ -321,8 +353,7 @@
                     wire:navigate>
                     Walk-in Dispense
                 </flux:sidebar.item>
-                 <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.report')"
-                    wire:navigate>
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('pharmacy.walkin.report')" wire:navigate>
                     Walk-in Sales Report
                 </flux:sidebar.item>
             </flux:sidebar.group>
@@ -429,7 +460,7 @@
                     <flux:menu.item href="/settings/profile" icon="cog" wire:navigate>Settings</flux:menu.item>
                 </flux:menu.radio.group>
 
-          enu.separator />
+                enu.separator />
 
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
