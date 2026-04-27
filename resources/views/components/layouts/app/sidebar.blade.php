@@ -465,7 +465,7 @@
                     <flux:menu.item href="/settings/profile" icon="cog" wire:navigate>Settings</flux:menu.item>
                 </flux:menu.radio.group>
 
-                enu.separator />
+            
 
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
