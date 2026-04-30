@@ -174,10 +174,10 @@
                 </flux:sidebar.item>
                 @endcan
 
-                @can('fill_rehab_questionnaire')
+                {{-- @can('fill_rehab_questionnaire')
                 <flux:sidebar.item icon="clipboard-document-check" :href="route('rehab.questionnaire', ['id' => 0])"
                     wire:navigate>Questionnaire</flux:sidebar.item>
-                @endcan
+                @endcan --}}
 
                 @canany(['view_rehab_templates','manage_rehab_templates'])
                 <flux:sidebar.item icon="rectangle-group" :href="route('rehab.templates.index')" wire:navigate>Question
