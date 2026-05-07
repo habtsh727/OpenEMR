@@ -458,6 +458,35 @@ class PharmacyDashboardComponent extends Component
         }
     }
 
+    // public function render()
+    // {
+    //     // Get orders with their dispensations
+    //     $dispensations = MedicationDispensation::with(['order.encounter.patient', 'order.payment'])
+    //         ->when($this->status === 'pending', function ($query) {
+    //             $query->where('status', 'pending');
+    //         })
+    //         ->when($this->status === 'approved', function ($query) {
+    //             $query->where('status', 'approved');
+    //         })
+    //         ->when($this->status === 'dispensed', function ($query) {
+    //             $query->where('status', 'dispensed');
+    //         })
+    //         ->when($this->search, function ($query) {
+    //             $query->whereHas('order.encounter.patient', function ($patientQuery) {
+    //                 $patientQuery->where('name', 'like', '%' . $this->search . '%')
+    //                     ->orWhere('id', 'like', '%' . $this->search . '%');
+    //             })
+    //                 ->orWhereHas('order', function ($orderQuery) {
+    //                     $orderQuery->where('id', 'like', '%' . $this->search . '%');
+    //                 });
+    //         })
+    //         ->orderBy('created_at', 'desc')
+    //         ->paginate(15);
+
+    //     return view('livewire.pharmacy.pharmacy-dashboard-component', [
+    //         'dispensations' => $dispensations
+    //     ]);
+    // }
     public function render()
     {
         // Get orders with their dispensations
@@ -472,13 +501,38 @@ class PharmacyDashboardComponent extends Component
                 $query->where('status', 'dispensed');
             })
             ->when($this->search, function ($query) {
-                $query->whereHas('order.encounter.patient', function ($patientQuery) {
-                    $patientQuery->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('id', 'like', '%' . $this->search . '%');
-                })
-                    ->orWhereHas('order', function ($orderQuery) {
-                        $orderQuery->where('id', 'like', '%' . $this->search . '%');
-                    });
+                $searchTerm = '%' . $this->search . '%';
+
+                $query->where(function ($subQuery) use ($searchTerm) {
+                    // Search in patient name (handle both first_name/last_name or full_name)
+                    $subQuery->whereHas('order.encounter.patient', function ($patientQuery) use ($searchTerm) {
+                        // Try common column names for patient name
+                        $patientQuery->where(function ($nameQuery) use ($searchTerm) {
+                            // Check if first_name/last_name columns exist
+                            if (\Schema::hasColumn('patients', 'first_name') && \Schema::hasColumn('patients', 'last_name')) {
+                                $nameQuery->where('first_name', 'like', $searchTerm)
+                                    ->orWhere('last_name', 'like', $searchTerm)
+                                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$searchTerm]);
+                            }
+                            // Check if full_name column exists
+                            elseif (\Schema::hasColumn('patients', 'full_name')) {
+                                $nameQuery->where('full_name', 'like', $searchTerm);
+                            }
+                            // Check if name column exists (as last resort)
+                            elseif (\Schema::hasColumn('patients', 'name')) {
+                                $nameQuery->where('name', 'like', $searchTerm);
+                            }
+                            // Also search by patient ID if it's numeric
+                            if (is_numeric(str_replace('%', '', $searchTerm))) {
+                                $nameQuery->orWhere('id', 'like', $searchTerm);
+                            }
+                        });
+                    })
+                        // Search in order ID
+                        ->orWhereHas('order', function ($orderQuery) use ($searchTerm) {
+                            $orderQuery->where('id', 'like', $searchTerm);
+                        });
+                });
             })
             ->orderBy('created_at', 'desc')
             ->paginate(15);
