@@ -408,146 +408,146 @@ class RehabPaymentQueue extends Component
         }
     }
 
-    public function processPayment()
-    {
-        if (!$this->paymentOrder || !$this->selectedInstallment) {
-            return;
-        }
+public function processPayment()
+{
+    if (!$this->paymentOrder || !$this->selectedInstallment) {
+        return;
+    }
 
-        $remainingAmount = $this->selectedInstallment->getRemainingAmount();
+    $remainingAmount = $this->selectedInstallment->getRemainingAmount();
 
-        $this->validate([
-            'paymentMethod' => 'required|in:cash,card,insurance,bank_transfer',
-            'paymentAmount' => 'required|numeric|min:1|max:' . $remainingAmount,
-        ]);
+    $this->validate([
+        'paymentMethod' => 'required|in:cash,card,insurance,bank_transfer',
+        'paymentAmount' => 'required|numeric|min:1|max:' . $remainingAmount,
+    ]);
 
-        try {
-            DB::transaction(function () {
-                // Update installment
-                $newPaidAmount = $this->selectedInstallment->paid_amount + $this->paymentAmount;
-                $installmentStatus = $newPaidAmount >= $this->selectedInstallment->amount ? 'paid' : 'partial';
+    try {
+        DB::transaction(function () {
+            // Get the rehab encounter FIRST
+            $rehabEncounter = $this->paymentOrder->encounter;
+            $currentEncounterStatus = $rehabEncounter ? $rehabEncounter->status : null;
 
-                $this->selectedInstallment->update([
-                    'paid_amount' => $newPaidAmount,
-                    'paid_date' => $installmentStatus === 'paid' ? now() : null,
-                    'status' => $installmentStatus,
-                    'updated_by' => auth()->id()
-                ]);
+            \Log::info('=== PROCESSING PAYMENT ===');
+            \Log::info('Order ID: ' . $this->paymentOrder->id);
+            \Log::info('Installment number: ' . $this->selectedInstallment->installment_number);
+            \Log::info('Current encounter status: ' . $currentEncounterStatus);
+            \Log::info('Payment amount: ' . $this->paymentAmount);
 
-                // Update order paid amount
-                $totalPaid = $this->paymentOrder->paymentInstallments()->sum('paid_amount');
-                $this->paymentOrder->paid_amount = $totalPaid;
+            // Update installment
+            $newPaidAmount = $this->selectedInstallment->paid_amount + $this->paymentAmount;
+            $installmentStatus = $newPaidAmount >= $this->selectedInstallment->amount ? 'paid' : 'partial';
 
-                // Get the rehab encounter
-                $rehabEncounter = $this->paymentOrder->encounter;
+            $this->selectedInstallment->update([
+                'paid_amount' => $newPaidAmount,
+                'paid_date' => $installmentStatus === 'paid' ? now() : null,
+                'status' => $installmentStatus,
+                'updated_by' => auth()->id()
+            ]);
 
-                // FIXED: Get treatment status from encounter
-                $encounterStatus = $rehabEncounter ? $rehabEncounter->status : null;
-                $isTreatmentStarted = in_array($encounterStatus, ['treatment_in_progress', 'completed']);
+            // Update order paid amount
+            $totalPaid = $this->paymentOrder->paymentInstallments()->sum('paid_amount');
+            $this->paymentOrder->paid_amount = $totalPaid;
 
-                // Check if all installments are paid
-                $pendingInstallments = $this->paymentOrder->paymentInstallments()
-                    ->where('status', '!=', 'paid')
-                    ->count();
+            // Check if all installments are paid
+            $pendingInstallments = $this->paymentOrder->paymentInstallments()
+                ->where('status', '!=', 'paid')
+                ->count();
 
-                if ($pendingInstallments === 0) {
-                    // ALL INSTALLMENTS PAID - Full payment completed
-                    $this->paymentOrder->status = 'paid';
-                    $this->paymentOrder->payment_status = 'paid';
-                    $this->paymentOrder->payment_method = $this->paymentMethod;
-                    $this->paymentOrder->paid_at = now();
+            // Determine if treatment has already started
+            $isTreatmentStarted = in_array($currentEncounterStatus, ['treatment_in_progress', 'completed']);
 
-                    // FIXED: Only update rehab encounter if treatment hasn't started
-                    if ($rehabEncounter && !$isTreatmentStarted) {
+            if ($pendingInstallments === 0) {
+                // ALL INSTALLMENTS PAID - Final payment
+                \Log::info('Processing FINAL payment - All installments paid');
+
+                $this->paymentOrder->status = 'paid';
+                $this->paymentOrder->payment_status = 'paid';
+                $this->paymentOrder->payment_method = $this->paymentMethod;
+                $this->paymentOrder->paid_at = now();
+
+                // ✅ CRITICAL FIX: Only update rehab encounter if treatment hasn't started yet
+                if ($rehabEncounter) {
+                    if ($isTreatmentStarted) {
+                        // Treatment already in progress or completed - PRESERVE the status
+                        \Log::info('Final payment - Treatment already started/completed. Preserving status: ' . $currentEncounterStatus);
+                        // DO NOT change the status - keep as treatment_in_progress or completed
+                    } else {
+                        // Treatment not started yet (unlikely for final payment, but handle anyway)
+                        \Log::info('Final payment - Treatment not started. Sending to rehab');
                         $rehabEncounter->update(['status' => 'sent_to_rehab']);
                     }
+                }
 
-                    // If there's a bed selection, update bed status
-                    if ($this->bedSelection) {
-                        $bed = \App\Models\Bed::find($this->bedSelection->bed_id);
-                        if ($bed) {
-                            $bed->update(['status' => 'occupied']);
-                        }
-                        $this->bedSelection->update(['status' => 'completed']);
+                // If there's a bed selection, update bed status (only if not already done)
+                if ($this->bedSelection && $this->bedSelection->status !== 'completed') {
+                    $bed = \App\Models\Bed::find($this->bedSelection->bed_id);
+                    if ($bed && $bed->status !== 'occupied') {
+                        $bed->update(['status' => 'occupied']);
                     }
+                    $this->bedSelection->update(['status' => 'completed']);
+                }
+
+                $this->showAlertMessage("Final payment completed! Treatment continues.", 'success');
+
+            } else {
+                // NOT ALL INSTALLMENTS PAID YET
+                \Log::info('Not all installments paid - remaining: ' . $pendingInstallments);
+
+                // Send to rehab if this is the first payment and patient isn't in treatment yet
+                $shouldSendToRehab = false;
+
+                if ($rehabEncounter && $currentEncounterStatus === 'sent_to_cashier' && !$isTreatmentStarted) {
+                    $shouldSendToRehab = true;
+                    \Log::info('Sending patient to rehab (first time)');
+                }
+
+                if ($shouldSendToRehab) {
+                    $rehabEncounter->update(['status' => 'sent_to_rehab']);
+                    $rehabEncounter->refresh();
+                    \Log::info('Encounter status after update: ' . $rehabEncounter->status);
 
                     $this->showAlertMessage(
-                        "Full payment completed! " . ($isTreatmentStarted ? "Treatment continues." : "Patient sent to rehabilitation."),
-                        'success'
-                    );
-                } elseif ($this->selectedInstallment->installment_number === 1 && $installmentStatus === 'paid') {
-                    // FIRST INSTALLMENT FULLY PAID - Send to treatment if not started
-                    $this->paymentOrder->payment_status = 'partial';
-                    $this->paymentOrder->status = 'paid';
-                    $this->paymentOrder->payment_method = $this->paymentMethod;
-
-                    // FIXED: Only update rehab encounter if treatment hasn't started
-                    if ($rehabEncounter && !$isTreatmentStarted) {
-                        $rehabEncounter->update(['status' => 'sent_to_rehab']);
-                    }
-
-                    // Update bed status if exists
-                    if ($this->bedSelection) {
-                        $bed = \App\Models\Bed::find($this->bedSelection->bed_id);
-                        if ($bed) {
-                            $bed->update(['status' => 'occupied']);
-                        }
-                        $this->bedSelection->update(['status' => 'completed']);
-                    }
-
-                    // Set next payment due date
-                    $nextInstallment = $this->paymentOrder->paymentInstallments()
-                        ->where('installment_number', 2)
-                        ->first();
-
-                    if ($nextInstallment) {
-                        $this->paymentOrder->next_payment_due = $nextInstallment->due_date;
-                    }
-
-                    $this->showAlertMessage(
-                        "First installment paid! " . ($isTreatmentStarted ? "Treatment continues." : "Patient sent to rehabilitation.") .
-                            " Next payment due: " . ($nextInstallment ? $nextInstallment->due_date->format('M d, Y') : 'N/A'),
+                        "Payment received! Patient has been sent to rehabilitation.",
                         'success'
                     );
                 } else {
-                    // PARTIAL OR SUBSEQUENT INSTALLMENT PAYMENT - Keep status as is
-                    $nextInstallment = $this->paymentOrder->paymentInstallments()
-                        ->where('status', 'pending')
-                        ->orderBy('installment_number')
-                        ->first();
-
-                    if ($nextInstallment) {
-                        $this->paymentOrder->next_payment_due = $nextInstallment->due_date;
-                    }
-
-                    $this->paymentOrder->payment_status = 'partial';
-                    $this->paymentOrder->status = 'sent_to_cashier'; // Keep in cashier queue
-
-                    // FIXED: DO NOT change rehab encounter status - preserve current
-                    if ($rehabEncounter && $isTreatmentStarted) {
-                        \Log::info('Keeping treatment status: ' . $encounterStatus);
-                    }
-
-                    $this->showAlertMessage(
-                        "Payment received successfully!",
-                        'success'
-                    );
+                    \Log::info('Patient already in treatment or not ready. Current status: ' . $currentEncounterStatus);
+                    $this->showAlertMessage("Payment received successfully!", 'success');
                 }
 
-                $this->paymentOrder->save();
-            });
+                // Update order status for non-final payments
+                $this->paymentOrder->payment_status = 'partial';
+                $this->paymentOrder->status = 'sent_to_cashier';
 
-            $orderId = $this->paymentOrder->id;
-            $installmentNumber = $this->selectedInstallment->installment_number;
-            $this->closePaymentModal();
+                // Set next payment due date
+                $nextInstallment = $this->paymentOrder->paymentInstallments()
+                    ->where('status', 'pending')
+                    ->orderBy('installment_number')
+                    ->first();
 
-            $this->dispatch('refreshQueue');
-            $this->checkPaymentReminders(); // Refresh reminders
+                if ($nextInstallment) {
+                    $this->paymentOrder->next_payment_due = $nextInstallment->due_date;
+                }
+            }
 
-        } catch (\Exception $e) {
-            $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
-        }
+            $this->paymentOrder->save();
+
+            // Final verification
+            if ($rehabEncounter) {
+                $rehabEncounter->refresh();
+                \Log::info('FINAL encounter status: ' . $rehabEncounter->status);
+            }
+        });
+
+        $this->closePaymentModal();
+        $this->dispatch('refreshQueue');
+        $this->checkPaymentReminders();
+
+    } catch (\Exception $e) {
+        \Log::error('Payment error: ' . $e->getMessage());
+        $this->showAlertMessage('Error processing payment: ' . $e->getMessage(), 'error');
     }
+}
     public function getUpcomingPayments()
     {
         $upcomingPayments = RehabPaymentInstallment::with([
