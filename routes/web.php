@@ -182,8 +182,8 @@ Route::middleware(['auth'])->group(function () {
 
 // ==================== HOME & DASHBOARD ====================
 Route::get('/', function () {
-    return redirect()->route('dashboard');
-})->middleware('auth')->name('home');
+    return view('welcome');
+})->name('home');
 
 Route::get('/dashboard', \App\Livewire\Dashboard::class)
     ->middleware('auth')
