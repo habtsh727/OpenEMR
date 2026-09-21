@@ -20,7 +20,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
     public bool $remember = false;
 
     /**
-     * Handle an incoming authentication request.
+     * Handle an incoming authentication request  .
      */
     public function login(): void
     {
